@@ -14,14 +14,11 @@
                 extend: {
                     colors: {
                         aurora: {
-                            bg: '#020617',     // Deep space blue
-                            card: 'rgba(30, 41, 59, 0.4)', // Glass
+                            bg: '#020617',     
+                            card: 'rgba(30, 41, 59, 0.4)', 
                             border: 'rgba(148, 163, 184, 0.15)',
-                            primary: '#22d3ee', // Cyan
-                            secondary: '#a855f7', // Purple
-                            accent: '#34d399',  // Emerald
-                            text: '#f1f5f9',
-                            muted: '#94a3b8'
+                            primary: '#22d3ee', 
+                            secondary: '#a855f7', 
                         }
                     },
                     fontFamily: {
@@ -69,6 +66,9 @@
             overscroll-behavior-y: none;
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
+            min-height: 100vh;
+            /* Fix for mobile viewport height */
+            min-height: 100dvh; 
         }
         
         /* Animated Background */
@@ -133,7 +133,6 @@
             z-index: 9999;
             max-width: 90%;
             text-align: center;
-            font-family: sans-serif;
         }
     </style>
 </head>
@@ -142,12 +141,11 @@
     <div class="aurora-glow"></div>
     <div class="aurora-glow-2"></div>
     
-    <div id="root"></div>
+    <div id="root" class="min-h-[100dvh]"></div>
 
     <div id="error-box">
         <h3 style="font-weight:bold; margin-bottom:10px;">Ошибка запуска</h3>
         <p id="error-text">Инициализация...</p>
-        <p style="font-size: 12px; margin-top: 10px; opacity: 0.8;">Если вы открыли файл локально, используйте локальный сервер (Live Server) или загрузите на хостинг.</p>
     </div>
 
     <script>
@@ -156,26 +154,27 @@
             const text = document.getElementById('error-text');
             box.style.display = 'block';
             text.innerText = `${msg}\nLine: ${line}`;
-            console.error("Global Error:", error);
             return false;
         };
     </script>
 
     <script type="text/babel" data-type="module">
-        // Direct Imports for Stability
+        // Direct Imports
         import React, { useState, useEffect } from 'https://esm.sh/react@18.2.0';
         import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
         import { 
             Trophy, Diamond, Zap, Camera, CheckCircle, Activity, User, Settings, Plus, X, 
-            Hexagon, Flame, Send, Bell, AlertTriangle, Skull, Dumbbell, Timer, Ruler, 
-            BarChart3, Users, Calendar, Award, ChevronRight, ChevronUp, ChevronDown, Siren, FileWarning, UploadCloud, 
-            RefreshCw, Shield, Download, Edit3, Save, Trash2, LogOut, Sun, Moon
+            Hexagon, Flame, Send, Bell, Skull, Dumbbell, Ruler, 
+            BarChart3, Users, Calendar, ChevronUp, ChevronDown, Siren
         } from 'https://esm.sh/lucide-react@0.263.1';
 
         // --- CONSTANTS ---
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydULT-3CWngM-jmKIuVH5f0LvcwDiSqMgEBCbR2FroObYhwKZqG_DeVc4pDa8-WL5A/exec'; // Вставьте ссылку Web App
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydULT-3CWngM-jmKIuVH5f0LvcwDiSqMgEBCbR2FroObYhwKZqG_DeVc4pDa8-WL5A/exec'; 
         const ADMIN_USERNAME = 'solomin_d';
-        const DEFAULT_START_DATE = new Date('2025-03-18'); 
+        
+        // ! ВАЖНО: Устанавливаем дату в будущем, чтобы уровни сложности отображались корректно
+        // Используем 1 Апреля 2026 года
+        const DEFAULT_START_DATE = new Date('2026-04-01'); 
 
         // --- UI COMPONENTS ---
 
@@ -192,9 +191,6 @@
             const variants = {
                 primary: "bg-cyan-600/80 text-white shadow-[0_0_20px_rgba(8,145,178,0.4)] hover:bg-cyan-500 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] border border-cyan-400/30 backdrop-blur-sm",
                 danger: "bg-rose-600/80 text-white shadow-[0_0_20px_rgba(225,29,72,0.4)] hover:bg-rose-500 border border-rose-400/30 backdrop-blur-sm",
-                success: "bg-emerald-600/80 text-white shadow-[0_0_20px_rgba(5,150,105,0.4)] hover:bg-emerald-500 border border-emerald-400/30 backdrop-blur-sm",
-                gold: "bg-amber-500/80 text-white shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:bg-amber-400 border border-amber-300/30 backdrop-blur-sm",
-                secondary: "bg-white/5 text-aurora-text border border-white/10 hover:bg-white/10 backdrop-blur-sm",
                 disabled: "bg-slate-800/50 text-slate-500 border border-slate-700 cursor-not-allowed shadow-none backdrop-blur-sm"
             };
             
@@ -214,16 +210,9 @@
 
         const Avatar = ({ name, className = "", size = "w-10 h-10" }) => {
             const initials = name ? name.slice(0, 2).toUpperCase() : "FQ";
-            const gradients = [
-                "from-cyan-500 to-blue-600",
-                "from-purple-500 to-indigo-600",
-                "from-emerald-400 to-teal-600",
-                "from-fuchsia-500 to-pink-600",
-            ];
-            const colorIndex = name ? name.length % gradients.length : 0;
-            
+            const gradients = ["from-cyan-500 to-blue-600", "from-purple-500 to-indigo-600", "from-emerald-400 to-teal-600"];
             return (
-                <div className={`${size} rounded-full bg-gradient-to-br ${gradients[colorIndex]} flex items-center justify-center text-white font-bold shadow-lg border border-white/20 ${className}`}>
+                <div className={`${size} rounded-full bg-gradient-to-br ${gradients[name ? name.length % 3 : 0]} flex items-center justify-center text-white font-bold shadow-lg border border-white/20 ${className}`}>
                     {initials}
                 </div>
             );
@@ -258,11 +247,10 @@
         // --- SCREENS ---
 
         const WelcomeScreen = ({ onStart }) => (
-            <div className="flex flex-col h-screen p-6 animate-fade-in relative z-10 pt-safe-top">
+            <div className="flex flex-col h-full min-h-[100dvh] p-6 animate-fade-in relative z-10 pt-safe-top">
                 <div className="flex-grow flex flex-col items-center justify-center text-center space-y-8">
                     <div className="relative w-40 h-40 flex items-center justify-center">
                         <div className="absolute inset-0 bg-cyan-500 blur-[60px] opacity-30 rounded-full animate-pulse"></div>
-                        <div className="absolute inset-0 bg-purple-500 blur-[60px] opacity-20 rounded-full translate-x-4 animate-pulse" style={{animationDelay: '1s'}}></div>
                         <Hexagon size={130} className="text-cyan-400 stroke-[1.5] animate-float drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
                         <Activity size={50} className="text-white absolute drop-shadow-lg" />
                     </div>
@@ -273,13 +261,12 @@
                 </div>
                 <div className="mt-auto w-full pb-8">
                     <NeonButton onClick={onStart}>Начать Путь</NeonButton>
-                    <p className="text-center text-slate-500 text-[10px] mt-4 uppercase tracking-widest font-bold">Version Aurora 1.1</p>
                 </div>
             </div>
         );
 
         const RegistrationScreen = ({ regForm, setRegForm, onNext }) => (
-            <div className="min-h-screen flex flex-col p-6 animate-slide-up pt-safe-top relative z-10">
+            <div className="flex flex-col h-full min-h-[100dvh] p-6 animate-slide-up pt-safe-top relative z-10">
                 <h2 className="text-3xl font-display font-bold text-white mb-6 tracking-wide">ИДЕНТИФИКАЦИЯ</h2>
                 <div className="space-y-6 flex-grow">
                     <GlassCard className="p-1">
@@ -318,7 +305,7 @@
             };
 
             return (
-                <div className="p-6 flex flex-col h-screen animate-slide-up relative z-10 pt-safe-top">
+                <div className="p-6 flex flex-col h-full min-h-[100dvh] animate-slide-up relative z-10 pt-safe-top">
                     <h2 className="text-3xl font-display font-bold text-white mb-2 tracking-wide">ВЫБОР ОРУЖИЯ</h2>
                     <p className="text-slate-400 text-sm mb-8 leading-relaxed">Собери свой сет.<br/>Максимум 5 дисциплин.</p>
                     <div className="flex flex-wrap gap-3 mb-4 max-h-[60vh] overflow-y-auto content-start pb-20 no-scrollbar">
@@ -348,22 +335,28 @@
                 const start = startDate || DEFAULT_START_DATE;
                 const diffTime = start - now;
                 const daysUntilStart = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                const passed = daysUntilStart > 0 ? 0 : Math.abs(daysUntilStart);
                 
+                // Исправленная логика: Если марафон еще не начался (daysUntilStart > 0), показываем полную длительность.
+                // Если начался, вычитаем прошедшие дни, но не меньше 1 дня.
+                let passed = 0;
+                if (daysUntilStart <= 0) {
+                     passed = Math.abs(daysUntilStart);
+                }
+
                 return [
                     { label: 'Новичок', days: 30 - passed, original: 30 },
                     { label: 'Атлет', days: 60 - passed, original: 60 },
                     { label: 'Киборг', days: 100 - passed, original: 100 }
-                ].filter(g => g.days > 0);
+                ].filter(g => g.days > 0); // Показываем только если осталось > 0 дней
             };
 
             const goals = calculateGoalOptions();
             
             return (
-                <div className="p-6 flex flex-col h-screen animate-slide-up relative z-10 pt-safe-top">
+                <div className="p-6 flex flex-col h-full min-h-[100dvh] animate-slide-up relative z-10 pt-safe-top">
                     <h2 className="text-3xl font-display font-bold text-white mb-10 text-center tracking-wide">УРОВЕНЬ СЛОЖНОСТИ</h2>
                     <div className="flex flex-col gap-6 flex-grow justify-center pb-8">
-                        {goals.map((g, idx) => (
+                        {goals.length > 0 ? goals.map((g, idx) => (
                             <GlassCard key={idx} onClick={() => onSelect(g.days)} className="p-6 flex items-center justify-between group border-l-4 border-l-transparent hover:border-l-cyan-400 transition-all bg-white/5 hover:bg-white/10">
                                 <div className="flex flex-col">
                                     <span className="text-4xl font-display font-black text-white group-hover:text-cyan-300 transition-colors drop-shadow-md">{g.days} <span className="text-lg font-sans font-normal text-slate-400">Дней</span></span>
@@ -373,7 +366,12 @@
                                     {idx === 0 ? <Activity size={24} /> : idx === 1 ? <Zap size={24} /> : <Trophy size={24} />}
                                 </div>
                             </GlassCard>
-                        ))}
+                        )) : (
+                             <div className="text-center p-8 glass-panel rounded-2xl">
+                                <h3 className="text-rose-400 font-bold mb-2">СЕЗОН ЗАВЕРШЕН</h3>
+                                <p className="text-slate-400 text-sm">Жди следующего призыва.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             );
@@ -401,8 +399,6 @@
             const [selectedSportForCheckIn, setSelectedSportForCheckIn] = useState(null);
             const [checkInValue, setCheckInValue] = useState("");
             const [editingProfile, setEditingProfile] = useState(false);
-            const [adminPanelOpen, setAdminPanelOpen] = useState(false);
-            const [selectedUser, setSelectedUser] = useState(null);
             const [dashboardView, setDashboardView] = useState('leaderboard');
             const [showAllBadges, setShowAllBadges] = useState(false);
             const [showConfetti, setShowConfetti] = useState(false);
@@ -414,7 +410,6 @@
                 { id: 1, name: 'Alex', diamonds: 3, streak: 12, goal: 100, status: 'active', disciplines: ['Бег', 'Воркаут'], history: [], badges: ['streak', 'runner'] },
                 { id: 2, name: 'Elena', diamonds: 5, streak: 45, goal: 60, status: 'active', disciplines: ['Зал', 'Плавание'], history: [], badges: ['gym', 'reps', 'early'] },
                 { id: 3, name: 'Max', diamonds: 0, streak: 8, goal: 30, status: 'frozen', disciplines: ['Бокс'], history: [], badges: [] },
-                { id: 4, name: 'Igor', diamonds: 2, streak: 89, goal: 100, status: 'active', disciplines: ['Вело', 'Отжимания'], history: [], badges: ['runner', 'reps', 'social', 'streak'] },
             ]);
 
             // --- INIT ---
@@ -423,7 +418,7 @@
                 const tg = window.Telegram?.WebApp;
                 if (tg) {
                     tg.ready(); 
-                    tg.expand();
+                    tg.expand(); // Force Full Screen
                     tg.setHeaderColor('#020617'); 
                     tg.setBackgroundColor('#020617');
                 }
@@ -433,9 +428,7 @@
                 
                 if (savedUser) {
                     const parsed = JSON.parse(savedUser);
-                    const tgUser = tg?.initDataUnsafe?.user;
-                    const isAdmin = (tgUser?.username === ADMIN_USERNAME) || parsed.isAdmin;
-                    setUser({ ...parsed, isAdmin });
+                    setUser({ ...parsed });
                     setStep('dashboard');
                 } else {
                     const tgUser = tg?.initDataUnsafe?.user;
@@ -446,7 +439,6 @@
                     setStep('welcome');
                 }
                 
-                // Set default date
                 setMarathonStartDate(DEFAULT_START_DATE);
 
             }, []);
@@ -489,7 +481,7 @@
                     return { 
                         ...prev, 
                         streak: isFirstCheckIn ? prev.streak + 1 : prev.streak, 
-                        diamonds: isFirstCheckIn ? prev.diamonds : prev.diamonds, // В будущем можно давать алмазы
+                        diamonds: isFirstCheckIn ? prev.diamonds : prev.diamonds, 
                         todayActivity: [...prev.todayActivity, sport], 
                         history: [newItem, ...prev.history] 
                     };
@@ -498,17 +490,11 @@
                 setCheckInModalOpen(false); setCheckInStage('select');
             };
 
-            // Badge Config
             const badgeConfig = {
                 'streak': { icon: <Flame size={10} />, color: 'text-orange-400', bg: 'bg-orange-500/20' },
                 'runner': { icon: <Ruler size={10} />, color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
                 'gym': { icon: <Dumbbell size={10} />, color: 'text-purple-400', bg: 'bg-purple-500/20' },
                 'reps': { icon: <Activity size={10} />, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
-                'early': { icon: <Sun size={10} />, color: 'text-amber-400', bg: 'bg-amber-500/20' },
-                'night': { icon: <Moon size={10} />, color: 'text-indigo-400', bg: 'bg-indigo-500/20' },
-                'weekend': { icon: <Calendar size={10} />, color: 'text-rose-400', bg: 'bg-rose-500/20' },
-                'social': { icon: <Send size={10} />, color: 'text-blue-400', bg: 'bg-blue-500/20' },
-                'redemption': { icon: <Skull size={10} />, color: 'text-slate-400', bg: 'bg-slate-500/20' },
             };
 
             const badges = [
@@ -519,11 +505,8 @@
             ].map(b => ({...b, ...badgeConfig[b.id]}));
             
             const visibleBadges = showAllBadges ? badges : badges.slice(0, 3);
-            
-            // Logic for CheckIn status
             const isCheckedIn = user.todayActivity.length > 0;
 
-            // --- SUB-COMPONENTS ---
             const RedemptionShop = () => {
                 const [processing, setProcessing] = useState(false);
                 const [task, setTask] = useState("Ищу наказание...");
@@ -545,10 +528,10 @@
                     }, 2000); 
                 };
 
-                if (processing) return <div className="h-full flex flex-col items-center justify-center p-6 text-center space-y-8 relative z-10"><div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div><h3 className="text-xl font-display font-bold text-white uppercase tracking-widest">Воскрешение...</h3></div>;
+                if (processing) return <div className="h-full min-h-[100dvh] flex flex-col items-center justify-center p-6 text-center space-y-8 relative z-10"><div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div><h3 className="text-xl font-display font-bold text-white uppercase tracking-widest">Воскрешение...</h3></div>;
                 
                 return (
-                    <div className="h-full flex flex-col relative z-10 overflow-y-auto">
+                    <div className="h-full min-h-[100dvh] flex flex-col relative z-10 overflow-y-auto">
                         <div className="sticky top-0 z-20 bg-slate-900/90 backdrop-blur-md px-4 py-4 flex items-center gap-3 border-b border-white/10 pt-safe-top"><button onClick={() => setStep('dashboard')} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-transform">←</button><span className="font-display font-bold text-white uppercase tracking-wider">Магазин искупления</span></div>
                         <div className="p-6 pb-20">
                             <div className="relative rounded-2xl overflow-hidden mb-8 border border-rose-500/30 shadow-[0_0_30px_rgba(244,63,94,0.2)] bg-rose-900/20"><div className="p-8 text-center relative z-10"><div className="inline-flex items-center justify-center w-16 h-16 bg-rose-500/20 rounded-full mb-4 border border-rose-500/50 shadow-sm animate-pulse"><Skull className="text-rose-400" size={32} /></div><h2 className="text-2xl font-display font-black text-white uppercase leading-none mb-2 tracking-widest">ВЕРНУТЬ <span className="text-rose-500">АЛМАЗ</span></h2></div></div>
@@ -571,12 +554,12 @@
             const userStats = getStatsSummary(user.history);
 
             return (
-                <div className="pb-24 relative min-h-screen z-10">
+                <div className="pb-24 relative min-h-[100dvh] z-10">
                     {/* Header */}
                     <div className="sticky top-0 bg-[#020617]/80 backdrop-blur-xl z-20 px-6 py-4 border-b border-white/5 pt-safe-top shadow-lg">
                         <div className="flex justify-between items-start mb-4">
-                            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => user.isAdmin && setAdminPanelOpen(true)}>
-                                <div className="relative"><Avatar name={user.firstName} />{user.isAdmin && <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white rounded-full p-0.5 border-2 border-[#020617]"><Shield size={10} /></div>}</div>
+                            <div className="flex items-center gap-3 cursor-pointer group">
+                                <div className="relative"><Avatar name={user.firstName} /></div>
                                 <div><div className="font-display font-bold text-white text-lg leading-tight group-hover:text-cyan-400 transition-colors">{user.firstName}</div><div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Статус: <span className="text-emerald-400">{user.status === 'active' ? 'В строю' : 'Заморожен'}</span></div></div>
                             </div>
                             <div className="flex gap-2">
@@ -624,7 +607,7 @@
                         {dashboardView === 'leaderboard' ? (
                             <div className="space-y-3">
                                 {leaderboard.map((u, idx) => (
-                                    <GlassCard key={u.id} onClick={() => setSelectedUser(u)} className={`p-4 flex items-center justify-between transition-colors ${u.status === 'frozen' ? 'opacity-50 grayscale' : 'hover:bg-white/5'}`}>
+                                    <GlassCard key={u.id} className={`p-4 flex items-center justify-between transition-colors ${u.status === 'frozen' ? 'opacity-50 grayscale' : 'hover:bg-white/5'}`}>
                                         <div className="flex items-center gap-4">
                                             <div className="relative">
                                                 <Avatar name={u.name} size="w-10 h-10" />
