@@ -57,7 +57,7 @@
             width: 100%; height: 100%;
             background-color: #020617; color: #f1f5f9;
             overflow: hidden; /* No scroll on body */
-            overscroll-behavior: none;
+            overscroll-behavior: none; /* Предотвращает "резиновый" скролл и сворачивание */
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -70,12 +70,20 @@
             z-index: 10;
         }
 
-        /* Анимированный фон */
+        /* Стандартный фон Aurora */
         .bg-aurora {
             background: linear-gradient(-45deg, #020617, #0f172a, #1e1b4b, #064e3b);
             background-size: 400% 400%;
             position: absolute; inset: 0; z-index: 0;
             animation: aurora 15s ease infinite alternate;
+        }
+
+        /* Улучшенный фон для Дашборда (меньше зеленого, больше глубины) */
+        .bg-aurora-dashboard {
+            background: linear-gradient(-45deg, #0f172a, #312e81, #1e1b4b, #111827);
+            background-size: 400% 400%;
+            position: absolute; inset: 0; z-index: 0;
+            animation: aurora 20s ease infinite alternate;
         }
         
         /* Стеклянные панели */
@@ -99,17 +107,19 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            scroll-behavior: smooth;
         }
         
         .padding-onboarding {
              padding-top: calc(80px + env(safe-area-inset-top)); 
         }
 
-        /* Fullscreen Modal */
+        /* Fullscreen Modal - Fix for "background visible at top" */
         .modal-fullscreen {
             position: fixed; inset: 0; z-index: 60;
-            background-color: #020617;
+            background-color: #020617; /* Solid background */
             display: flex; flex-direction: column;
+            padding-top: env(safe-area-inset-top); /* Отступ внутри модалки, а не снаружи */
         }
         
         /* Neon text effect */
@@ -125,10 +135,22 @@
             top: -10px;
             z-index: 50;
         }
+
+        /* Smooth Accordion Transition */
+        .accordion-content {
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .accordion-content.open {
+            max-height: 200px; /* Достаточно для контента */
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
-    <div class="bg-aurora"></div>
+    <div id="bg-layer" class="bg-aurora"></div>
     <div class="fixed top-[-20%] left-[-20%] w-[80vw] h-[80vw] rounded-full bg-cyan-500/10 blur-[100px] pointer-events-none z-0"></div>
     <div class="fixed bottom-[-20%] right-[-20%] w-[80vw] h-[80vw] rounded-full bg-purple-500/10 blur-[100px] pointer-events-none z-0"></div>
     <div class="fixed top-[20%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-emerald-500/10 blur-[100px] pointer-events-none z-0"></div>
@@ -136,26 +158,54 @@
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
-        import React, { useState, useEffect } from 'https://esm.sh/react@18.2.0';
+        import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
         import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
         import { 
             Trophy, Diamond, Zap, Camera, CheckCircle, Activity, Settings, Plus, X, 
             Hexagon, Flame, Send, Bell, Skull, Dumbbell, Ruler, Star, Crown,
             BarChart3, Users, Calendar, ChevronDown, Shield, Edit3, Save, Trash2, ArrowLeft, Clock, UserPlus, Sun, Moon, Info,
-            Timer, Layers, Gauge, RefreshCw, ChevronUp, AlertTriangle, PartyPopper, Ghost
+            Timer, Layers, Gauge, RefreshCw, ChevronUp, AlertTriangle, PartyPopper, Ghost, BicepsFlexed, Lock, Medal
         } from 'https://esm.sh/lucide-react@0.263.1';
 
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/library/d/1zIhoIYV8JDFhRzaiAqIVwDanbakHeJprh8xY5IB9MtfocMqm9gd545VT/4'; 
         const ADMIN_USERNAME = 'solomin_d';
         const DEFAULT_START_DATE = new Date('2026-04-01');
 
-        // --- MOTIVATION PHRASES ---
+        // --- MOTIVATION PHRASES (Funny & Emotional) ---
         const MOTIVATION_PHRASES = [
-            "[N], [S] следит за тобой! Поднимись!", "Эй [N], [S] не видит огня в глазах!", "[N], [S] говорит: хватит жрать, иди пахать!", "[N], [S] ждет рекордов, а не оправданий.", "Вставай [N]! [S] верит в тебя!",
-            "[N], боль временна, слава вечна. [S]", "[N], [S] знает, что ты можешь больше!", "[N], покажи [S], кто тут босс качалки!", "[N], [S] ставит на твою победу!", "[N], [S] уже тренируется, а ты?",
-            "[N], лень - это смерть. [S]", "[N], [S] требует пота и крови!", "Работай, [N]! [S] смотрит.", "[N], [S] не примет поражения.", "[N], стань легендой для [S]!",
-            "[N], [S] видит твой потенциал. Жги!", "Не ной [N], [S] тоже устал, но делает.", "[N], докажи [S], что ты не тряпка!", "[N], [S] ждет отчета. Бегом!", "Только вперед [N]! [S] рядом.",
-            "Будь лучше [N]. [S]", "[N], [S] ставит лайк твоей боли.", "[N], [S] ждет пота.", "Удиви [S], [N]!", "[N], [S] - твой фанат.", "Вперед к славе [N]! [S]"
+            "[N], я видел бабушек в парке, которые делают это быстрее!", 
+            "Эй [N], диван по тебе не скучает? А он скучает!",
+            "[N], если ты сейчас сдашься, я расскажу всем твой секрет...", 
+            "Вставай, [N]! Пельмешки сами себя не сожгут!", 
+            "[N], ты машина или самокат? Газуй!",
+            "Слушай, [N], твои мышцы плачут от скуки. Дай им жару!", 
+            "[N], [S] сделал ставку, что ты слабак. Докажи обратное!", 
+            "[N], представь, что штанга — это твои проблемы. Жми их!", 
+            "Не будь овощем, [N], будь фруктом! Сочным и мощным!", 
+            "[N], еще один подход, и ты красавчик (хотя ты и так норм).",
+            "Алё, [N]! Режим зверя выключился? Включай обратно!",
+            "[N], ты потеешь? Значит не ржавеешь!",
+            "Давай [N], покажи им кузькину мать!",
+            "[N], боль — это просто слабость, покидающая тело (и немного нытья).",
+            "Остановишься сейчас, [N] — станешь сутулой собакой. Не надо так.",
+            "[N], твой пресс где-то там, я точно знаю. Копай глубже!",
+            "Вперед [N]! [S] следит за тобой (в хорошем смысле).",
+            "[N], ты легенда... в будущем. А пока работай!",
+            "Хватит жалеть себя, [N]! Жалей штангу!",
+            "[N], сделай это ради лайков в сторис (шутка, ради себя)!"
+        ];
+
+        // --- ACHIEVEMENTS DATA (100 days Marathon) ---
+        const ACHIEVEMENTS = [
+            { id: 1, title: "Первый Шаг", desc: "1 день в строю. Начало положено!", icon: <Star size={20}/>, condition: (u) => u.streak >= 1 },
+            { id: 2, title: "Неделя Выживания", desc: "7 дней подряд. Ты не слился!", icon: <Flame size={20}/>, condition: (u) => u.streak >= 7 },
+            { id: 3, title: "Привычка", desc: "21 день. Теперь это часть тебя.", icon: <Zap size={20}/>, condition: (u) => u.streak >= 21 },
+            { id: 4, title: "Экватор", desc: "50 дней. Половина пути пройдена!", icon: <Layers size={20}/>, condition: (u) => u.streak >= 50 },
+            { id: 5, title: "Легенда Марафона", desc: "100 дней. Ты прошел игру!", icon: <Crown size={20}/>, condition: (u) => u.streak >= 100 },
+            { id: 6, title: "Бегун", desc: "Набрано 50 км суммарно.", icon: <Ruler size={20}/>, condition: (u, stats) => stats.k >= 50 },
+            { id: 7, title: "Терминатор", desc: "1000 повторений суммарно.", icon: <Dumbbell size={20}/>, condition: (u, stats) => stats.r >= 1000 },
+            { id: 8, title: "Ранняя Пташка", desc: "Тренировка выполнена (любая).", icon: <Sun size={20}/>, condition: (u) => u.history.length > 0 }, 
+            { id: 9, title: "Воин Ночи", desc: "Тренировка выполнена (любая).", icon: <Moon size={20}/>, condition: (u) => u.history.length > 5 }
         ];
 
         // --- COMPONENTS ---
@@ -172,7 +222,7 @@
                 danger: "bg-rose-600/90 text-white border-rose-400/30", 
                 gold: "bg-amber-500/90 text-white border-amber-300/30", 
                 secondary: "bg-white/5 text-white border border-white/10 hover:bg-white/10", 
-                disabled: "bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed" 
+                disabled: "bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed opacity-50" 
             };
             return (
                 <button onClick={onClick} disabled={disabled} className={`w-full py-4 font-bold tracking-wider uppercase rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 ${disabled ? v.disabled : v[variant]} ${className}`}>
@@ -198,18 +248,6 @@
             </button>
         );
 
-        const badgesData = [
-            { id: 'streak', icon: <Flame size={14} />, color: 'text-orange-400', bg: 'bg-orange-500/20', label: 'На огне', desc: 'Стрик 3+ дней подряд' },
-            { id: 'runner', icon: <Ruler size={14} />, color: 'text-cyan-400', bg: 'bg-cyan-500/20', label: 'Бегун', desc: 'Набрано 10+ км' },
-            { id: 'gym', icon: <Dumbbell size={14} />, color: 'text-purple-400', bg: 'bg-purple-500/20', label: 'Терминатор', desc: '5+ тренировок в зале' },
-            { id: 'reps', icon: <Activity size={14} />, color: 'text-emerald-400', bg: 'bg-emerald-500/20', label: 'Машина', desc: '500+ повторений' },
-            { id: 'early', icon: <Sun size={14} />, color: 'text-amber-400', bg: 'bg-amber-500/20', label: 'Жаворонок', desc: 'Тренировка до 8:00' },
-            { id: 'night', icon: <Moon size={14} />, color: 'text-indigo-400', bg: 'bg-indigo-500/20', label: 'Сова', desc: 'Тренировка после 22:00' },
-            { id: 'weekend', icon: <Calendar size={14} />, color: 'text-rose-400', bg: 'bg-rose-500/20', label: 'Выходной', desc: 'Тренировка в Сб/Вс' },
-            { id: 'social', icon: <Send size={14} />, color: 'text-blue-400', bg: 'bg-blue-500/20', label: 'Друг', desc: 'Пригласил друга' },
-            { id: 'redemption', icon: <Skull size={14} />, color: 'text-slate-400', bg: 'bg-slate-500/20', label: 'Выживший', desc: 'Купил жизнь' },
-        ];
-
         // --- APP ---
         function App() {
             // STATE
@@ -230,6 +268,7 @@
             const [badgeInfo, setBadgeInfo] = useState(null);
             const [expandedMode, setExpandedMode] = useState(null);
             const [showAllLeaderboard, setShowAllLeaderboard] = useState(false);
+            const [isBeastModeConfirmed, setIsBeastModeConfirmed] = useState(false); // Для чекбокса
 
             // Inputs
             const [customInput, setCustomInput] = useState("");
@@ -249,6 +288,9 @@
             const [isAddingUser, setIsAddingUser] = useState(false);
             const [newUserNick, setNewUserNick] = useState("");
             const [isSyncing, setIsSyncing] = useState(false);
+
+            // Ref for scrolling
+            const contentRef = useRef(null);
 
             // Mock Data
             const [leaderboard, setLeaderboard] = useState([
@@ -299,6 +341,18 @@
                 fetchConfigDate();
             }, []);
 
+            // BACKGROUND CHANGER
+            useEffect(() => {
+                const bg = document.getElementById('bg-layer');
+                if (bg) {
+                    if (step === 'dashboard') {
+                        bg.className = 'bg-aurora-dashboard';
+                    } else {
+                        bg.className = 'bg-aurora';
+                    }
+                }
+            }, [step]);
+
             useEffect(() => { if(user.firstName) localStorage.setItem('fitness_aurora_user', JSON.stringify(user)); }, [user]);
 
             // Logic: Diamonds & Streak
@@ -345,9 +399,17 @@
                 return gymWords.some(w => sport.includes(w));
             };
 
+            const checkAchievements = (usr) => {
+                const stats = getStats(usr.history);
+                return ACHIEVEMENTS.map(ach => ({
+                    ...ach,
+                    unlocked: ach.condition(usr, stats)
+                }));
+            };
+
             const handleCheckInComplete = (val) => {
                 const sport = selectedSportForCheckIn;
-                const unit = isGymWorkout(sport) ? 'тип' : getUnitForSport(sport); // спец unit для зала
+                const unit = isGymWorkout(sport) ? 'тип' : getUnitForSport(sport);
                 const now = new Date();
                 const todayStr = now.toDateString();
                 const dateDisplay = now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }); 
@@ -379,6 +441,14 @@
                 const phraseTemplate = MOTIVATION_PHRASES[Math.floor(Math.random() * MOTIVATION_PHRASES.length)];
                 const msg = phraseTemplate.replace("[N]", targetName).replace("[S]", sender);
                 if (window.Telegram?.WebApp?.showPopup) { window.Telegram.WebApp.showPopup({ title: 'Отправлено 🚀', message: `Пуш для ${targetName}:\n"${msg}"`, buttons: [{id: 'ok', type: 'ok'}] }); } else { alert(`Пуш отправлен ${targetName}:\n"${msg}"`); }
+            };
+
+            // SCROLL TO TOP
+            const handleShowAll = (show) => {
+                setShowAllLeaderboard(show);
+                if (!show && contentRef.current) {
+                    contentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                }
             };
 
             const renderCheckInModal = () => {
@@ -492,15 +562,15 @@
                                     </div>
                                     <div className="flex items-center gap-2">
                                          {user.frequency === opt.id && <CheckCircle size={14} className="text-cyan-400"/>}
-                                         <ChevronDown size={16} className={`text-slate-500 transition-transform ${expandedMode === opt.id ? 'rotate-180' : ''}`}/>
+                                         <ChevronDown size={16} className={`text-slate-500 transition-transform duration-300 ${expandedMode === opt.id ? 'rotate-180' : ''}`}/>
                                     </div>
                                 </div>
-                                {(expandedMode === opt.id) && (
-                                    <div className="p-4 bg-black/20 text-sm text-slate-300 animate-expand border-t border-white/5">
+                                <div className={`accordion-content ${expandedMode === opt.id ? 'open' : ''}`}>
+                                    <div className="p-4 bg-black/20 text-sm text-slate-300 border-t border-white/5">
                                         <div className="font-bold text-white mb-1">{opt.title}</div>
                                         {opt.desc}
                                     </div>
-                                )}
+                                </div>
                             </div>
                         ))}
                      </div>
@@ -543,12 +613,16 @@
                         <p className="text-slate-300 text-lg mb-8 max-w-xs mx-auto leading-relaxed">
                             Официально: ты теперь не просто человек, ты — машина в процессе сборки. Не сбавляй обороты!
                         </p>
-                        <div className="bg-emerald-900/20 border border-emerald-500/30 p-4 rounded-xl mb-8">
-                             <p className="text-emerald-400 font-bold text-sm uppercase tracking-wider">РЕЖИМ ЗВЕРЯ АКТИВИРОВАН</p>
+                        
+                        <div onClick={() => setIsBeastModeConfirmed(!isBeastModeConfirmed)} className="flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all duration-300 mb-8 max-w-xs mx-auto text-left bg-white/5 border-white/10 hover:border-cyan-500/50">
+                            <div className={`w-6 h-6 rounded-md border flex items-center justify-center transition-colors ${isBeastModeConfirmed ? 'bg-cyan-500 border-cyan-500' : 'border-slate-500'}`}>
+                                {isBeastModeConfirmed && <CheckCircle size={16} className="text-white"/>}
+                            </div>
+                            <span className="text-sm font-bold text-white uppercase">Я подтверждаю активацию режима зверя</span>
                         </div>
                     </div>
                     <div className="mt-auto w-full">
-                        <NeonButton onClick={() => setStep('dashboard')} variant="primary">ПОГНАЛИ 🚀</NeonButton>
+                        <NeonButton onClick={() => setStep('dashboard')} variant="primary" disabled={!isBeastModeConfirmed}>ПОГНАЛИ 🚀</NeonButton>
                     </div>
                 </div>
             );
@@ -556,9 +630,10 @@
             // --- DASHBOARD ---
             const progressPercent = Math.min((user.streak / user.goal) * 100, 100);
             const displayedLeaderboard = showAllLeaderboard ? leaderboard : leaderboard.slice(0, 3);
+            const userAchievements = checkAchievements(user);
             
             return (
-                <div className="content-section space-y-8">
+                <div className="content-section space-y-8" ref={contentRef}>
                     
                     {/* Profile Header */}
                     <div className="mb-6 mt-4"> 
@@ -636,7 +711,7 @@
                                     </GlassCard>
                                 ))}
                                 {leaderboard.length > 3 && (
-                                    <button onClick={() => setShowAllLeaderboard(!showAllLeaderboard)} className="w-full py-3 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-white transition-colors">
+                                    <button onClick={() => handleShowAll(!showAllLeaderboard)} className="w-full py-3 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-white transition-colors">
                                         {showAllLeaderboard ? 'Скрыть' : 'Показать всех'}
                                     </button>
                                 )}
@@ -652,6 +727,18 @@
                                         <div className="text-2xl font-black text-white uppercase tracking-wide">{getUserRankTitle(user.goal)}</div>
                                     </div>
                                 </GlassCard>
+
+                                <div>
+                                    <h3 className="text-slate-500 uppercase text-[10px] font-bold tracking-[0.2em] mb-3">Ачивки</h3>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {userAchievements.map(ach => (
+                                            <div key={ach.id} onClick={() => setBadgeInfo(ach)} className={`aspect-square rounded-xl flex flex-col items-center justify-center text-center p-2 border transition-all cursor-pointer ${ach.unlocked ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)]' : 'bg-white/5 border-white/5 text-slate-600 grayscale'}`}>
+                                                <div className="mb-1">{ach.icon}</div>
+                                                <div className="text-[8px] font-bold uppercase leading-tight">{ach.title}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
 
                                 <GlassCard className="p-4 grid grid-cols-2 gap-4"><div className="text-center"><Ruler className="mx-auto text-cyan-400 mb-1"/><div className="text-xl font-bold text-white">{getStats(user.history).k}</div><div className="text-[10px] text-slate-500 uppercase font-bold">КМ Всего</div></div><div className="text-center"><Dumbbell className="mx-auto text-purple-400 mb-1"/><div className="text-xl font-bold text-white">{getStats(user.history).r}</div><div className="text-[10px] text-slate-500 uppercase font-bold">Повторов</div></div></GlassCard>
                                 
@@ -748,7 +835,20 @@
                     {activeModal === 'checkIn' && renderCheckInModal()}
 
                     {badgeInfo && (
-                        <div className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in" onClick={()=>setBadgeInfo(null)}><div className="bg-[#0f172a] border border-white/10 rounded-3xl p-8 text-center max-w-sm w-full" onClick={e=>e.stopPropagation()}><div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${badgeInfo.bg} ${badgeInfo.color}`}>{React.cloneElement(badgeInfo.icon, {size:32})}</div><h3 className="text-xl font-bold text-white mb-2">{badgeInfo.label}</h3><p className="text-slate-400 mb-6">{badgeInfo.desc}</p><NeonButton variant="secondary" onClick={()=>setBadgeInfo(null)}>Понятно</NeonButton></div></div>
+                        <div className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in" onClick={()=>setBadgeInfo(null)}>
+                            <div className="bg-[#0f172a] border border-white/10 rounded-3xl p-8 text-center max-w-sm w-full relative overflow-hidden" onClick={e=>e.stopPropagation()}>
+                                <div className="absolute top-[-20%] left-[-20%] w-[140%] h-[140%] bg-gradient-to-b from-cyan-500/10 to-transparent pointer-events-none"></div>
+                                <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border-2 transition-all ${badgeInfo.unlocked ? 'bg-cyan-500/20 border-cyan-400 text-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.4)]' : 'bg-slate-800 border-slate-700 text-slate-500'}`}>
+                                    {React.cloneElement(badgeInfo.icon, {size: 40})}
+                                </div>
+                                <h3 className="text-2xl font-black text-white mb-2 uppercase">{badgeInfo.title}</h3>
+                                <p className="text-slate-400 mb-6 leading-relaxed">{badgeInfo.desc}</p>
+                                <div className={`inline-block px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-6 ${badgeInfo.unlocked ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700/50 text-slate-500'}`}>
+                                    {badgeInfo.unlocked ? 'ПОЛУЧЕНО' : 'ЗАБЛОКИРОВАНО'}
+                                </div>
+                                <NeonButton variant="secondary" onClick={()=>setBadgeInfo(null)}>Понятно</NeonButton>
+                            </div>
+                        </div>
                     )}
                 </div>
             );
@@ -757,7 +857,18 @@
         const RedemptionShopContent = ({ onClose }) => {
             const [spinState, setSpinState] = useState('idle');
             const [task, setTask] = useState("");
-            const tasks = ["Селфи с котом", "Планка 1 мин на видео", "30 Берпи на камеру", "Записать войс бывшей", "Спеть гимн в сторис", "50 приседаний в магазине", "Отжаться на остановке", "Написать 'Я слабак' в статус на час", "Съесть лимон без эмоций", "Простоять в стульчике 2 мин"];
+            const tasks = [
+                "Селфи с котом", 
+                "Планка 1 мин на видео", 
+                "30 Берпи на камеру", 
+                "Спеть гимн в сторис", 
+                "50 приседаний в магазине", 
+                "Отжаться на остановке", 
+                "Написать 'Я слабак' в статус на час", 
+                "Съесть лимон без эмоций", 
+                "Простоять в стульчике 2 мин",
+                "Станцевать макарену на улице"
+            ];
             const spin = () => {
                 setSpinState('spinning');
                 let counter = 0;
