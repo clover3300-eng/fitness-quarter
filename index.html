@@ -203,7 +203,7 @@
             "[N], сделай это ради лайков в сторис (шутка, ради себя)!"
         ];
 
-        // --- GLOBAL DATA (Fixed ReferenceError) ---
+        // --- GLOBAL DATA ---
         const badgesData = [
             { id: 'streak', icon: <Flame size={14} />, color: 'text-orange-400', bg: 'bg-orange-500/20', label: 'На огне', desc: 'Стрик 3+ дней подряд' },
             { id: 'runner', icon: <Ruler size={14} />, color: 'text-cyan-400', bg: 'bg-cyan-500/20', label: 'Бегун', desc: 'Набрано 10+ км' },
@@ -325,13 +325,13 @@
                 if (tg) { 
                     tg.ready(); 
                     
-                    // FIX: Check if method exists and try/catch to avoid crash on version < 6.0
+                    // FIX: Safer fullscreen request
                     try {
                         if (typeof tg.requestFullscreen === 'function') {
                             tg.requestFullscreen();
                         }
                     } catch (e) {
-                        console.log("Fullscreen not supported on this version");
+                        console.log("Fullscreen not supported");
                     }
 
                     tg.expand(); 
