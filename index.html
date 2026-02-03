@@ -13,13 +13,7 @@
             theme: {
                 extend: {
                     colors: {
-                        aurora: {
-                            bg: '#020617',     
-                            card: 'rgba(30, 41, 59, 0.4)', 
-                            border: 'rgba(148, 163, 184, 0.15)',
-                            primary: '#22d3ee', 
-                            secondary: '#a855f7', 
-                        }
+                        aurora: { bg: '#020617' }
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -33,15 +27,8 @@
                         'slide-up': 'slideUp 0.5s ease-out forwards',
                     },
                     keyframes: {
-                        aurora: {
-                            '0%': { backgroundPosition: '0% 50%' },
-                            '50%': { backgroundPosition: '100% 50%' },
-                            '100%': { backgroundPosition: '0% 50%' }
-                        },
-                        float: { 
-                            '0%, 100%': { transform: 'translateY(0)' }, 
-                            '50%': { transform: 'translateY(-10px)' } 
-                        },
+                        aurora: { '0%': { backgroundPosition: '0% 50%' }, '100%': { backgroundPosition: '100% 50%' } },
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
                         shine: { '0%': { transform: 'translateX(-100%)' }, '100%': { transform: 'translateX(100%)' } },
                         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
                         slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } }
@@ -56,68 +43,45 @@
     <script src="https://unpkg.com/@babel/standalone@7.26.9/babel.min.js"></script>
 
     <style>
-        /* FIX: Полная блокировка прокрутки тела страницы */
+        /* Блокировка прокрутки и полный экран */
         html, body { 
-            margin: 0;
-            padding: 0;
-            background-color: #020617; 
-            color: #f1f5f9;
-            width: 100%;
-            height: 100%;
-            overflow: hidden; /* Скрываем скроллбар у body */
-            overscroll-behavior: none; /* Убираем "резинку" на iOS */
+            margin: 0; padding: 0;
+            background-color: #020617; color: #f1f5f9;
+            width: 100%; height: 100%;
+            overflow: hidden; 
+            overscroll-behavior: none;
             -webkit-tap-highlight-color: transparent;
-            font-family: 'Inter', sans-serif;
         }
 
         .aurora-bg {
             background: linear-gradient(-45deg, #020617, #1e1b4b, #111827, #0f172a);
             background-size: 400% 400%;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: -1;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: -1;
             animation: aurora 15s ease infinite alternate;
         }
 
         .aurora-glow {
-            position: fixed;
-            width: 80vw;
-            height: 80vw;
+            position: fixed; width: 80vw; height: 80vw;
             background: radial-gradient(circle, rgba(34,211,238,0.1) 0%, rgba(0,0,0,0) 70%);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: -1;
-            top: -20%;
-            left: -20%;
+            border-radius: 50%; pointer-events: none; z-index: -1; top: -20%; left: -20%;
         }
         
         .glass-panel {
-            background: rgba(30, 41, 59, 0.3);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
-        .pt-safe-top {
-            padding-top: 80px;
-        }
+        /* Увеличенный отступ сверху для челки и кнопок TG */
+        .pt-safe-top { padding-top: 140px; }
 
-        /* Контейнер приложения, который скроллится внутри */
-        #root {
-            height: 100%;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
+        #root { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     </style>
 </head>
 <body>
     <div class="aurora-bg"></div>
     <div class="aurora-glow"></div>
-    
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
@@ -125,18 +89,16 @@
         import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
         import { 
             Trophy, Diamond, Zap, Camera, CheckCircle, Activity, User, Settings, Plus, X, 
-            Hexagon, Flame, Send, Bell, Skull, Dumbbell, Ruler, 
-            BarChart3, Users, Calendar, ChevronUp, ChevronDown, Siren, Shield, Edit3, Save, Moon, Sun, Trash2, LogOut
+            Hexagon, Flame, Send, Bell, Skull, Dumbbell, Ruler, Star, Crown,
+            BarChart3, Users, Calendar, ChevronUp, ChevronDown, Siren, Shield, Edit3, Save, Trash2, ArrowLeft, Clock, UserPlus
         } from 'https://esm.sh/lucide-react@0.263.1';
 
-        // --- CONFIGURATION ---
+        // --- CONFIG ---
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/library/d/1zIhoIYV8JDFhRzaiAqIVwDanbakHeJprh8xY5IB9MtfocMqm9gd545VT/4'; 
-        
         const ADMIN_USERNAME = 'solomin_d';
         const DEFAULT_START_DATE = new Date('2026-04-01');
 
         // --- UI COMPONENTS ---
-
         const GlassCard = ({ children, className = "", onClick }) => (
             <div onClick={onClick} className={`relative glass-panel rounded-2xl overflow-hidden ${onClick ? 'cursor-pointer active:scale-95 transition-transform' : ''} ${className}`}>
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
@@ -165,36 +127,35 @@
         );
 
         const Avatar = ({ name, photoUrl, className = "", size = "w-10 h-10" }) => {
-            if (photoUrl) {
-                return <img src={photoUrl} alt={name} className={`${size} rounded-full object-cover border border-white/20 shadow-lg ${className}`} />;
-            }
+            if (photoUrl) return <img src={photoUrl} alt={name} className={`${size} rounded-full object-cover border border-white/20 shadow-lg ${className}`} />;
             const initials = name ? name.slice(0, 2).toUpperCase() : "FQ";
             const gradients = ["from-cyan-500 to-blue-600", "from-purple-500 to-indigo-600", "from-emerald-400 to-teal-600"];
-            return (
-                <div className={`${size} rounded-full bg-gradient-to-br ${gradients[name ? name.length % 3 : 0]} flex items-center justify-center text-white font-bold shadow-lg border border-white/20 ${className}`}>
-                    {initials}
-                </div>
-            );
+            return <div className={`${size} rounded-full bg-gradient-to-br ${gradients[name ? name.length % 3 : 0]} flex items-center justify-center text-white font-bold shadow-lg border border-white/20 ${className}`}>{initials}</div>;
         };
 
         // --- APP ---
-
         function App() {
             // State
             const [step, setStep] = useState('loading');
             const [user, setUser] = useState({
                 firstName: '', lastName: '', username: '', telegramId: null, photoUrl: null,
                 disciplines: [], goal: 0, diamonds: 3, streak: 0,
-                todayActivity: [], history: [], status: 'active', notifications: true, isAdmin: false
+                todayActivity: [], history: [], status: 'active', notifications: true, notificationTime: '09:00', isAdmin: false
             });
             const [marathonStartDate, setMarathonStartDate] = useState(DEFAULT_START_DATE);
             const [isSyncing, setIsSyncing] = useState(false);
 
-            // Flow & UI State
+            // Flow
             const [regForm, setRegForm] = useState({ firstName: '', lastName: '' });
             const [popularSports, setPopularSports] = useState(['Бег', 'Зал', 'Отжимания', 'Плавание', 'Воркаут', 'Вело']);
             const [dashboardView, setDashboardView] = useState('leaderboard');
             
+            // Custom Inputs
+            const [isAddingCustom, setIsAddingCustom] = useState(false);
+            const [customInput, setCustomInput] = useState("");
+            const [checkInCustomInput, setCheckInCustomInput] = useState("");
+            const [isAddingInCheckIn, setIsAddingInCheckIn] = useState(false);
+
             // Modals
             const [checkInModalOpen, setCheckInModalOpen] = useState(false);
             const [checkInStage, setCheckInStage] = useState('select');
@@ -202,43 +163,32 @@
             const [checkInValue, setCheckInValue] = useState("");
             const [editingProfile, setEditingProfile] = useState(false);
             const [adminPanelOpen, setAdminPanelOpen] = useState(false);
-            const [selectedUserForDetail, setSelectedUserForDetail] = useState(null);
             const [adminDateInput, setAdminDateInput] = useState('');
             const [showAllBadges, setShowAllBadges] = useState(false);
-            
-            // State for "Add Custom"
-            const [isAddingCustom, setIsAddingCustom] = useState(false);
-            const [customInput, setCustomInput] = useState("");
-            
-            // State for "Add Custom" INSIDE CHECK-IN
-            const [isAddingInCheckIn, setIsAddingInCheckIn] = useState(false);
-            const [checkInCustomInput, setCheckInCustomInput] = useState("");
+
+            // Admin Logic
+            const [editUser, setEditUser] = useState(null); // User currently being edited by admin
+            const [isAddingUser, setIsAddingUser] = useState(false);
+            const [newUserNick, setNewUserNick] = useState("");
 
             // Data
             const [leaderboard, setLeaderboard] = useState([
-                { id: 1, name: 'Alex', photoUrl: null, diamonds: 3, streak: 12, goal: 100, status: 'active', disciplines: ['Бег', 'Воркаут'], history: [], badges: ['streak', 'runner'] },
-                { id: 2, name: 'Elena', photoUrl: null, diamonds: 5, streak: 45, goal: 60, status: 'active', disciplines: ['Зал', 'Плавание'], history: [], badges: ['gym'] },
-                { id: 3, name: 'Max', photoUrl: null, diamonds: 0, streak: 8, goal: 30, status: 'frozen', disciplines: ['Бокс'], history: [], badges: [] },
+                { id: 1, name: 'Alex', photoUrl: null, diamonds: 3, streak: 12, goal: 100, status: 'active', disciplines: ['Бег', 'Воркаут'], history: [] },
+                { id: 2, name: 'Elena', photoUrl: null, diamonds: 5, streak: 45, goal: 60, status: 'active', disciplines: ['Зал', 'Плавание'], history: [] },
             ]);
 
-            // --- INITIALIZATION ---
+            // --- INIT ---
             useEffect(() => {
                 const init = async () => {
                     const tg = window.Telegram?.WebApp;
-                    if (tg) {
-                        tg.ready();
-                        tg.expand();
-                        tg.setHeaderColor('#020617');
-                        tg.setBackgroundColor('#020617');
-                    }
-
+                    if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor('#020617'); tg.setBackgroundColor('#020617'); }
+                    
                     if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.startsWith('http')) {
                         try {
                             const res = await fetch(GOOGLE_SCRIPT_URL);
                             const data = await res.json();
                             if (data.result === 'success' && data.config?.MARATHON_START_DATE) {
-                                const fetchedDate = new Date(data.config.MARATHON_START_DATE);
-                                setMarathonStartDate(fetchedDate);
+                                setMarathonStartDate(new Date(data.config.MARATHON_START_DATE));
                                 setAdminDateInput(data.config.MARATHON_START_DATE);
                             }
                         } catch (e) { console.error("Sync failed", e); }
@@ -249,22 +199,13 @@
                     
                     if (savedUser) {
                         const parsed = JSON.parse(savedUser);
-                        if (tgUser) {
-                            parsed.photoUrl = tgUser.photo_url;
-                            parsed.isAdmin = (tgUser.username === ADMIN_USERNAME);
-                        }
+                        if (tgUser) { parsed.photoUrl = tgUser.photo_url; parsed.isAdmin = (tgUser.username === ADMIN_USERNAME); }
                         setUser(parsed);
                         setStep('dashboard');
                     } else {
                         if (tgUser) {
                             setRegForm({ firstName: tgUser.first_name || '', lastName: tgUser.last_name || '' });
-                            setUser(prev => ({ 
-                                ...prev, 
-                                telegramId: tgUser.id, 
-                                username: tgUser.username, 
-                                photoUrl: tgUser.photo_url,
-                                isAdmin: tgUser.username === ADMIN_USERNAME 
-                            }));
+                            setUser(prev => ({ ...prev, telegramId: tgUser.id, username: tgUser.username, photoUrl: tgUser.photo_url, isAdmin: tgUser.username === ADMIN_USERNAME }));
                         }
                         setStep('welcome');
                     }
@@ -272,22 +213,18 @@
                 init();
             }, []);
 
-            useEffect(() => { 
-                if (user.firstName) localStorage.setItem('fitness_aurora_user', JSON.stringify(user)); 
-            }, [user]);
+            useEffect(() => { if (user.firstName) localStorage.setItem('fitness_aurora_user', JSON.stringify(user)); }, [user]);
 
             // --- HELPERS ---
             const getAdjustedGoals = () => {
                 const now = new Date();
-                const diffTime = now - marathonStartDate;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                const diffDays = Math.ceil((now - marathonStartDate) / (1000 * 60 * 60 * 24)); 
                 const daysPassed = diffDays > 0 ? diffDays : 0;
-                const baseGoals = [30, 60, 100];
-                return baseGoals.map(g => ({
-                    original: g,
-                    remaining: g - daysPassed,
-                    label: g === 30 ? 'Новичок' : g === 60 ? 'Атлет' : 'Киборг'
-                })).filter(g => g.remaining > 5);
+                return [
+                    { original: 30, remaining: 30 - daysPassed, label: 'Новичок', icon: <Star size={24} className="text-emerald-400" /> },
+                    { original: 60, remaining: 60 - daysPassed, label: 'Атлет', icon: <Dumbbell size={24} className="text-cyan-400" /> },
+                    { original: 100, remaining: 100 - daysPassed, label: 'Киборг', icon: <Crown size={24} className="text-amber-400" /> }
+                ].filter(g => g.remaining > 5);
             };
 
             const getStatsSummary = (history = []) => {
@@ -300,51 +237,28 @@
                 return { totalKm, totalReps, gymSessions };
             };
 
-            const getUserTitle = (goal) => goal >= 100 ? 'Киборг' : goal >= 60 ? 'Атлет' : 'Новичок';
+            // --- HANDLERS ---
+            const handleRegNext = () => { if (regForm.firstName) { setUser(p => ({ ...p, firstName: regForm.firstName, lastName: regForm.lastName })); setStep('arsenal'); } };
+            
+            const handleArsenalToggle = (sport) => setUser(prev => { 
+                const exists = prev.disciplines.includes(sport); 
+                if (exists) return { ...prev, disciplines: prev.disciplines.filter(d => d !== sport) }; 
+                if (prev.disciplines.length >= 5) return prev; 
+                return { ...prev, disciplines: [...prev.disciplines, sport] }; 
+            });
 
-            const badgeConfig = {
-                'streak': { icon: <Flame size={10} />, color: 'text-orange-400', bg: 'bg-orange-500/20' },
-                'runner': { icon: <Ruler size={10} />, color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
-                'gym': { icon: <Dumbbell size={10} />, color: 'text-purple-400', bg: 'bg-purple-500/20' },
-                'reps': { icon: <Activity size={10} />, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
-            };
-            const badges = [
-                { id: 'streak', icon: <Flame size={16} />, label: 'На огне', condition: user.streak >= 3 },
-                { id: 'runner', icon: <Ruler size={16} />, label: 'Бегун', condition: getStatsSummary(user.history).totalKm >= 10 },
-                { id: 'gym', icon: <Dumbbell size={16} />, label: 'Терминатор', condition: getStatsSummary(user.history).gymSessions >= 5 },
-                { id: 'reps', icon: <Activity size={16} />, label: 'Машина', condition: getStatsSummary(user.history).totalReps >= 500 },
-            ].map(b => ({...b, ...badgeConfig[b.id]}));
-            const visibleBadges = showAllBadges ? badges : badges.slice(0, 3);
-
-            // --- ADMIN ---
-            const handleUpdateDate = async () => {
-                if (!adminDateInput) return;
-                setIsSyncing(true);
-                try {
-                    setMarathonStartDate(new Date(adminDateInput));
-                    if (GOOGLE_SCRIPT_URL) {
-                        await fetch(GOOGLE_SCRIPT_URL, {
-                            method: 'POST',
-                            body: JSON.stringify({ action: 'UPDATE_DATE', date: adminDateInput })
-                        });
-                    }
-                    setAdminPanelOpen(false);
-                    alert("Дата обновлена!");
-                } catch (e) { alert("Ошибка: " + e.message); } 
-                finally { setIsSyncing(false); }
-            };
-
-            const handleDeleteAccount = () => {
-                if (confirm("Вы уверены, что хотите удалить аккаунт? Все данные и прогресс будут потеряны безвозвратно.")) {
-                    localStorage.removeItem('fitness_aurora_user');
-                    window.location.reload();
+            const handleAddCustom = () => {
+                if (customInput.trim()) {
+                    const s = customInput.trim();
+                    setPopularSports(prev => [...prev, s]);
+                    handleArsenalToggle(s);
+                    setCustomInput("");
+                    setIsAddingCustom(false);
                 }
             };
 
-            // --- HANDLERS ---
-            const handleRegNext = () => { if (regForm.firstName) { setUser(p => ({ ...p, firstName: regForm.firstName, lastName: regForm.lastName })); setStep('arsenal'); } };
-            const handleArsenalToggle = (sport) => setUser(prev => { const exists = prev.disciplines.includes(sport); if (exists) return { ...prev, disciplines: prev.disciplines.filter(d => d !== sport) }; if (prev.disciplines.length >= 5) return prev; return { ...prev, disciplines: [...prev.disciplines, sport] }; });
             const handleGoalSelect = (goal) => { setUser(prev => ({ ...prev, goal })); setStep('dashboard'); };
+            
             const handleCheckInComplete = (val, unit) => {
                 const sport = selectedSportForCheckIn;
                 setUser(prev => ({
@@ -356,72 +270,181 @@
                 setCheckInModalOpen(false);
                 setCheckInStage('select');
             };
-            const toggleDiscipline = (sport) => {
-                 setUser(prev => {
-                    if (prev.disciplines.includes(sport)) return { ...prev, disciplines: prev.disciplines.filter(s => s !== sport) };
-                    if (prev.disciplines.length < 5) return { ...prev, disciplines: [...prev.disciplines, sport] };
-                    return prev;
-                });
-            };
-            
-            // Add Custom in Settings
-            const handleAddCustom = () => {
-                if (customInput.trim()) {
-                    const s = customInput.trim();
-                    setPopularSports(prev => [...prev, s]);
-                    toggleDiscipline(s);
-                    setCustomInput("");
-                    setIsAddingCustom(false);
-                }
-            };
 
-            // Add Custom in Check In Modal
-            const handleAddCustomFromCheckIn = () => {
+             const handleAddCustomFromCheckIn = () => {
                 if (checkInCustomInput.trim()) {
                     const newSport = checkInCustomInput.trim();
-                    // 1. Добавить в популярные (локально)
                     setPopularSports(prev => [...prev, newSport]);
-                    // 2. Добавить в Арсенал юзера (если нет места - не добавит, но для чекина это не страшно)
                     setUser(prev => {
-                        if (!prev.disciplines.includes(newSport)) {
-                             return { ...prev, disciplines: [...prev.disciplines, newSport] };
-                        }
+                        if (!prev.disciplines.includes(newSport)) return { ...prev, disciplines: [...prev.disciplines, newSport] };
                         return prev;
                     });
-                    // 3. Выбрать для чекина
                     setSelectedSportForCheckIn(newSport);
                     setCheckInStage('value');
-                    
-                    // Reset
                     setCheckInCustomInput("");
                     setIsAddingInCheckIn(false);
                 }
-            }
+            };
 
-            // --- VIEWS ---
+            // --- ADMIN HANDLERS ---
+            const adminUpdateDate = async () => {
+                if (!adminDateInput) return;
+                setIsSyncing(true);
+                try {
+                    setMarathonStartDate(new Date(adminDateInput));
+                    if (GOOGLE_SCRIPT_URL) {
+                        await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'UPDATE_DATE', date: adminDateInput }) });
+                    }
+                    alert("Дата обновлена!");
+                } catch (e) { alert("Ошибка: " + e.message); } finally { setIsSyncing(false); }
+            };
 
-            const RedemptionShop = () => (
-                <div className="fixed inset-0 z-50 bg-[#020617] pt-safe-top overflow-y-auto animate-slide-up">
-                    <div className="p-6">
-                        <div className="flex items-center gap-3 mb-8">
-                            <button onClick={() => setStep('dashboard')} className="p-2 bg-white/10 rounded-full text-white"><X size={20}/></button>
-                            <h2 className="text-2xl font-display font-bold text-rose-500 tracking-wider">МАГАЗИН ИСКУПЛЕНИЯ</h2>
-                        </div>
-                        <div className="relative rounded-2xl overflow-hidden mb-8 border border-rose-500/30 bg-rose-900/10 p-8 text-center">
-                            <div className="inline-flex items-center justify-center w-16 h-16 bg-rose-500/20 rounded-full mb-4 animate-pulse"><Skull className="text-rose-500" size={32} /></div>
-                            <h3 className="text-xl font-bold text-white uppercase mb-2">КУПИТЬ ЖИЗНЬ</h3>
-                            <p className="text-rose-400 text-xs mb-6">Цена: Твоя гордость (фото)</p>
-                            <NeonButton variant="danger">КРУТИТЬ РУЛЕТКУ</NeonButton>
+            const adminAddUser = () => {
+                if(!newUserNick) return;
+                const newId = leaderboard.length + 1;
+                const newUser = { id: newId, name: newUserNick, photoUrl: null, diamonds: 3, streak: 0, goal: 30, status: 'active', disciplines: ['Бег'], history: [] };
+                setLeaderboard([...leaderboard, newUser]);
+                setNewUserNick("");
+                setIsAddingUser(false);
+            };
+
+            const adminDeleteUser = (id) => {
+                if(confirm("Удалить пользователя?")) setLeaderboard(leaderboard.filter(u => u.id !== id));
+            };
+
+            const adminSaveUserChanges = () => {
+                setLeaderboard(leaderboard.map(u => u.id === editUser.id ? editUser : u));
+                setEditUser(null);
+            };
+
+            const handleDeleteAccount = () => {
+                if (confirm("Вы уверены? Это действие необратимо.")) {
+                    localStorage.removeItem('fitness_aurora_user');
+                    window.location.reload();
+                }
+            };
+
+            // --- SUB-COMPONENTS ---
+
+            const RedemptionShop = () => {
+                const [spinState, setSpinState] = useState('idle'); // idle, spinning, result, upload
+                const [task, setTask] = useState("");
+                
+                const tasks = ["Селфи с котом", "Планка 1 мин", "30 Берпи на видео", "Смешное лицо"];
+                
+                const spin = () => {
+                    setSpinState('spinning');
+                    let counter = 0;
+                    const interval = setInterval(() => {
+                        setTask(tasks[counter % tasks.length]);
+                        counter++;
+                    }, 100);
+                    setTimeout(() => {
+                        clearInterval(interval);
+                        setTask(tasks[Math.floor(Math.random() * tasks.length)]);
+                        setSpinState('result');
+                    }, 2000);
+                };
+
+                return (
+                    <div className="fixed inset-0 z-50 bg-[#020617] pt-safe-top overflow-y-auto animate-slide-up">
+                        <div className="p-6">
+                            <div className="flex items-center gap-3 mb-8">
+                                <button onClick={() => setStep('dashboard')} className="p-2 bg-white/10 rounded-full text-white"><ArrowLeft size={20}/></button>
+                                <h2 className="text-2xl font-display font-bold text-rose-500 tracking-wider">МАГАЗИН ИСКУПЛЕНИЯ</h2>
+                            </div>
+                            
+                            <GlassCard className="p-8 text-center border-rose-500/30 bg-rose-900/10 mb-6">
+                                <div className="inline-flex items-center justify-center w-20 h-20 bg-rose-500/20 rounded-full mb-4 animate-pulse"><Skull className="text-rose-500" size={40} /></div>
+                                <h3 className="text-2xl font-black text-white uppercase mb-2">КУПИТЬ ЖИЗНЬ</h3>
+                                <p className="text-rose-400 text-sm mb-6">Цена: Твоя гордость</p>
+                                
+                                {spinState === 'idle' && <NeonButton variant="danger" onClick={spin}>КРУТИТЬ РУЛЕТКУ</NeonButton>}
+                                {spinState === 'spinning' && <div className="text-xl font-bold text-white animate-pulse">{task}</div>}
+                                {spinState === 'result' && (
+                                    <div className="animate-fade-in">
+                                        <div className="text-lg font-bold text-white mb-4 border p-4 rounded-xl border-dashed border-rose-500/50">{task}</div>
+                                        <NeonButton onClick={() => setSpinState('upload')} variant="danger"><Camera size={18}/> ЗАГРУЗИТЬ ФОТО</NeonButton>
+                                    </div>
+                                )}
+                                {spinState === 'upload' && (
+                                    <div className="animate-fade-in">
+                                        <div className="w-full h-32 bg-slate-800 rounded-xl flex items-center justify-center mb-4 border border-dashed border-slate-600">
+                                            <span className="text-slate-500 text-xs">Фото загружено</span>
+                                        </div>
+                                        <NeonButton onClick={() => { alert("Отправлено на проверку!"); setStep('dashboard'); }} variant="gold">ОТПРАВИТЬ</NeonButton>
+                                    </div>
+                                )}
+                            </GlassCard>
                         </div>
                     </div>
+                );
+            };
+
+            const AdminModal = () => (
+                <div className="fixed inset-0 z-50 bg-[#020617] p-6 pt-safe-top overflow-y-auto animate-fade-in">
+                    <div className="flex justify-between items-center mb-8">
+                        <h2 className="text-2xl font-display font-bold text-amber-500 tracking-wider flex items-center gap-2"><Shield /> ADMIN</h2>
+                        <button onClick={() => setAdminPanelOpen(false)} className="p-2 bg-white/10 rounded-full text-white"><X size={20}/></button>
+                    </div>
+
+                    {!editUser ? (
+                        <div className="space-y-6">
+                            {/* Date Config */}
+                            <GlassCard className="p-6">
+                                <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">Дата Старта</h3>
+                                <input type="date" value={adminDateInput} onChange={(e) => setAdminDateInput(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-cyan-500 mb-4" />
+                                <NeonButton variant="gold" onClick={adminUpdateDate} disabled={isSyncing}>{isSyncing ? "..." : "Сохранить"} <Save size={18} /></NeonButton>
+                            </GlassCard>
+
+                            {/* Add User */}
+                            {!isAddingUser ? (
+                                <NeonButton variant="secondary" onClick={() => setIsAddingUser(true)}><UserPlus size={18}/> Добавить Участника</NeonButton>
+                            ) : (
+                                <GlassCard className="p-4 animate-fade-in">
+                                    <input type="text" value={newUserNick} onChange={e => setNewUserNick(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white outline-none mb-3" placeholder="Nickname" />
+                                    <div className="flex gap-2">
+                                        <NeonButton variant="disabled" onClick={() => setIsAddingUser(false)}>Отмена</NeonButton>
+                                        <NeonButton onClick={adminAddUser}>Добавить</NeonButton>
+                                    </div>
+                                </GlassCard>
+                            )}
+
+                            {/* User List */}
+                            <div className="space-y-2">
+                                <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Список участников</h3>
+                                {leaderboard.map(u => (
+                                    <div key={u.id} className="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/10">
+                                        <span className="text-white font-bold">{u.name}</span>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => setEditUser({...u})} className="p-2 bg-cyan-500/20 text-cyan-400 rounded-lg"><Edit3 size={16}/></button>
+                                            <button onClick={() => adminDeleteUser(u.id)} className="p-2 bg-rose-500/20 text-rose-400 rounded-lg"><Trash2 size={16}/></button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <GlassCard className="p-6 animate-fade-in space-y-4">
+                            <h3 className="text-xl font-bold text-white mb-4">Редактирование: {editUser.name}</h3>
+                            <div><label className="text-xs text-slate-400">Алмазы</label><input type="number" value={editUser.diamonds} onChange={e => setEditUser({...editUser, diamonds: parseInt(e.target.value)})} className="w-full bg-slate-900 p-2 rounded text-white"/></div>
+                            <div><label className="text-xs text-slate-400">Стрик</label><input type="number" value={editUser.streak} onChange={e => setEditUser({...editUser, streak: parseInt(e.target.value)})} className="w-full bg-slate-900 p-2 rounded text-white"/></div>
+                            <div><label className="text-xs text-slate-400">Цель</label><input type="number" value={editUser.goal} onChange={e => setEditUser({...editUser, goal: parseInt(e.target.value)})} className="w-full bg-slate-900 p-2 rounded text-white"/></div>
+                            <div className="flex gap-2 pt-4">
+                                <NeonButton variant="disabled" onClick={() => setEditUser(null)}>Назад</NeonButton>
+                                <NeonButton onClick={adminSaveUserChanges}>Сохранить</NeonButton>
+                            </div>
+                        </GlassCard>
+                    )}
                 </div>
             );
 
-            // --- RENDER ---
+            // --- RENDER STEPS ---
+
             if (step === 'welcome') return (
                 <div className="flex flex-col h-full p-6 pt-safe-top relative z-10">
                     <div className="flex-grow flex flex-col items-center justify-center text-center">
-                        <div className="relative w-40 h-40 flex items-center justify-center mb-8">
+                         <div className="relative w-40 h-40 flex items-center justify-center mb-8">
                             <div className="absolute inset-0 bg-cyan-500 blur-[60px] opacity-30 rounded-full animate-pulse"></div>
                             <Hexagon size={130} className="text-cyan-400 stroke-[1.5] animate-float" />
                             <Activity size={50} className="text-white absolute" />
@@ -436,8 +459,8 @@
                 <div className="flex flex-col h-full p-6 pt-safe-top relative z-10 animate-slide-up">
                     <h2 className="text-2xl font-display font-bold text-white mb-6">ИДЕНТИФИКАЦИЯ</h2>
                     <div className="space-y-4 flex-grow">
-                        <input type="text" value={regForm.firstName} onChange={e => setRegForm({...regForm, firstName: e.target.value})} className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-cyan-500" placeholder="Имя" />
-                        <input type="text" value={regForm.lastName} onChange={e => setRegForm({...regForm, lastName: e.target.value})} className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-cyan-500" placeholder="Фамилия" />
+                        <input type="text" placeholder="Имя" value={regForm.firstName} onChange={e => setRegForm({...regForm, firstName: e.target.value})} className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-cyan-500 placeholder:text-slate-500" />
+                        <input type="text" placeholder="Фамилия" value={regForm.lastName} onChange={e => setRegForm({...regForm, lastName: e.target.value})} className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-cyan-500 placeholder:text-slate-500" />
                     </div>
                     <NeonButton onClick={handleRegNext} disabled={!regForm.firstName}>Далее</NeonButton>
                 </div>
@@ -446,11 +469,24 @@
             if (step === 'arsenal') return (
                 <div className="flex flex-col h-full p-6 pt-safe-top relative z-10 animate-slide-up">
                     <h2 className="text-2xl font-display font-bold text-white mb-2">АРСЕНАЛ</h2>
-                    <div className="flex flex-wrap gap-3 mb-6">
+                    <p className="text-slate-400 text-xs mb-4">Выбери до 5 дисциплин ({user.disciplines.length}/5)</p>
+                    
+                    <div className="flex flex-wrap gap-3 mb-4">
                         {popularSports.map(s => (
                             <button key={s} onClick={() => handleArsenalToggle(s)} className={`px-4 py-3 rounded-xl text-sm font-bold border transition-all ${user.disciplines.includes(s) ? 'bg-cyan-600/80 text-white border-cyan-400' : 'bg-white/5 text-slate-400 border-white/10'}`}>{s}</button>
                         ))}
                     </div>
+
+                    {!isAddingCustom ? (
+                        <button onClick={() => setIsAddingCustom(true)} className="w-full p-3 border border-dashed border-slate-600 rounded-xl text-slate-400 flex items-center justify-center gap-2 hover:border-cyan-500 hover:text-cyan-400 transition-colors"><Plus size={16}/> Своя дисциплина</button>
+                    ) : (
+                        <div className="flex gap-2 animate-fade-in mb-4">
+                            <input type="text" value={customInput} onChange={e => setCustomInput(e.target.value)} className="flex-1 bg-slate-900 border border-cyan-500 rounded-xl px-4 text-white outline-none" placeholder="Название..." autoFocus />
+                            <button onClick={handleAddCustom} className="p-3 bg-cyan-600 rounded-xl text-white"><CheckCircle size={20}/></button>
+                        </div>
+                    )}
+                    
+                    <p className="text-slate-600 text-[10px] mt-4 text-center">Вы сможете изменить выбор позже в настройках</p>
                     <div className="mt-auto"><NeonButton onClick={() => setStep('goal')} disabled={user.disciplines.length === 0}>Далее</NeonButton></div>
                 </div>
             );
@@ -464,7 +500,7 @@
                             {goals.map((g, idx) => (
                                 <GlassCard key={idx} onClick={() => handleGoalSelect(g.remaining)} className="p-6 flex items-center justify-between group hover:bg-white/10 transition-colors">
                                     <div><span className="text-3xl font-display font-black text-white">{g.remaining} <span className="text-sm font-sans font-normal text-slate-400">Дней</span></span><div className="text-[10px] text-cyan-400 font-bold uppercase mt-1">Ранг: {g.label}</div></div>
-                                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white"><Trophy size={20}/></div>
+                                    <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/10">{g.icon}</div>
                                 </GlassCard>
                             ))}
                         </div>
@@ -482,18 +518,18 @@
                 <div className="pb-24 relative pt-safe-top">
                     {/* Header */}
                     <div className="sticky top-0 bg-[#020617]/90 backdrop-blur-xl z-20 px-6 py-4 border-b border-white/5">
+                        <div className="flex justify-between items-center mb-4">
+                            <h1 className="text-lg font-display font-bold text-white tracking-widest">ПРОФИЛЬ</h1>
+                            <div className="flex gap-2">
+                                {user.isAdmin && <button onClick={() => setAdminPanelOpen(true)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-amber-500/20 text-amber-500 border border-amber-500/30"><Shield size={18} /></button>}
+                                <div onClick={() => setStep('redemption')} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer active:scale-95 transition-transform"><Diamond size={16} className="text-cyan-400 fill-cyan-400" /><span className="font-bold text-white">{user.diamonds}</span></div>
+                                <button onClick={() => setEditingProfile(true)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-slate-400 transition-colors"><Settings size={18} /></button>
+                            </div>
+                        </div>
                         <div className="flex justify-between items-start mb-4">
                             <div className="flex items-center gap-3">
                                 <Avatar name={user.firstName} photoUrl={user.photoUrl} />
                                 <div><div className="font-display font-bold text-white leading-tight">{user.firstName}</div><div className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Статус: <span className="text-emerald-400">В строю</span></div></div>
-                            </div>
-                            <div className="flex gap-2">
-                                {/* Admin Button */}
-                                {user.isAdmin && <button onClick={() => setAdminPanelOpen(true)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-amber-500/20 text-amber-500 border border-amber-500/30"><Shield size={18} /></button>}
-                                {/* Diamond (Shop) */}
-                                <div onClick={() => setStep('redemption')} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer active:scale-95 transition-transform"><Diamond size={16} className="text-cyan-400 fill-cyan-400" /><span className="font-bold text-white">{user.diamonds}</span></div>
-                                {/* Settings */}
-                                <button onClick={() => setEditingProfile(true)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-slate-400 transition-colors"><Settings size={18} /></button>
                             </div>
                         </div>
                         <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-widest"><span>{user.streak} Days</span><span>Goal: {user.goal}</span></div>
@@ -501,16 +537,12 @@
                     </div>
 
                     <div className="p-6 space-y-6">
-                        {/* Check-in Card (Conditional) */}
+                        {/* Check-in Card */}
                         {user.todayActivity.length > 0 ? (
                             <GlassCard className="p-8 text-center bg-emerald-900/10 border-emerald-500/20">
                                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 mb-4 text-emerald-400 border border-emerald-500/20 shadow-[0_0_20px_rgba(52,211,153,0.2)]"><CheckCircle size={32} /></div>
                                 <h3 className="text-xl font-display font-bold text-white mb-2 tracking-wide">ДЕНЬ ЗАСЧИТАН</h3>
-                                <div className="flex flex-wrap justify-center gap-2 mt-2 mb-6">
-                                    {user.todayActivity.map((act, i) => (
-                                        <span key={i} className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-[10px] font-bold text-emerald-400 uppercase tracking-wider shadow-sm">{act}</span>
-                                    ))}
-                                </div>
+                                <div className="flex flex-wrap justify-center gap-2 mt-2 mb-6">{user.todayActivity.map((act, i) => (<span key={i} className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-[10px] font-bold text-emerald-400 uppercase tracking-wider shadow-sm">{act}</span>))}</div>
                                 <NeonButton variant="secondary" onClick={() => setCheckInModalOpen(true)} className="py-3 text-xs"><Plus size={14} /> Добавить еще</NeonButton>
                             </GlassCard>
                         ) : (
@@ -551,39 +583,28 @@
                                         <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 text-center"><Dumbbell size={16} className="mx-auto text-purple-500 mb-1" /><div className="font-display font-bold text-lg text-slate-200">{userStats.totalReps}</div><div className="text-[9px] text-slate-500 uppercase font-bold">Повторений</div></div>
                                     </div>
                                 </GlassCard>
-                                <div>
-                                    <div className="flex justify-between items-center mb-3 pl-1 pr-1"><h3 className="text-slate-500 uppercase text-[10px] font-bold tracking-[0.2em]">Награды</h3><button onClick={() => setShowAllBadges(!showAllBadges)} className="text-[10px] font-bold text-cyan-500 hover:text-cyan-400 flex items-center gap-1 uppercase transition-colors">{showAllBadges ? 'Скрыть' : 'Раскрыть'}{showAllBadges ? <ChevronUp size={10}/> : <ChevronDown size={10}/>}</button></div>
-                                    <div className="grid gap-2 grid-cols-3">{visibleBadges.map(b => (<div key={b.id} className={`flex flex-col items-center p-3 rounded-xl border text-center transition-all ${b.condition ? 'bg-white/5 border-white/10 shadow-sm' : 'bg-slate-900/50 border-white/5 opacity-40 grayscale'}`}><div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 border bg-opacity-20 ${b.bg} ${b.color}`}>{b.icon}</div><div className="font-bold text-slate-400 text-[9px] uppercase leading-tight mb-1">{b.label}</div></div>))}</div>
-                                </div>
                             </div>
                         )}
                     </div>
 
                     {/* Modals */}
-                    {adminPanelOpen && (
-                        <div className="fixed inset-0 z-50 bg-[#020617] p-6 pt-safe-top overflow-y-auto animate-fade-in">
-                            <div className="flex justify-between items-center mb-8"><h2 className="text-2xl font-display font-bold text-amber-500 tracking-wider flex items-center gap-2"><Shield /> ADMIN</h2><button onClick={() => setAdminPanelOpen(false)} className="p-2 bg-white/10 rounded-full text-white"><X size={20}/></button></div>
-                            <GlassCard className="p-6 mb-6">
-                                <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">Дата Старта</h3>
-                                <input type="date" value={adminDateInput} onChange={(e) => setAdminDateInput(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-cyan-500 mb-4" />
-                                <NeonButton variant="gold" onClick={handleUpdateDate} disabled={isSyncing}>{isSyncing ? "..." : "Сохранить"} <Save size={18} /></NeonButton>
-                            </GlassCard>
-                        </div>
-                    )}
+                    {adminPanelOpen && <AdminModal />}
 
                     {editingProfile && (
                         <div className="fixed inset-0 z-50 bg-[#020617] p-6 animate-fade-in overflow-y-auto pt-safe-top">
                             <div className="flex justify-between items-center mb-8"><h2 className="text-2xl font-display font-bold text-white tracking-wider">НАСТРОЙКИ</h2><button onClick={() => setEditingProfile(false)} className="p-2 bg-white/5 rounded-full shadow-sm border border-white/10 text-white"><X size={20} /></button></div>
-                            <div className="space-y-8">
-                                <GlassCard className="p-4 flex justify-between items-center"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400"><Bell size={20} /></div><div><div className="font-bold text-slate-200">Уведомления</div><div className="text-xs text-slate-500">Напоминания</div></div></div><ToggleSwitch checked={user.notifications} onChange={(val) => setUser({...user, notifications: val})} /></GlassCard>
-                                <div><label className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-4 block px-1">Твои дисциплины</label><div className="flex flex-wrap gap-2">{popularSports.map(s => <button key={s} onClick={() => toggleDiscipline(s)} className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${user.disciplines.includes(s) ? 'bg-cyan-600/50 text-white border-cyan-500/50 shadow-sm' : 'bg-white/5 border-white/10 text-slate-400 hover:border-cyan-500/30 hover:text-cyan-400'}`}>{s}</button>)}{!isAddingCustom ? <button onClick={() => setIsAddingCustom(true)} className="px-4 py-2 rounded-lg text-xs font-bold border border-dashed border-slate-700 text-slate-500 hover:border-cyan-500 hover:text-cyan-400 bg-transparent flex items-center gap-2 transition-colors"><Plus size={14} /> Своя</button> : <div className="flex items-center gap-2 mt-2 sm:mt-0"><input type="text" value={customInput} onChange={(e) => setCustomInput(e.target.value)} className="px-3 py-2 rounded-lg bg-slate-800 border border-cyan-500 outline-none text-white text-xs w-32 focus:ring-1 focus:ring-cyan-500" autoFocus onKeyDown={(e) => e.key === 'Enter' && handleAddCustom()} /><button onClick={handleAddCustom} className="p-2 bg-cyan-600 text-white rounded-lg shadow-sm hover:bg-cyan-700"><CheckCircle size={14}/></button></div>}</div></div>
-                                
-                                <div className="border-t border-white/10 pt-8 pb-8">
-                                    <button onClick={handleDeleteAccount} className="w-full py-4 text-xs font-bold text-rose-500 border border-rose-500/30 bg-rose-500/10 rounded-xl hover:bg-rose-500/20 transition-colors flex items-center justify-center gap-2 uppercase tracking-widest">
-                                        <Trash2 size={16} /> Удалить Аккаунт
-                                    </button>
-                                </div>
-                                <div className="h-10"></div>
+                            <div className="space-y-6">
+                                <GlassCard className="p-4 flex flex-col gap-4">
+                                    <div className="flex justify-between items-center"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400"><Bell size={20} /></div><div className="font-bold text-slate-200">Уведомления</div></div><ToggleSwitch checked={user.notifications} onChange={(val) => setUser({...user, notifications: val})} /></div>
+                                    {user.notifications && (
+                                        <div className="flex items-center gap-3 mt-2 border-t border-white/10 pt-4">
+                                            <Clock size={16} className="text-slate-400" />
+                                            <input type="time" value={user.notificationTime} onChange={(e) => { setUser({...user, notificationTime: e.target.value}); alert(`Уведомление установлено на ${e.target.value}`); }} className="bg-slate-900 text-white rounded p-2 text-sm border border-slate-700 outline-none" />
+                                            <span className="text-xs text-slate-500">Время напоминания</span>
+                                        </div>
+                                    )}
+                                </GlassCard>
+                                <button onClick={handleDeleteAccount} className="w-full py-4 text-xs font-bold text-rose-500 border border-rose-500/30 bg-rose-500/10 rounded-xl hover:bg-rose-500/20 transition-colors flex items-center justify-center gap-2 uppercase tracking-widest"><Trash2 size={16} /> Удалить Аккаунт</button>
                             </div>
                         </div>
                     )}
@@ -594,27 +615,11 @@
                                 {checkInStage === 'select' ? (
                                     <>
                                         <div className="flex justify-between items-center mb-6"><h3 className="text-lg font-bold text-white">ЧТО СДЕЛАНО?</h3><button onClick={() => setCheckInModalOpen(false)}><X className="text-slate-500" /></button></div>
-                                        <div className="space-y-3 mb-4">
-                                            {user.disciplines.map(s => (<button key={s} onClick={() => { setSelectedSportForCheckIn(s); setCheckInStage('value'); }} className="w-full p-4 bg-white/5 rounded-xl text-left font-bold text-slate-300 hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors flex justify-between">{s} <ChevronDown size={16} className="-rotate-90 text-slate-600" /></button>))}
-                                        </div>
-                                        
-                                        {/* ADD CUSTOM BUTTON IN CHECKIN */}
+                                        <div className="space-y-3 mb-4">{user.disciplines.map(s => (<button key={s} onClick={() => { setSelectedSportForCheckIn(s); setCheckInStage('value'); }} className="w-full p-4 bg-white/5 rounded-xl text-left font-bold text-slate-300 hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors flex justify-between">{s} <ChevronDown size={16} className="-rotate-90 text-slate-600" /></button>))}</div>
                                         {!isAddingInCheckIn ? (
-                                            <button onClick={() => setIsAddingInCheckIn(true)} className="w-full p-4 border border-dashed border-slate-700 rounded-xl text-slate-500 font-bold hover:text-cyan-400 hover:border-cyan-500 transition-colors flex items-center justify-center gap-2">
-                                                <Plus size={16}/> Своя дисциплина
-                                            </button>
+                                            <button onClick={() => setIsAddingInCheckIn(true)} className="w-full p-4 border border-dashed border-slate-700 rounded-xl text-slate-500 font-bold hover:text-cyan-400 hover:border-cyan-500 transition-colors flex items-center justify-center gap-2"><Plus size={16}/> Своя дисциплина</button>
                                         ) : (
-                                            <div className="flex gap-2 animate-fade-in">
-                                                <input 
-                                                    type="text" 
-                                                    value={checkInCustomInput} 
-                                                    onChange={e => setCheckInCustomInput(e.target.value)} 
-                                                    placeholder="Название (напр. Йога)" 
-                                                    className="flex-1 p-4 bg-slate-900 border border-cyan-500 rounded-xl text-white outline-none"
-                                                    autoFocus
-                                                />
-                                                <button onClick={handleAddCustomFromCheckIn} className="p-4 bg-cyan-600 rounded-xl text-white shadow-lg"><CheckCircle size={20}/></button>
-                                            </div>
+                                            <div className="flex gap-2 animate-fade-in"><input type="text" value={checkInCustomInput} onChange={e => setCheckInCustomInput(e.target.value)} placeholder="Название..." className="flex-1 p-4 bg-slate-900 border border-cyan-500 rounded-xl text-white outline-none" autoFocus /><button onClick={handleAddCustomFromCheckIn} className="p-4 bg-cyan-600 rounded-xl text-white shadow-lg"><CheckCircle size={20}/></button></div>
                                         )}
                                     </>
                                 ) : (
