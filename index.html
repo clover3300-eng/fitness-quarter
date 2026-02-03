@@ -72,7 +72,7 @@
 
         /* Анимированный фон */
         .bg-aurora {
-            background: linear-gradient(-45deg, #020617, #0f172a, #1e1b4b, #064e3b); /* Added emerald tone */
+            background: linear-gradient(-45deg, #020617, #0f172a, #1e1b4b, #064e3b);
             background-size: 400% 400%;
             position: absolute; inset: 0; z-index: 0;
             animation: aurora 15s ease infinite alternate;
@@ -87,13 +87,13 @@
         }
 
         /* MAIN CONTENT CONTAINER */
-        /* Базовый отступ */
+        /* Уменьшил отступ до 20px + safe area чтобы поднять профиль выше */
         .content-section {
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             padding: 1.5rem;
-            padding-top: calc(40px + env(safe-area-inset-top)); 
+            padding-top: calc(20px + env(safe-area-inset-top)); 
             padding-bottom: 40px;
             width: 100%;
             display: flex;
@@ -101,7 +101,6 @@
             height: 100%;
         }
         
-        /* Дополнительный отступ для экранов онбординга */
         .padding-onboarding {
              padding-top: calc(80px + env(safe-area-inset-top)); 
         }
@@ -143,7 +142,7 @@
             Trophy, Diamond, Zap, Camera, CheckCircle, Activity, Settings, Plus, X, 
             Hexagon, Flame, Send, Bell, Skull, Dumbbell, Ruler, Star, Crown,
             BarChart3, Users, Calendar, ChevronDown, Shield, Edit3, Save, Trash2, ArrowLeft, Clock, UserPlus, Sun, Moon, Info,
-            Timer, Layers, Gauge, RefreshCw, ChevronUp, AlertTriangle, PartyPopper, Ghost
+            Timer, Layers, Gauge, RefreshCw, ChevronUp, AlertTriangle, PartyPopper, Ghost, BicepsFlexed
         } from 'https://esm.sh/lucide-react@0.263.1';
 
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/library/d/1zIhoIYV8JDFhRzaiAqIVwDanbakHeJprh8xY5IB9MtfocMqm9gd545VT/4'; 
@@ -229,7 +228,8 @@
             const [activeModal, setActiveModal] = useState(null); 
             const [expandedUserId, setExpandedUserId] = useState(null);
             const [badgeInfo, setBadgeInfo] = useState(null);
-            const [expandedMode, setExpandedMode] = useState(null); 
+            const [expandedMode, setExpandedMode] = useState(null);
+            const [showAllLeaderboard, setShowAllLeaderboard] = useState(false);
 
             // Inputs
             const [customInput, setCustomInput] = useState("");
@@ -254,6 +254,8 @@
             const [leaderboard, setLeaderboard] = useState([
                 { id: 1, name: 'Alex', photoUrl: null, diamonds: 3, streak: 12, goal: 100, status: 'active', disciplines: ['Бег', 'Воркаут'], history: [], badges: ['streak', 'runner'] },
                 { id: 2, name: 'Elena', photoUrl: null, diamonds: 5, streak: 45, goal: 60, status: 'active', disciplines: ['Зал', 'Плавание'], history: [], badges: ['gym'] },
+                { id: 3, name: 'Max', photoUrl: null, diamonds: 2, streak: 5, goal: 60, status: 'active', disciplines: ['Зал'], history: [], badges: [] },
+                { id: 4, name: 'Dima', photoUrl: null, diamonds: 3, streak: 1, goal: 30, status: 'active', disciplines: ['Бег'], history: [], badges: [] },
             ]);
 
             useEffect(() => {
@@ -275,7 +277,6 @@
                         };
                         setUser(prev => ({ ...prev, ...newUserData }));
                         
-                        // Auto-fill registration form
                         if (tgUser.first_name && !regForm.firstName) {
                             setRegForm(prev => ({ ...prev, firstName: tgUser.first_name, lastName: tgUser.last_name || '' }));
                         }
@@ -333,11 +334,20 @@
             const getUserRankIcon = (g) => { if (g >= 100) return <Crown size={32} className="text-amber-400"/>; if (g >= 60) return <Dumbbell size={32} className="text-cyan-400"/>; return <Star size={32} className="text-emerald-400"/>; };
             const getStats = (hist) => { let k=0,r=0; hist.forEach(h=>{if(h.unit==='км')k+=+h.value;if(h.unit==='повт')r+=+h.value;}); return {k,r}; };
             const toggleDiscipline = (s) => setUser(p => ({ ...p, disciplines: p.disciplines.includes(s) ? p.disciplines.filter(d => d !== s) : [...p.disciplines, s] }));
-            const getUnitForSport = (sport) => { const distanceSports = ['Бег', 'Плавание', 'Вело', 'Велосипед', 'Ходьба', 'Лыжи']; return distanceSports.some(ds => sport.includes(ds)) ? 'км' : 'повт'; };
+            
+            const getUnitForSport = (sport) => { 
+                const distanceSports = ['Бег', 'Плавание', 'Вело', 'Велосипед', 'Ходьба', 'Лыжи']; 
+                return distanceSports.some(ds => sport.includes(ds)) ? 'км' : 'повт'; 
+            };
+            
+            const isGymWorkout = (sport) => {
+                const gymWords = ['Зал', 'Спортзал', 'Качалка', 'Фитнес'];
+                return gymWords.some(w => sport.includes(w));
+            };
 
             const handleCheckInComplete = (val) => {
                 const sport = selectedSportForCheckIn;
-                const unit = getUnitForSport(sport);
+                const unit = isGymWorkout(sport) ? 'тип' : getUnitForSport(sport); // спец unit для зала
                 const now = new Date();
                 const todayStr = now.toDateString();
                 const dateDisplay = now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }); 
@@ -372,7 +382,9 @@
             };
 
             const renderCheckInModal = () => {
+                const isGym = selectedSportForCheckIn && isGymWorkout(selectedSportForCheckIn);
                 const currentUnit = selectedSportForCheckIn ? getUnitForSport(selectedSportForCheckIn) : '';
+                
                 return (
                     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in" onClick={() => setActiveModal(null)}>
                         <div className="w-full max-w-md bg-[#0f172a] rounded-t-3xl sm:rounded-3xl p-6 border-t sm:border border-white/10 relative" onClick={e => e.stopPropagation()}>
@@ -396,9 +408,24 @@
                                 <div className="animate-fade-in text-center">
                                     <button onClick={() => setCheckInStage('select')} className="absolute top-6 left-6 text-slate-500 hover:text-white"><ArrowLeft size={24} /></button>
                                     <h3 className="text-xl font-bold text-cyan-400 mb-1 uppercase">{selectedSportForCheckIn}</h3>
-                                    <p className="text-slate-500 text-sm mb-6">Сколько {currentUnit === 'км' ? 'прошел/пробежал' : 'сделал'}?</p>
-                                    <div className="flex items-center justify-center gap-4 mb-8"><input type="number" value={checkInValue} onChange={e => setCheckInValue(e.target.value)} className="w-32 bg-transparent text-5xl font-black text-white text-center border-b-2 border-cyan-500 outline-none pb-2" autoFocus placeholder="0" /><span className="text-xl font-bold text-slate-500 mt-4">{currentUnit}.</span></div>
-                                    <NeonButton onClick={() => handleCheckInComplete(checkInValue)}>ЗАПИСАТЬ</NeonButton>
+                                    
+                                    {isGym ? (
+                                        <div className="space-y-4 mb-4">
+                                            <p className="text-slate-500 text-sm mb-4">Что сегодня качал?</p>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <NeonButton variant="secondary" onClick={() => handleCheckInComplete("Все тело")}>Все тело</NeonButton>
+                                                <NeonButton variant="secondary" onClick={() => handleCheckInComplete("Верх")}>Верх</NeonButton>
+                                                <NeonButton variant="secondary" onClick={() => handleCheckInComplete("Низ")}>Низ</NeonButton>
+                                                <NeonButton variant="secondary" onClick={() => handleCheckInComplete("Качал головой")}>Качал головой</NeonButton>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <p className="text-slate-500 text-sm mb-6">Сколько {currentUnit === 'км' ? 'прошел/пробежал' : 'сделал'}?</p>
+                                            <div className="flex items-center justify-center gap-4 mb-8"><input type="number" value={checkInValue} onChange={e => setCheckInValue(e.target.value)} className="w-32 bg-transparent text-5xl font-black text-white text-center border-b-2 border-cyan-500 outline-none pb-2" autoFocus placeholder="0" /><span className="text-xl font-bold text-slate-500 mt-4">{currentUnit}.</span></div>
+                                            <NeonButton onClick={() => handleCheckInComplete(checkInValue)}>ЗАПИСАТЬ</NeonButton>
+                                        </>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -502,7 +529,7 @@
             );
 
             if (step === 'celebration') return (
-                <div className="content-section items-center justify-center relative overflow-hidden">
+                <div className="content-section items-center justify-center relative overflow-hidden padding-onboarding">
                     <div className="absolute inset-0 pointer-events-none">
                         {[...Array(20)].map((_, i) => (
                             <div key={i} className="confetti-piece" style={{ left: `${Math.random()*100}%`, animationDelay: `${Math.random()*2}s`, backgroundColor: ['#ff0000', '#00ff00', '#0000ff', '#ffff00'][Math.floor(Math.random()*4)] }}></div>
@@ -512,12 +539,12 @@
                         <div className="mb-6 inline-block p-6 rounded-full bg-cyan-500/10 border border-cyan-400/30 animate-pulse-glow">
                              <PartyPopper size={64} className="text-cyan-400"/>
                         </div>
-                        <h1 className="text-4xl font-black text-white mb-4">ДОБРО ПОЖАЛОВАТЬ<br/>В КЛУБ</h1>
+                        <h1 className="text-4xl font-black text-white mb-4">ТЫ В ИГРЕ,<br/>ЛЕГЕНДА!</h1>
                         <p className="text-slate-300 text-lg mb-8 max-w-xs mx-auto leading-relaxed">
-                            Ты сделал первый шаг. Теперь назад дороги нет. Только вперед, только к величию. Мы верим в тебя.
+                            Официально: ты теперь не просто человек, ты — машина в процессе сборки. Не сбавляй обороты!
                         </p>
                         <div className="bg-emerald-900/20 border border-emerald-500/30 p-4 rounded-xl mb-8">
-                             <p className="text-emerald-400 font-bold text-sm uppercase tracking-wider">Твоя трансформация началась</p>
+                             <p className="text-emerald-400 font-bold text-sm uppercase tracking-wider">РЕЖИМ ЗВЕРЯ АКТИВИРОВАН</p>
                         </div>
                     </div>
                     <div className="mt-auto w-full">
@@ -528,12 +555,13 @@
 
             // --- DASHBOARD ---
             const progressPercent = Math.min((user.streak / user.goal) * 100, 100);
+            const displayedLeaderboard = showAllLeaderboard ? leaderboard : leaderboard.slice(0, 3);
             
             return (
                 <div className="content-section space-y-8">
                     
                     {/* Profile Header */}
-                    <div className="mb-6 mt-8"> {/* Added mt-8 to lower icons */}
+                    <div className="mb-6 mt-4"> 
                         <div className="flex justify-between items-center mb-6">
                             <h1 className="text-sm font-bold text-white tracking-[0.2em] opacity-80">ПРОФИЛЬ</h1>
                             <div className="flex gap-2">
@@ -556,20 +584,26 @@
                         </div>
                     </div>
                     
-                    {/* Check-in Block */}
-                    {user.todayActivity.length > 0 ? (
-                        <GlassCard className="p-6 text-center bg-emerald-900/10 border-emerald-500/30 relative z-0">
-                            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/10 mb-3 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]"><CheckCircle size={24} /></div>
-                            <h3 className="text-lg font-bold text-white mb-4 tracking-wide">ДЕНЬ ЗАСЧИТАН</h3>
-                            <div className="flex flex-wrap justify-center gap-2 mb-6">{user.todayActivity.map((act, i) => (<span key={i} className="px-3 py-1 bg-emerald-500/5 border border-emerald-500/20 rounded-lg text-[10px] font-bold text-emerald-300 uppercase tracking-wider">{act}</span>))}</div>
-                            <button onClick={() => setActiveModal('checkIn')} className="w-full py-4 bg-white/5 border border-white/10 rounded-xl text-white font-bold hover:bg-white/10 flex items-center justify-center gap-2 text-xs uppercase tracking-widest transition-colors backdrop-blur-md relative z-10"><Plus size={14}/> Добавить еще</button>
-                        </GlassCard>
-                    ) : (
-                        <button onClick={() => setActiveModal('checkIn')} className="w-full h-44 rounded-2xl glass-panel flex flex-col items-center justify-center gap-4 active:scale-98 transition-all group hover:border-emerald-500/30">
-                            <div className="p-5 bg-emerald-500/10 rounded-full text-emerald-400 group-hover:scale-110 transition-transform animate-pulse-glow shadow-lg shadow-emerald-500/20"><Zap size={40} fill="currentColor" /></div>
-                            <span className="text-2xl font-black text-white uppercase tracking-[0.2em] group-hover:text-emerald-300 transition-colors">ОТМЕТИТЬСЯ</span>
-                        </button>
-                    )}
+                    {/* Check-in Block (Dynamic) */}
+                    <div className={`transition-all duration-500 ${dashboardView === 'progress' ? 'scale-95 opacity-80 mb-0' : 'mb-6'}`}>
+                        {user.todayActivity.length > 0 ? (
+                            <GlassCard className="p-6 text-center bg-emerald-900/10 border-emerald-500/30 relative z-0">
+                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/10 mb-3 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]"><CheckCircle size={24} /></div>
+                                {dashboardView !== 'progress' && (
+                                    <div className="animate-fade-in">
+                                        <h3 className="text-lg font-bold text-white mb-4 tracking-wide">ДЕНЬ ЗАСЧИТАН</h3>
+                                        <div className="flex flex-wrap justify-center gap-2 mb-6">{user.todayActivity.map((act, i) => (<span key={i} className="px-3 py-1 bg-emerald-500/5 border border-emerald-500/20 rounded-lg text-[10px] font-bold text-emerald-300 uppercase tracking-wider">{act}</span>))}</div>
+                                        <button onClick={() => setActiveModal('checkIn')} className="w-full py-4 bg-white/5 border border-white/10 rounded-xl text-white font-bold hover:bg-white/10 flex items-center justify-center gap-2 text-xs uppercase tracking-widest transition-colors backdrop-blur-md relative z-10"><Plus size={14}/> Добавить еще</button>
+                                    </div>
+                                )}
+                            </GlassCard>
+                        ) : (
+                            <button onClick={() => setActiveModal('checkIn')} className="w-full h-44 rounded-2xl glass-panel flex flex-col items-center justify-center gap-4 active:scale-98 transition-all group hover:border-emerald-500/30">
+                                <div className="p-5 bg-emerald-500/10 rounded-full text-emerald-400 group-hover:scale-110 transition-transform animate-pulse-glow shadow-lg shadow-emerald-500/20"><Zap size={40} fill="currentColor" /></div>
+                                <span className="text-2xl font-black text-white uppercase tracking-[0.2em] group-hover:text-emerald-300 transition-colors">ОТМЕТИТЬСЯ</span>
+                            </button>
+                        )}
+                    </div>
 
                     {/* Switcher & Lists */}
                     <div className="space-y-4">
@@ -582,24 +616,31 @@
                         </div>
 
                         {dashboardView === 'leaderboard' ? (
-                            <div className="space-y-3">{leaderboard.map((u, idx) => (
-                                <GlassCard key={u.id} onClick={() => setExpandedUserId(expandedUserId === u.id ? null : u.id)} className="p-4 transition-all hover:bg-white/5">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="relative"><Avatar name={u.name} photoUrl={u.photoUrl} /><div className="absolute -top-1 -right-1 bg-slate-900 rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold border border-slate-700 text-white">{idx + 1}</div></div>
-                                            <div>
-                                                <div className="font-bold text-slate-200">{u.name}</div>
-                                                <div className="flex gap-1 mt-1">{u.badges?.slice(0, 4).map((bid) => { const b = badgesData.find(x=>x.id===bid); return b ? <div key={bid} className={`w-3 h-3 rounded-full flex items-center justify-center border ${b.bg} ${b.color}`}>{React.cloneElement(b.icon, {size:8})}</div> : null })}</div>
+                            <div className="space-y-3">
+                                {displayedLeaderboard.map((u, idx) => (
+                                    <GlassCard key={u.id} onClick={() => setExpandedUserId(expandedUserId === u.id ? null : u.id)} className="p-4 transition-all hover:bg-white/5">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-4">
+                                                <div className="relative"><Avatar name={u.name} photoUrl={u.photoUrl} /><div className="absolute -top-1 -right-1 bg-slate-900 rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold border border-slate-700 text-white">{idx + 1}</div></div>
+                                                <div>
+                                                    <div className="font-bold text-slate-200">{u.name}</div>
+                                                    <div className="flex gap-1 mt-1">{u.badges?.slice(0, 4).map((bid) => { const b = badgesData.find(x=>x.id===bid); return b ? <div key={bid} className={`w-3 h-3 rounded-full flex items-center justify-center border ${b.bg} ${b.color}`}>{React.cloneElement(b.icon, {size:8})}</div> : null })}</div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="text-right"><div className="font-bold text-white text-sm">{u.streak} <span className="text-[10px] text-orange-400">🔥</span></div></div>
+                                                <button onClick={(e) => { e.stopPropagation(); sendMotivation(u.name); }} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-cyan-400 hover:bg-cyan-500 hover:text-white transition-colors"><Zap size={14}/></button>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-3">
-                                            <div className="text-right"><div className="font-bold text-white text-sm">{u.streak} <span className="text-[10px] text-orange-400">🔥</span></div></div>
-                                            <button onClick={(e) => { e.stopPropagation(); sendMotivation(u.name); }} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-cyan-400 hover:bg-cyan-500 hover:text-white transition-colors"><Zap size={14}/></button>
-                                        </div>
-                                    </div>
-                                    {expandedUserId === u.id && (<div className="mt-4 pt-4 border-t border-white/5 animate-expand overflow-hidden"><div className="grid grid-cols-2 gap-2 mb-3"><div className="bg-white/5 p-2 rounded text-center"><span className="text-[10px] uppercase text-slate-500 block mb-1">Алмазы</span><span className="font-bold text-white">{u.diamonds} 💎</span></div><div className="bg-white/5 p-2 rounded text-center"><span className="text-[10px] uppercase text-slate-500 block mb-1">Цель</span><span className="font-bold text-white">{u.goal} дн.</span></div></div><div className="flex flex-wrap gap-2">{u.disciplines?.map(d=><span key={d} className="text-[10px] px-2 py-1 bg-white/5 rounded border border-white/10 text-slate-300 font-bold">{d}</span>)}</div></div>)}
-                                </GlassCard>
-                            ))}</div>
+                                        {expandedUserId === u.id && (<div className="mt-4 pt-4 border-t border-white/5 animate-expand overflow-hidden"><div className="grid grid-cols-2 gap-2 mb-3"><div className="bg-white/5 p-2 rounded text-center"><span className="text-[10px] uppercase text-slate-500 block mb-1">Алмазы</span><span className="font-bold text-white">{u.diamonds} 💎</span></div><div className="bg-white/5 p-2 rounded text-center"><span className="text-[10px] uppercase text-slate-500 block mb-1">Цель</span><span className="font-bold text-white">{u.goal} дн.</span></div></div><div className="flex flex-wrap gap-2">{u.disciplines?.map(d=><span key={d} className="text-[10px] px-2 py-1 bg-white/5 rounded border border-white/10 text-slate-300 font-bold">{d}</span>)}</div></div>)}
+                                    </GlassCard>
+                                ))}
+                                {leaderboard.length > 3 && (
+                                    <button onClick={() => setShowAllLeaderboard(!showAllLeaderboard)} className="w-full py-3 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-white transition-colors">
+                                        {showAllLeaderboard ? 'Скрыть' : 'Показать всех'}
+                                    </button>
+                                )}
+                            </div>
                         ) : (
                             <div className="animate-fade-in space-y-6">
                                 <GlassCard className="p-4 flex items-center gap-4 bg-gradient-to-r from-emerald-900/20 to-cyan-900/20">
@@ -697,7 +738,7 @@
                                 <div className="absolute bottom-20 right-10 opacity-10 animate-float" style={{animationDelay: '2s'}}><Skull size={80} className="text-rose-500"/></div>
 
                                 <div className="flex justify-between items-center mb-6 z-10"><button onClick={()=>setActiveModal(null)} className="p-2 bg-white/10 rounded-full text-white"><ArrowLeft size={20}/></button><h2 className="text-xl font-bold text-rose-500 uppercase">Магазин Искупления</h2><div className="w-8"></div></div>
-                                <div className="flex items-center justify-center flex-grow z-10 px-4">
+                                <div className="flex items-start justify-center flex-grow z-10 px-4 pt-10">
                                     <RedemptionShopContent onClose={()=>setActiveModal(null)}/>
                                 </div>
                             </div>
