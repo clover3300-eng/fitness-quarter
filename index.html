@@ -112,7 +112,7 @@
              padding-top: calc(80px + env(safe-area-inset-top)); 
         }
 
-        /* Fullscreen Modal */
+        /* Fullscreen Modal - Fixed to cover everything */
         .modal-fullscreen {
             position: fixed; 
             top: 0; left: 0; right: 0; bottom: 0;
@@ -322,7 +322,6 @@
 
             // --- MOVED useMemo HERE ---
             // Build Sorted Leaderboard including Current User
-            // Crucial Fix: This hook is now at the top level, before any return statements.
             const finalLeaderboard = useMemo(() => {
                 const currentUserEntry = { 
                     id: 999, // user ID
