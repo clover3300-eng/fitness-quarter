@@ -16,7 +16,7 @@
                         aurora: {
                             bg: '#020617',     // Deep space blue
                             card: 'rgba(30, 41, 59, 0.4)', // Glass
-                            border: 'rgba(148, 163, 184, 0.2)',
+                            border: 'rgba(148, 163, 184, 0.15)',
                             primary: '#22d3ee', // Cyan
                             secondary: '#a855f7', // Purple
                             accent: '#34d399',  // Emerald
@@ -34,7 +34,7 @@
                     animation: {
                         'aurora-flow': 'aurora 15s ease infinite alternate',
                         'float': 'float 6s ease-in-out infinite',
-                        'pulse-glow': 'pulseGlow 3s infinite',
+                        'shine': 'shine 1.5s infinite',
                         'fade-in': 'fadeIn 0.5s ease-out forwards',
                         'slide-up': 'slideUp 0.5s ease-out forwards',
                     },
@@ -46,12 +46,9 @@
                         },
                         float: { 
                             '0%, 100%': { transform: 'translateY(0)' }, 
-                            '50%': { transform: 'translateY(-15px)' } 
+                            '50%': { transform: 'translateY(-10px)' } 
                         },
-                        pulseGlow: {
-                            '0%, 100%': { opacity: '1', boxShadow: '0 0 20px rgba(34, 211, 238, 0.2)' },
-                            '50%': { opacity: '0.8', boxShadow: '0 0 40px rgba(168, 85, 247, 0.4)' }
-                        },
+                        shine: { '0%': { transform: 'translateX(-100%)' }, '100%': { transform: 'translateX(100%)' } },
                         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
                         slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } }
                     }
@@ -62,15 +59,6 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 
-    <script type="importmap">
-        {
-            "imports": {
-                "react": "https://esm.sh/react@18.2.0",
-                "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-                "lucide-react": "https://esm.sh/lucide-react@0.263.1"
-            }
-        }
-    </script>
     <script src="https://unpkg.com/@babel/standalone@7.26.9/babel.min.js"></script>
 
     <style>
@@ -80,11 +68,12 @@
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
             font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
         }
         
-        /* Aurora Background */
+        /* Animated Background */
         .aurora-bg {
-            background: linear-gradient(-45deg, #020617, #1e1b4b, #0f172a, #022c22);
+            background: linear-gradient(-45deg, #020617, #1e1b4b, #111827, #0f172a);
             background-size: 400% 400%;
             position: fixed;
             top: 0;
@@ -97,36 +86,54 @@
 
         .aurora-glow {
             position: fixed;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(34,211,238,0.15) 0%, rgba(0,0,0,0) 70%);
+            width: 80vw;
+            height: 80vw;
+            background: radial-gradient(circle, rgba(34,211,238,0.1) 0%, rgba(0,0,0,0) 70%);
             border-radius: 50%;
             pointer-events: none;
-            z-index: 0;
-            top: -100px;
-            left: -50px;
+            z-index: -1;
+            top: -20%;
+            left: -20%;
         }
         
         .aurora-glow-2 {
             position: fixed;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(168,85,247,0.15) 0%, rgba(0,0,0,0) 70%);
+            width: 90vw;
+            height: 90vw;
+            background: radial-gradient(circle, rgba(168,85,247,0.1) 0%, rgba(0,0,0,0) 70%);
             border-radius: 50%;
             pointer-events: none;
-            z-index: 0;
-            bottom: -100px;
-            right: -50px;
+            z-index: -1;
+            bottom: -20%;
+            right: -20%;
         }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         .glass-panel {
-            background: rgba(30, 41, 59, 0.4);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(30, 41, 59, 0.3);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Error Box Style */
+        #error-box {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(220, 38, 38, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            z-index: 9999;
+            max-width: 90%;
+            text-align: center;
+            font-family: sans-serif;
         }
     </style>
 </head>
@@ -134,17 +141,36 @@
     <div class="aurora-bg"></div>
     <div class="aurora-glow"></div>
     <div class="aurora-glow-2"></div>
+    
     <div id="root"></div>
 
-    <script type="text/babel" data-type="module" data-presets="env,react">
-        import React, { useState, useEffect } from 'react';
-        import { createRoot } from 'react-dom/client';
+    <div id="error-box">
+        <h3 style="font-weight:bold; margin-bottom:10px;">Ошибка запуска</h3>
+        <p id="error-text">Инициализация...</p>
+        <p style="font-size: 12px; margin-top: 10px; opacity: 0.8;">Если вы открыли файл локально, используйте локальный сервер (Live Server) или загрузите на хостинг.</p>
+    </div>
+
+    <script>
+        window.onerror = function(msg, url, line, col, error) {
+            const box = document.getElementById('error-box');
+            const text = document.getElementById('error-text');
+            box.style.display = 'block';
+            text.innerText = `${msg}\nLine: ${line}`;
+            console.error("Global Error:", error);
+            return false;
+        };
+    </script>
+
+    <script type="text/babel" data-type="module">
+        // Direct Imports for Stability
+        import React, { useState, useEffect } from 'https://esm.sh/react@18.2.0';
+        import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
         import { 
             Trophy, Diamond, Zap, Camera, CheckCircle, Activity, User, Settings, Plus, X, 
             Hexagon, Flame, Send, Bell, AlertTriangle, Skull, Dumbbell, Timer, Ruler, 
             BarChart3, Users, Calendar, Award, ChevronRight, ChevronUp, ChevronDown, Siren, FileWarning, UploadCloud, 
             RefreshCw, Shield, Download, Edit3, Save, Trash2, LogOut, Sun, Moon
-        } from 'lucide-react';
+        } from 'https://esm.sh/lucide-react@0.263.1';
 
         // --- CONSTANTS ---
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydULT-3CWngM-jmKIuVH5f0LvcwDiSqMgEBCbR2FroObYhwKZqG_DeVc4pDa8-WL5A/exec'; // Вставьте ссылку Web App
@@ -164,12 +190,12 @@
             const baseStyle = "w-full py-4 font-bold tracking-wider uppercase transition-all active:scale-95 flex items-center justify-center gap-2 relative overflow-hidden group rounded-xl";
             
             const variants = {
-                primary: "bg-cyan-600/90 text-white shadow-[0_0_20px_rgba(8,145,178,0.4)] hover:bg-cyan-500 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] border border-cyan-400/30",
-                danger: "bg-rose-600/90 text-white shadow-[0_0_20px_rgba(225,29,72,0.4)] hover:bg-rose-500 border border-rose-400/30",
-                success: "bg-emerald-600/90 text-white shadow-[0_0_20px_rgba(5,150,105,0.4)] hover:bg-emerald-500 border border-emerald-400/30",
-                gold: "bg-amber-500/90 text-white shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:bg-amber-400 border border-amber-300/30",
-                secondary: "bg-white/10 text-aurora-text border border-white/10 hover:bg-white/20",
-                disabled: "bg-slate-800/50 text-slate-500 border border-slate-700 cursor-not-allowed shadow-none"
+                primary: "bg-cyan-600/80 text-white shadow-[0_0_20px_rgba(8,145,178,0.4)] hover:bg-cyan-500 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] border border-cyan-400/30 backdrop-blur-sm",
+                danger: "bg-rose-600/80 text-white shadow-[0_0_20px_rgba(225,29,72,0.4)] hover:bg-rose-500 border border-rose-400/30 backdrop-blur-sm",
+                success: "bg-emerald-600/80 text-white shadow-[0_0_20px_rgba(5,150,105,0.4)] hover:bg-emerald-500 border border-emerald-400/30 backdrop-blur-sm",
+                gold: "bg-amber-500/80 text-white shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:bg-amber-400 border border-amber-300/30 backdrop-blur-sm",
+                secondary: "bg-white/5 text-aurora-text border border-white/10 hover:bg-white/10 backdrop-blur-sm",
+                disabled: "bg-slate-800/50 text-slate-500 border border-slate-700 cursor-not-allowed shadow-none backdrop-blur-sm"
             };
             
             return (
@@ -181,7 +207,7 @@
         };
 
         const ToggleSwitch = ({ checked, onChange }) => (
-            <button onClick={() => onChange(!checked)} className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 relative ${checked ? 'bg-cyan-500' : 'bg-slate-700'}`}>
+            <button onClick={() => onChange(!checked)} className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 relative ${checked ? 'bg-cyan-500' : 'bg-slate-700/50 border border-slate-600'}`}>
                 <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${checked ? 'translate-x-6' : 'translate-x-0'}`} />
             </button>
         );
@@ -235,25 +261,25 @@
             <div className="flex flex-col h-screen p-6 animate-fade-in relative z-10 pt-safe-top">
                 <div className="flex-grow flex flex-col items-center justify-center text-center space-y-8">
                     <div className="relative w-40 h-40 flex items-center justify-center">
-                        <div className="absolute inset-0 bg-cyan-500 blur-[60px] opacity-40 rounded-full animate-pulse"></div>
-                        <div className="absolute inset-0 bg-purple-500 blur-[60px] opacity-30 rounded-full translate-x-4 animate-pulse" style={{animationDelay: '1s'}}></div>
+                        <div className="absolute inset-0 bg-cyan-500 blur-[60px] opacity-30 rounded-full animate-pulse"></div>
+                        <div className="absolute inset-0 bg-purple-500 blur-[60px] opacity-20 rounded-full translate-x-4 animate-pulse" style={{animationDelay: '1s'}}></div>
                         <Hexagon size={130} className="text-cyan-400 stroke-[1.5] animate-float drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
                         <Activity size={50} className="text-white absolute drop-shadow-lg" />
                     </div>
                     <div>
-                        <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-purple-300 uppercase tracking-tighter leading-tight mb-2 font-display">Fitness<br/>Aurora</h1>
+                        <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-white to-purple-200 uppercase tracking-tighter leading-tight mb-2 font-display drop-shadow-sm">Fitness<br/>Aurora</h1>
                         <p className="text-cyan-200/80 font-medium tracking-[0.2em] uppercase text-xs bg-white/5 inline-block px-4 py-1.5 rounded-full border border-white/10 backdrop-blur-md mt-4">Северный квартал</p>
                     </div>
                 </div>
                 <div className="mt-auto w-full pb-8">
                     <NeonButton onClick={onStart}>Начать Путь</NeonButton>
-                    <p className="text-center text-slate-500 text-[10px] mt-4 uppercase tracking-widest font-bold">Version Aurora 1.0</p>
+                    <p className="text-center text-slate-500 text-[10px] mt-4 uppercase tracking-widest font-bold">Version Aurora 1.1</p>
                 </div>
             </div>
         );
 
         const RegistrationScreen = ({ regForm, setRegForm, onNext }) => (
-            <div className="min-h-screen flex flex-col p-6 animate-slide-up pt-safe-top">
+            <div className="min-h-screen flex flex-col p-6 animate-slide-up pt-safe-top relative z-10">
                 <h2 className="text-3xl font-display font-bold text-white mb-6 tracking-wide">ИДЕНТИФИКАЦИЯ</h2>
                 <div className="space-y-6 flex-grow">
                     <GlassCard className="p-1">
@@ -261,7 +287,7 @@
                             type="text" 
                             value={regForm.firstName} 
                             onChange={e => setRegForm(prev => ({...prev, firstName: e.target.value}))} 
-                            className="w-full p-4 bg-transparent text-white font-bold outline-none placeholder:text-slate-600" 
+                            className="w-full p-4 bg-transparent text-white font-bold outline-none placeholder:text-slate-500" 
                             placeholder="Имя агента" 
                         />
                     </GlassCard>
@@ -270,7 +296,7 @@
                             type="text" 
                             value={regForm.lastName} 
                             onChange={e => setRegForm(prev => ({...prev, lastName: e.target.value}))} 
-                            className="w-full p-4 bg-transparent text-white font-bold outline-none placeholder:text-slate-600" 
+                            className="w-full p-4 bg-transparent text-white font-bold outline-none placeholder:text-slate-500" 
                             placeholder="Позывной (Фамилия)" 
                         />
                     </GlassCard>
@@ -547,7 +573,7 @@
             return (
                 <div className="pb-24 relative min-h-screen z-10">
                     {/* Header */}
-                    <div className="sticky top-0 bg-[#020617]/80 backdrop-blur-xl z-20 px-6 py-4 border-b border-white/5 pt-safe-top">
+                    <div className="sticky top-0 bg-[#020617]/80 backdrop-blur-xl z-20 px-6 py-4 border-b border-white/5 pt-safe-top shadow-lg">
                         <div className="flex justify-between items-start mb-4">
                             <div className="flex items-center gap-3 cursor-pointer group" onClick={() => user.isAdmin && setAdminPanelOpen(true)}>
                                 <div className="relative"><Avatar name={user.firstName} />{user.isAdmin && <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white rounded-full p-0.5 border-2 border-[#020617]"><Shield size={10} /></div>}</div>
