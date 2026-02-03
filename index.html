@@ -112,7 +112,7 @@
              padding-top: calc(80px + env(safe-area-inset-top)); 
         }
 
-        /* Fullscreen Modal - Fixed to cover everything */
+        /* Fullscreen Modal */
         .modal-fullscreen {
             position: fixed; 
             top: 0; left: 0; right: 0; bottom: 0;
@@ -179,7 +179,7 @@
         const ADMIN_USERNAME = 'solomin_d';
         const DEFAULT_START_DATE = new Date('2026-04-01');
 
-        // --- MOTIVATION PHRASES (Funny & Emotional) ---
+        // --- MOTIVATION PHRASES ---
         const MOTIVATION_PHRASES = [
             "[N], я видел бабушек в парке, которые делают это быстрее!", 
             "Эй [N], диван по тебе не скучает? А он скучает!",
@@ -203,7 +203,7 @@
             "[N], сделай это ради лайков в сторис (шутка, ради себя)!"
         ];
 
-        // --- GLOBAL DATA (Moved here to fix ReferenceError) ---
+        // --- GLOBAL DATA ---
         const badgesData = [
             { id: 'streak', icon: <Flame size={14} />, color: 'text-orange-400', bg: 'bg-orange-500/20', label: 'На огне', desc: 'Стрик 3+ дней подряд' },
             { id: 'runner', icon: <Ruler size={14} />, color: 'text-cyan-400', bg: 'bg-cyan-500/20', label: 'Бегун', desc: 'Набрано 10+ км' },
@@ -320,23 +320,48 @@
                 { id: 104, name: 'Dima', photoUrl: null, diamonds: 3, streak: 1, goal: 30, status: 'active', disciplines: ['Бег'], history: [], badges: [] },
             ]);
 
+            // --- MOVED useMemo HERE ---
+            // Build Sorted Leaderboard including Current User
+            // Crucial Fix: This hook is now at the top level, before any return statements.
+            const finalLeaderboard = useMemo(() => {
+                const currentUserEntry = { 
+                    id: 999, // user ID
+                    name: `${user.firstName} (Вы)`,
+                    photoUrl: user.photoUrl,
+                    diamonds: user.diamonds,
+                    streak: user.streak,
+                    goal: user.goal,
+                    isUser: true,
+                    badges: [] // simplistic badges for now
+                };
+                
+                const all = [...leaderboard, currentUserEntry];
+                return all.sort((a, b) => b.streak - a.streak);
+            }, [leaderboard, user]);
+
             useEffect(() => {
                 const tg = window.Telegram?.WebApp;
                 if (tg) { 
                     tg.ready(); 
                     
-                    // FIX: Safe check to avoid crash on Telegram 6.0
-                    if (parseFloat(tg.version) >= 8.0) {
-                        try { tg.requestFullscreen(); } catch(e) { console.log(e); }
+                    // FIX: Safer fullscreen request check
+                    try {
+                        if (typeof tg.requestFullscreen === 'function') {
+                            tg.requestFullscreen();
+                        }
+                    } catch (e) {
+                        console.log("Fullscreen not supported");
                     }
 
                     tg.expand(); 
                     tg.setHeaderColor('#020617'); 
                     tg.setBackgroundColor('#020617'); 
                     
-                    if (parseFloat(tg.version) >= 6.2) {
-                        try { tg.enableClosingConfirmation(); } catch(e) {}
-                    }
+                    try {
+                        if (typeof tg.enableClosingConfirmation === 'function') {
+                            tg.enableClosingConfirmation();
+                        }
+                    } catch(e) {}
                     
                     const tgUser = tg.initDataUnsafe?.user;
                     if (tgUser) {
@@ -679,29 +704,32 @@
             // --- DASHBOARD ---
             const progressPercent = Math.min((user.streak / user.goal) * 100, 100);
             
+            const displayedLeaderboard = showAllLeaderboard ? leaderboard : leaderboard.slice(0, 3);
+            const userAchievements = generateAchievements(user.disciplines).map(ach => ({
+                ...ach,
+                unlocked: ach.condition(user, getStats(user.history))
+            }));
+            
             // Build Sorted Leaderboard including Current User
+            // Correctly using useMemo for derived state
             const finalLeaderboard = useMemo(() => {
                 const currentUserEntry = { 
-                    id: 999, // user ID
+                    id: 999, 
                     name: `${user.firstName} (Вы)`,
                     photoUrl: user.photoUrl,
                     diamonds: user.diamonds,
                     streak: user.streak,
                     goal: user.goal,
                     isUser: true,
-                    badges: [] // simplistic badges for now
+                    badges: [] 
                 };
                 
                 const all = [...leaderboard, currentUserEntry];
                 return all.sort((a, b) => b.streak - a.streak);
             }, [leaderboard, user]);
 
-            const displayedLeaderboard = showAllLeaderboard ? finalLeaderboard : finalLeaderboard.slice(0, 3);
-            const userAchievements = generateAchievements(user.disciplines).map(ach => ({
-                ...ach,
-                unlocked: ach.condition(user, getStats(user.history))
-            }));
-            
+            const listToDisplay = showAllLeaderboard ? finalLeaderboard : finalLeaderboard.slice(0, 3);
+
             return (
                 <div className="content-section space-y-8" ref={contentRef}>
                     
@@ -762,7 +790,7 @@
 
                         {dashboardView === 'leaderboard' ? (
                             <div className="space-y-3">
-                                {displayedLeaderboard.map((u, idx) => (
+                                {listToDisplay.map((u, idx) => (
                                     <GlassCard key={u.id} onClick={() => !u.isUser && setExpandedUserId(expandedUserId === u.id ? null : u.id)} className={`p-4 transition-all ${u.isUser ? 'border-cyan-500/50 bg-cyan-900/10' : 'hover:bg-white/5'}`}>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-4">
