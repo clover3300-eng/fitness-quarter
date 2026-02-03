@@ -325,25 +325,18 @@
                 if (tg) { 
                     tg.ready(); 
                     
-                    // FIX: Safer fullscreen request to prevent crash on older clients (v6.0)
-                    try {
-                        if (typeof tg.requestFullscreen === 'function') {
-                            tg.requestFullscreen();
-                        }
-                    } catch (e) {
-                        console.log("Fullscreen not supported on this version");
+                    // FIX: Safe check to avoid crash on Telegram 6.0
+                    if (parseFloat(tg.version) >= 8.0) {
+                        try { tg.requestFullscreen(); } catch(e) { console.log(e); }
                     }
 
                     tg.expand(); 
                     tg.setHeaderColor('#020617'); 
                     tg.setBackgroundColor('#020617'); 
                     
-                    // Also guard closing confirmation
-                    try {
-                        if (typeof tg.enableClosingConfirmation === 'function') {
-                            tg.enableClosingConfirmation();
-                        }
-                    } catch(e) {}
+                    if (parseFloat(tg.version) >= 6.2) {
+                        try { tg.enableClosingConfirmation(); } catch(e) {}
+                    }
                     
                     const tgUser = tg.initDataUnsafe?.user;
                     if (tgUser) {
