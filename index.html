@@ -1,571 +1,559 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fitness Квартал</title>
-    
-    <!-- Telegram Web App -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
+import React, { useState, useEffect } from 'react';
+import { Trophy, Diamond, Zap, Camera, CheckCircle, Activity, User, Settings, Plus, X, Hexagon, Flame, Send, Bell, AlertTriangle, Skull, Dumbbell, Timer, Ruler, BarChart3, Users, Calendar, Award, ChevronRight, Siren, FileWarning, UploadCloud, RefreshCw, Sun, Moon, Heart, Star, ChevronDown, ChevronUp, Shield, Download, Edit3, Save, Trash2, LogOut } from 'lucide-react';
+
+// --- CONSTANTS ---
+// Дата старта марафона (ГГГГ-ММ-ДД)
+const MARATHON_START_DATE = new Date('2023-10-25'); 
+const ADMIN_USERNAME = 'solomin_d';
+// Вставьте URL вашего Google Apps Script здесь
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydULT-3CWngM-jmKIuVH5f0LvcwDiSqMgEBCbR2FroObYhwKZqG_DeVc4pDa8-WL5A/exec'; 
+
+// --- Aero Prism Dark UI Components ---
+
+const GlassCard = ({ children, className = "", onClick }) => (
+  <div 
+    onClick={onClick}
+    className={`relative bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl overflow-hidden ${onClick ? 'cursor-pointer active:scale-95 transition-transform' : ''} ${className}`}
+    style={{ boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3)' }}
+  >
+    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50"></div>
+    {children}
+  </div>
+);
+
+const NeonButton = ({ children, onClick, variant = 'primary', disabled = false, className = "" }) => {
+  const baseStyle = "w-full py-4 font-bold tracking-wider uppercase transition-all active:scale-95 flex items-center justify-center gap-2 relative overflow-hidden group rounded-xl";
+  
+  const variants = {
+    primary: "bg-cyan-500/10 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-500/20 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)]",
+    danger: "bg-rose-600/10 border border-rose-500/50 text-rose-400 hover:bg-rose-500/20 hover:shadow-[0_0_20px_rgba(244,63,94,0.4)]",
+    success: "bg-emerald-500/10 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/20 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)]",
+    gold: "bg-amber-500/10 border border-amber-500/50 text-amber-300 hover:bg-amber-500/20 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)]",
+    secondary: "bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10",
+    disabled: "bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed"
+  };
+  
+  return (
+    <button 
+      onClick={onClick} 
+      disabled={disabled}
+      className={`${baseStyle} ${disabled ? variants.disabled : variants[variant]} ${className}`}
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shine"></div>
+      {children}
+    </button>
+  );
+};
+
+const ToggleSwitch = ({ checked, onChange }) => (
+  <button 
+    onClick={() => onChange(!checked)}
+    className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 relative ${checked ? 'bg-cyan-600' : 'bg-gray-700'}`}
+  >
+    <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${checked ? 'translate-x-6' : 'translate-x-0'}`} />
+  </button>
+);
+
+const Avatar = ({ name, className = "" }) => {
+  const initials = name ? name.slice(0, 2).toUpperCase() : "FQ";
+  const gradients = [
+    "from-purple-500 to-indigo-600",
+    "from-cyan-500 to-blue-600",
+    "from-emerald-500 to-teal-600",
+    "from-rose-500 to-pink-600",
+    "from-amber-500 to-orange-600",
+  ];
+  const colorIndex = name ? name.length % gradients.length : 0;
+  
+  return (
+    <div className={`rounded-full bg-gradient-to-br ${gradients[colorIndex]} flex items-center justify-center text-white font-bold shadow-lg border border-white/10 ${className}`}>
+      {initials}
+    </div>
+  );
+};
+
+// --- MAIN APP ---
+
+export default function App() {
+  // Init
+  useEffect(() => {
+    // Tailwind Config for Dark Theme
+    if (window.tailwind) {
+        window.tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        cyan: { 50: '#ecfeff', 100: '#cffafe', 200: '#a5f3fc', 300: '#67e8f9', 400: '#22d3ee', 500: '#06b6d4', 600: '#0891b2', 700: '#0e7490', 800: '#155e75', 900: '#164e63' },
-                        slate: { 850: '#1e293b' } 
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Space Grotesk', 'sans-serif'],
-                    },
-                    padding: {
-                        'safe-top': '80px', /* Отступ для челки */
+                        dark: '#050505',
+                        cyan: { 400: '#22d3ee', 500: '#06b6d4', 900: '#164e63' },
                     },
                     animation: {
+                        'shine': 'shine 1.5s infinite',
+                        'float': 'float 3s ease-in-out infinite',
                         'fade-in': 'fadeIn 0.5s ease-out forwards',
                         'slide-up': 'slideUp 0.5s ease-out forwards',
                     },
                     keyframes: {
+                        shine: { '0%': { transform: 'translateX(-100%)' }, '100%': { transform: 'translateX(100%)' } },
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
                         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
                         slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } }
                     }
                 }
             }
+        };
+    }
+
+    // Telegram Setup
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+        tg.ready();
+        tg.expand();
+        tg.setHeaderColor('#050505');
+        tg.setBackgroundColor('#050505');
+    }
+
+    // Load User
+    const savedUser = localStorage.getItem('fitness_quarter_user');
+    if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        const tgUser = tg?.initDataUnsafe?.user;
+        const isAdmin = (tgUser?.username === ADMIN_USERNAME) || parsed.isAdmin;
+        setUser({ ...parsed, isAdmin });
+        setStep('dashboard');
+    } else {
+        const tgUser = tg?.initDataUnsafe?.user;
+        if (tgUser) {
+            setRegForm({ firstName: tgUser.first_name || '', lastName: tgUser.last_name || '' });
+            setUser(prev => ({ ...prev, telegramId: tgUser.id, username: tgUser.username, isAdmin: tgUser.username === ADMIN_USERNAME }));
         }
-    </script>
+        setStep('welcome');
+    }
+  }, []);
 
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  // --- State ---
+  const [step, setStep] = useState('loading');
+  const [user, setUser] = useState({
+    firstName: '', lastName: '', username: '', telegramId: null,
+    disciplines: [], goal: 0, diamonds: 3, streak: 3,
+    todayActivity: [], 
+    history: [
+        { date: new Date().toISOString(), sport: 'Бег', type: 'cardio', value: 5, unit: 'км' },
+        { date: new Date(Date.now() - 86400000).toISOString(), sport: 'Зал', type: 'gym', value: 'Верх', unit: null },
+    ], 
+    status: 'active', notifications: true, isAdmin: true
+  });
 
-    <!-- React & Babel -->
-    <script type="importmap">
-        {
-            "imports": {
-                "react": "https://esm.sh/react@18.2.0",
-                "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-                "lucide-react": "https://esm.sh/lucide-react@0.263.1"
-            }
-        }
-    </script>
-    <script src="https://unpkg.com/@babel/standalone@7.26.9/babel.min.js"></script>
-    <script>
-        window.Babel = { presets: [['env', { modules: false }], 'react'] };
-    </script>
+  // Registration & Forms
+  const [regForm, setRegForm] = useState({ firstName: '', lastName: '' });
+  const [customDiscipline, setCustomDiscipline] = useState('');
+  const [isAddingCustom, setIsAddingCustom] = useState(false);
 
-    <style>
-        body { 
-            background-color: #f8fafc; 
-            -webkit-tap-highlight-color: transparent;
-            overscroll-behavior-y: none;
-        }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
-</head>
-<body>
-    <div id="root"></div>
+  // UI State
+  const [checkInModalOpen, setCheckInModalOpen] = useState(false);
+  const [checkInStage, setCheckInStage] = useState('select');
+  const [selectedSportForCheckIn, setSelectedSportForCheckIn] = useState(null);
+  const [checkInValue, setCheckInValue] = useState("");
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [adminPanelOpen, setAdminPanelOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [dashboardView, setDashboardView] = useState('leaderboard');
+  const [showAllBadges, setShowAllBadges] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
-    <script type="text/babel" data-type="module">
-        import React, { useState, useEffect } from 'react';
-        import { createRoot } from 'react-dom/client';
-        import { 
-            Trophy, Diamond, Zap, Camera, CheckCircle, Activity, User, Settings, Plus, X, 
-            Hexagon, Flame, Send, Bell, AlertTriangle, Skull, Dumbbell, Timer, Ruler, 
-            BarChart3, Users, Calendar, Award, ChevronRight, Siren, FileWarning, UploadCloud, 
-            RefreshCw, Shield, Download, Edit3, Save, Trash2, LogOut
-        } from 'lucide-react';
+  // Data
+  const [leaderboard, setLeaderboard] = useState([
+    { id: 1, name: 'Александр', diamonds: 3, streak: 12, goal: 100, status: 'active', disciplines: ['Бег', 'Воркаут'], history: [], badges: ['streak', 'runner'] },
+    { id: 2, name: 'Елена', diamonds: 5, streak: 45, goal: 60, status: 'active', disciplines: ['Зал', 'Плавание'], history: [], badges: ['gym', 'reps', 'early'] },
+    { id: 3, name: 'Макс', diamonds: 0, streak: 8, goal: 30, status: 'frozen', disciplines: ['Бокс'], history: [], badges: [] },
+    { id: 4, name: 'Игорь', diamonds: 2, streak: 89, goal: 100, status: 'active', disciplines: ['Вело', 'Отжимания'], history: [], badges: ['runner', 'reps', 'social', 'streak'] },
+  ]);
+  const [popularSports, setPopularSports] = useState(['Бег', 'Зал', 'Отжимания', 'Плавание', 'Воркаут', 'Вело', 'Приседания', 'Ходьба']);
 
-        // --- CONSTANTS ---
-        
-        // Дата старта марафона (ГГГГ-ММ-ДД)
-        const MARATHON_START_DATE = new Date('2023-10-25'); // Установите реальную дату старта
-        const ADMIN_USERNAME = 'solomin_d';
-        
-        // Вставьте сюда URL вашего Google Apps Script Web App
-        // Если пусто, данные будут просто выводиться в консоль
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydULT-3CWngM-jmKIuVH5f0LvcwDiSqMgEBCbR2FroObYhwKZqG_DeVc4pDa8-WL5A/exec'; 
+  // --- Effects ---
+  useEffect(() => { if (user.firstName) localStorage.setItem('fitness_quarter_user', JSON.stringify(user)); }, [user]);
 
-        // --- COMPONENTS ---
+  // --- Logic Helpers ---
+  const calculateGoalOptions = () => {
+      const now = new Date();
+      const diffTime = Math.abs(now - MARATHON_START_DATE);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+      const passed = (now < MARATHON_START_DATE) ? 0 : diffDays;
+      return [
+          { label: 'Новичок', days: 30 - passed, original: 30 },
+          { label: 'Атлет', days: 60 - passed, original: 60 },
+          { label: 'Титан', days: 100 - passed, original: 100 }
+      ].filter(g => g.days > 0);
+  };
 
-        const Card = ({ children, className = "", onClick }) => (
-            <div onClick={onClick} className={`bg-white rounded-2xl p-4 border border-slate-100 shadow-sm ${onClick ? 'cursor-pointer active:scale-95 transition-transform' : ''} ${className}`}>
-                {children}
+  const getSportType = (sport) => {
+      const s = sport.toLowerCase();
+      if (['бег', 'ходьба', 'плавание', 'вело', 'лыжи'].some(x => s.includes(x))) return 'cardio';
+      if (['зал', 'качалка', 'gym'].some(x => s.includes(x))) return 'gym';
+      if (['воркаут', 'отжимания', 'приседания', 'пресс', 'подтягивания'].some(x => s.includes(x))) return 'reps';
+      return 'other';
+  };
+
+  const getStatsSummary = (history = []) => {
+      let totalKm = 0, totalReps = 0, gymSessions = { 'Верх': 0, 'Низ': 0, 'Всё тело': 0, 'Голова': 0 };
+      history.forEach(entry => {
+          if (entry.type === 'cardio' && entry.value) totalKm += parseFloat(entry.value);
+          if (entry.type === 'reps' && entry.value) totalReps += parseInt(entry.value);
+          if (entry.type === 'gym' && entry.value && gymSessions[entry.value] !== undefined) gymSessions[entry.value]++;
+      });
+      const totalGym = Object.values(gymSessions).reduce((a, b) => a + b, 0);
+      return { totalKm, totalReps, gymSessions, totalGym };
+  };
+
+  const getUserTitle = (goal) => {
+      if (goal >= 100) return 'Киборг';
+      if (goal >= 60) return 'Атлет';
+      return 'Новичок';
+  };
+
+  const syncWithGoogleSheets = async (userData, actionType = 'UPDATE') => {
+    if (!GOOGLE_SCRIPT_URL) return;
+    const payload = {
+        action: actionType,
+        timestamp: new Date().toISOString(),
+        telegramId: userData.telegramId,
+        username: userData.username,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        arsenal: userData.disciplines.join(', '),
+        goal: userData.goal,
+        diamonds: userData.diamonds,
+        streak: userData.streak,
+        completedToday: userData.todayActivity.join(', ')
+    };
+    try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+    } catch (e) { console.error(e); }
+  };
+
+  // --- Handlers ---
+  const handleRegistration = () => { if (regForm.firstName) { setUser(p => ({ ...p, firstName: regForm.firstName, lastName: regForm.lastName })); setStep('arsenal'); } };
+  const toggleDiscipline = (sport) => { setUser(prev => { const exists = prev.disciplines.includes(sport); if (exists) return { ...prev, disciplines: prev.disciplines.filter(d => d !== sport) }; if (prev.disciplines.length >= 5) return prev; return { ...prev, disciplines: [...prev.disciplines, sport] }; }); };
+  const handleAddCustom = () => { if (customInput.trim()) { setPopularSports(prev => [...prev, customInput.trim()]); toggleDiscipline(customInput.trim()); setCustomInput(""); setIsAddingCustom(false); } };
+  const finalizeRegistration = (goalDays) => { const newUser = { ...user, goal: goalDays }; setUser(newUser); syncWithGoogleSheets(newUser, 'REGISTER'); setStep('dashboard'); };
+  
+  const initCheckIn = (sport) => { setSelectedSportForCheckIn(sport); const type = getSportType(sport); if (type === 'other') { completeCheckIn(sport, null, null); } else { setCheckInStage('details'); setCheckInValue(""); } };
+  
+  const completeCheckIn = (sport, value, unit) => {
+      const type = getSportType(sport);
+      setUser(prev => {
+          const isFirstCheckIn = prev.todayActivity.length === 0;
+          const newHistoryItem = { date: new Date().toISOString(), sport, type, value, unit };
+          const newUser = {
+              ...prev, streak: isFirstCheckIn ? prev.streak + 1 : prev.streak, diamonds: isFirstCheckIn ? prev.diamonds : prev.diamonds,
+              todayActivity: [...prev.todayActivity, sport], history: [newHistoryItem, ...prev.history]
+          };
+          syncWithGoogleSheets(newUser, 'CHECK_IN');
+          return newUser;
+      });
+      setShowConfetti(true); setTimeout(() => setShowConfetti(false), 3000);
+      setCheckInModalOpen(false); setCheckInStage('select'); setSelectedSportForCheckIn(null); setCheckInValue("");
+  };
+
+  const handleLogout = () => { if(confirm("Сбросить прогресс?")) { localStorage.removeItem('fitness_quarter_user'); window.location.reload(); } };
+  const handleAdminUpdateUser = (updatedUser) => { setLeaderboard(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u)); };
+  const handleExportData = () => {
+    const headers = ["ID", "Name", "Diamonds", "Streak", "Goal", "Status", "Badges"];
+    const rows = leaderboard.map(u => [u.id, u.name, u.diamonds, u.streak, u.goal, u.status, u.badges?.join(',')].join(","));
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
+    const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", "fitness_quarter_data.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link);
+  };
+
+  // --- Badge Config ---
+  const badgeConfig = {
+      'streak': { icon: <Flame size={10} />, color: 'text-orange-400', bg: 'bg-orange-500/20' },
+      'runner': { icon: <Ruler size={10} />, color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
+      'gym': { icon: <Dumbbell size={10} />, color: 'text-purple-400', bg: 'bg-purple-500/20' },
+      'reps': { icon: <Activity size={10} />, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
+      'early': { icon: <Sun size={10} />, color: 'text-amber-400', bg: 'bg-amber-500/20' },
+      'night': { icon: <Moon size={10} />, color: 'text-indigo-400', bg: 'bg-indigo-500/20' },
+      'weekend': { icon: <Calendar size={10} />, color: 'text-rose-400', bg: 'bg-rose-500/20' },
+      'social': { icon: <Send size={10} />, color: 'text-blue-400', bg: 'bg-blue-500/20' },
+      'redemption': { icon: <Skull size={10} />, color: 'text-slate-400', bg: 'bg-slate-500/20' },
+  };
+
+  const badges = [
+      { id: 'streak', icon: <Flame size={16} />, label: 'На огне', desc: 'Стрик 3+ дней', color: 'text-orange-400', bg: 'bg-orange-900/30 border-orange-500/30', condition: user.streak >= 3 },
+      { id: 'runner', icon: <Ruler size={16} />, label: 'Бегун', desc: '10+ км всего', color: 'text-cyan-400', bg: 'bg-cyan-900/30 border-cyan-500/30', condition: getStatsSummary(user.history).totalKm >= 10 },
+      { id: 'gym', icon: <Dumbbell size={16} />, label: 'Терминатор', desc: '5+ тренировок', color: 'text-purple-400', bg: 'bg-purple-900/30 border-purple-500/30', condition: getStatsSummary(user.history).totalGym >= 5 },
+      { id: 'reps', icon: <Activity size={16} />, label: 'Машина', desc: '500+ повторений', color: 'text-emerald-400', bg: 'bg-emerald-900/30 border-emerald-500/30', condition: getStatsSummary(user.history).totalReps >= 500 },
+      { id: 'early', icon: <Sun size={16} />, label: 'Жаворонок', desc: 'Тренировка до 9 утра', color: 'text-amber-400', bg: 'bg-amber-900/30 border-amber-500/30', condition: false },
+      { id: 'night', icon: <Moon size={16} />, label: 'Сова', desc: 'Тренировка после 22', color: 'text-indigo-400', bg: 'bg-indigo-900/30 border-indigo-500/30', condition: false },
+      { id: 'weekend', icon: <Calendar size={16} />, label: 'Выходной', desc: 'Тренировка в Сб/Вс', color: 'text-rose-400', bg: 'bg-rose-900/30 border-rose-500/30', condition: false },
+      { id: 'social', icon: <Send size={16} />, label: 'Друг', desc: 'Отправил 5 пинков', color: 'text-blue-400', bg: 'bg-blue-900/30 border-blue-500/30', condition: false },
+      { id: 'redemption', icon: <Skull size={16} />, label: 'Выживший', desc: 'Вернул алмаз', color: 'text-slate-400', bg: 'bg-slate-800 border-slate-600', condition: false },
+  ];
+  const visibleBadges = showAllBadges ? badges : badges.slice(0, 3);
+  const userStats = getStatsSummary(user.history);
+  const progressPercent = Math.min((user.streak / user.goal) * 100, 100);
+
+  // --- Views ---
+
+  const WelcomeScreen = () => (
+      <div className="flex flex-col h-full p-8 animate-fade-in relative z-10 pt-20">
+          <div className="flex-grow flex flex-col items-center justify-center text-center space-y-8">
+              <div className="relative w-36 h-36 flex items-center justify-center"><div className="absolute inset-0 bg-cyan-500/20 blur-3xl rounded-full animate-pulse"></div><Hexagon size={120} className="text-cyan-400 stroke-[1.5] animate-float drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]" /><Activity size={48} className="text-white absolute" /></div>
+              <div><h1 className="text-5xl font-black text-white uppercase tracking-tighter leading-tight mb-2 font-display">Fitness<br/><span className="text-cyan-400">Квартал</span></h1><p className="text-gray-400 font-medium tracking-wide uppercase text-xs bg-white/5 inline-block px-4 py-1.5 rounded-full border border-white/10 mt-2">Твоя территория спорта</p></div>
+          </div>
+          <div className="mt-auto w-full pb-6"><NeonButton onClick={() => setStep('registration')} className="shadow-[0_0_30px_rgba(6,182,212,0.3)]">Начать Челлендж</NeonButton><p className="text-center text-gray-500 text-[10px] mt-4 uppercase tracking-widest font-bold">System v3.4 • Dark Mode</p></div>
+      </div>
+  );
+
+  const RegistrationScreen = () => (
+      <div className="min-h-screen pt-20 flex flex-col p-6 animate-slide-up bg-[#050505] text-white">
+          <h2 className="text-2xl font-bold mb-6 font-display tracking-wider">ПРЕДСТАВЬСЯ</h2>
+          <div className="space-y-4 flex-grow">
+              <div><label className="text-xs font-bold text-gray-500 uppercase ml-1 tracking-widest">Имя</label><input type="text" value={regForm.firstName} onChange={e => setRegForm({...regForm, firstName: e.target.value})} className="w-full p-4 rounded-xl bg-gray-900 border border-gray-800 font-bold focus:border-cyan-500 outline-none text-white" placeholder="Твое имя" /></div>
+              <div><label className="text-xs font-bold text-gray-500 uppercase ml-1 tracking-widest">Фамилия</label><input type="text" value={regForm.lastName} onChange={e => setRegForm({...regForm, lastName: e.target.value})} className="w-full p-4 rounded-xl bg-gray-900 border border-gray-800 font-bold focus:border-cyan-500 outline-none text-white" placeholder="Фамилия" /></div>
+          </div>
+          <div className="pb-8"><NeonButton onClick={handleRegistration} disabled={!regForm.firstName}>Далее</NeonButton></div>
+      </div>
+  );
+
+  const ArsenalScreen = () => (
+      <div className="p-6 flex flex-col h-full animate-slide-up relative z-10 pt-20">
+          <h2 className="text-3xl font-display font-bold text-white mb-2 tracking-wide">Твой Арсенал</h2><p className="text-gray-400 text-sm mb-8 leading-relaxed">Выбери оружие для трансформации.<br/>Максимум 5 дисциплин.</p>
+          <div className="flex flex-wrap gap-3 mb-4 max-h-[50vh] overflow-y-auto content-start">
+              {popularSports.map(sport => (<button key={sport} onClick={() => toggleDiscipline(sport)} className={`px-5 py-2.5 rounded-lg text-sm font-bold tracking-wide transition-all duration-300 border ${user.disciplines.includes(sport) ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.3)]' : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/30 hover:text-white'}`}>{sport}</button>))}
+              {!isAddingCustom ? (<button onClick={() => setIsAddingCustom(true)} className="px-5 py-2.5 rounded-lg text-sm border border-dashed border-gray-600 text-gray-400 hover:border-cyan-500 hover:text-cyan-500 bg-transparent flex items-center gap-2"><Plus size={16} /> Своя</button>) : (<div className="flex items-center gap-2 animate-fade-in w-full sm:w-auto mt-2 sm:mt-0"><input type="text" value={customInput} onChange={(e) => setCustomInput(e.target.value)} placeholder="Название..." className="px-4 py-2.5 rounded-lg bg-gray-900 border border-cyan-500 outline-none text-white text-sm w-32" autoFocus onKeyDown={(e) => e.key === 'Enter' && handleAddCustom()} /><button onClick={handleAddCustom} className="p-2.5 bg-cyan-500 text-white rounded-lg"><CheckCircle size={16}/></button></div>)}
+          </div>
+          <div className="mt-auto"><div className="flex justify-between items-center mb-6 text-xs font-bold uppercase tracking-widest text-gray-500"><span>Выбрано</span><span className={user.disciplines.length > 0 ? "text-cyan-400" : ""}>{user.disciplines.length} / 5</span></div><NeonButton onClick={() => setStep('goal')} disabled={user.disciplines.length === 0} variant={user.disciplines.length > 0 ? 'primary' : 'disabled'}>Далее</NeonButton></div>
+      </div>
+  );
+
+  const GoalScreen = () => {
+      const goals = calculateGoalOptions();
+      return (
+          <div className="p-6 flex flex-col h-full animate-slide-up relative z-10 pt-20">
+              <h2 className="text-3xl font-display font-bold text-white mb-10 text-center tracking-wide">Выбери Высоту</h2>
+              <div className="flex flex-col gap-6 flex-grow justify-center">
+                  {goals.map((g, idx) => (<GlassCard key={idx} onClick={() => finalizeRegistration(g.days)} className="p-6 flex items-center justify-between group border-l-4 border-l-transparent hover:border-l-cyan-500 transition-all"><div className="flex flex-col"><span className="text-4xl font-display font-black text-white group-hover:text-cyan-400 transition-colors drop-shadow-md">{g.days} <span className="text-lg font-sans font-normal text-gray-500">Дней</span></span><span className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mt-2 group-hover:text-white transition-colors">{g.label}</span></div><div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-cyan-500/20 group-hover:text-cyan-400 transition-colors border border-white/5 text-gray-500">{idx === 0 ? <Activity size={24} /> : idx === 1 ? <Zap size={24} /> : <Trophy size={24} />}</div></GlassCard>))}
+                  {goals.length === 0 && <p className="text-center text-rose-500 font-bold">Марафон завершен!</p>}
+              </div>
+          </div>
+      );
+  };
+
+  const AdminPanel = () => {
+      const [editUser, setEditUser] = useState(null);
+      const handleSave = () => { handleAdminUpdateUser(editUser); setEditUser(null); };
+
+      if (editUser) {
+          return (
+              <div className="absolute inset-0 z-50 bg-[#050505] p-6 animate-fade-in overflow-y-auto">
+                  <div className="flex items-center gap-3 mb-8"><button onClick={() => setEditUser(null)} className="p-2 bg-white/5 rounded-full border border-white/10"><X size={20} className="text-white"/></button><h2 className="text-2xl font-bold text-white font-display">РЕДАКТОР</h2></div>
+                  <div className="space-y-6"><GlassCard className="p-6 space-y-4"><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Имя</label><input type="text" value={editUser.name} onChange={(e) => setEditUser({...editUser, name: e.target.value})} className="w-full mt-2 p-3 rounded-lg bg-black/40 border border-white/10 text-white focus:border-cyan-500 outline-none"/></div><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Статус</label><select value={editUser.status} onChange={(e) => setEditUser({...editUser, status: e.target.value})} className="w-full mt-2 p-3 rounded-lg bg-black/40 border border-white/10 text-white outline-none"><option value="active">Active</option><option value="frozen">Frozen</option><option value="dead">Dead</option></select></div><div className="grid grid-cols-2 gap-4"><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Алмазы</label><input type="number" value={editUser.diamonds} onChange={(e) => setEditUser({...editUser, diamonds: parseInt(e.target.value)})} className="w-full mt-2 p-3 rounded-lg bg-black/40 border border-white/10 text-white focus:border-cyan-500 outline-none" /></div><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Стрик</label><input type="number" value={editUser.streak} onChange={(e) => setEditUser({...editUser, streak: parseInt(e.target.value)})} className="w-full mt-2 p-3 rounded-lg bg-black/40 border border-white/10 text-white focus:border-cyan-500 outline-none" /></div></div><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Цель (дней)</label><select value={editUser.goal} onChange={(e) => setEditUser({...editUser, goal: parseInt(e.target.value)})} className="w-full mt-2 p-3 rounded-lg bg-black/40 border border-white/10 text-white outline-none"><option value="30">30</option><option value="60">60</option><option value="100">100</option></select></div></GlassCard><NeonButton variant="gold" onClick={handleSave}><Save size={18} /> Сохранить</NeonButton></div>
+              </div>
+          )
+      }
+      return (
+          <div className="absolute inset-0 z-50 bg-[#050505] p-6 animate-fade-in overflow-y-auto">
+              <div className="flex justify-between items-center mb-8 border-b border-amber-900/30 pb-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/50"><Shield size={20} className="text-amber-500" /></div><div><h2 className="text-xl font-display font-black text-amber-500 uppercase tracking-widest">Master Profile</h2><p className="text-[9px] font-bold text-amber-700 uppercase tracking-[0.2em]">System Admin</p></div></div><button onClick={() => setAdminPanelOpen(false)} className="p-2 bg-white/5 rounded-full hover:bg-white/10"><X size={20} className="text-gray-400" /></button></div>
+              <div className="space-y-6"><div className="grid grid-cols-1 gap-3"><NeonButton variant="secondary" onClick={handleExportData}><Download size={18} /> Экспорт (CSV)</NeonButton></div><div><h3 className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em] mb-4 pl-1">Участники</h3><div className="space-y-3">{leaderboard.map(u => (<GlassCard key={u.id} className="p-3 flex items-center justify-between"><div className="flex items-center gap-3"><div className={`w-1 h-8 rounded-full ${u.status === 'active' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-rose-500'}`}></div><div><div className="font-bold text-white font-display tracking-wide">{u.name}</div><div className="flex gap-3 text-[10px] text-gray-400 font-medium mt-0.5"><span className="flex items-center gap-1"><Diamond size={10} className="text-cyan-400"/> {u.diamonds}</span><span className="flex items-center gap-1"><Flame size={10} className="text-orange-500"/> {u.streak}</span><span className="uppercase">{u.status}</span></div></div></div><button onClick={() => setEditUser(u)} className="p-2 rounded-lg bg-white/5 hover:bg-amber-500/20 text-gray-400 hover:text-amber-500 transition-colors"><Edit3 size={16} /></button></GlassCard>))}</div></div></div>
+          </div>
+      );
+  };
+
+  const Dashboard = () => {
+    // Render Check In Modal
+    if (checkInModalOpen) {
+        return (
+            <div className="absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in"><div className="w-full max-w-md bg-[#111] border-t border-white/10 rounded-t-3xl p-8 pb-10 sm:rounded-3xl shadow-2xl">
+                {checkInStage === 'select' ? (
+                    <>
+                        <div className="flex justify-between items-center mb-8"><h3 className="text-xl font-display font-bold text-white tracking-wider">ЧТО СДЕЛАНО?</h3><button onClick={() => setCheckInModalOpen(false)} className="p-2 bg-white/5 rounded-full hover:bg-white/10"><X size={20} className="text-gray-400" /></button></div>
+                        <div className="grid grid-cols-1 gap-3">
+                            {user.disciplines.map(sport => (<button key={sport} onClick={() => initCheckIn(sport)} className="py-4 rounded-xl font-bold transition-all border bg-white/5 text-gray-300 border-white/5 hover:bg-cyan-500/20 hover:border-cyan-500/50 hover:text-white flex justify-between px-6"><span>{sport}</span>{user.todayActivity.includes(sport) && <span className="text-emerald-400">✓</span>}</button>))}
+                            <div className="mt-6 text-center"><button onClick={() => { setCheckInModalOpen(false); setEditingProfile(true); }} className="text-xs font-bold text-gray-500 uppercase tracking-widest hover:text-cyan-400 transition-colors">Добавить дисциплину</button></div>
+                        </div>
+                    </>
+                ) : (
+                    <div className="animate-slide-up">
+                        <div className="flex justify-between items-center mb-8"><button onClick={() => setCheckInStage('select')} className="text-gray-500 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors">← Назад</button><h3 className="text-xl font-display font-bold text-white tracking-wider">{selectedSportForCheckIn}</h3><div className="w-8"></div></div>
+                        {getSportType(selectedSportForCheckIn) === 'gym' && <div className="grid grid-cols-2 gap-3">{['Всё тело', 'Верх', 'Низ', 'Голова'].map(s => <button key={s} onClick={() => completeCheckIn(selectedSportForCheckIn, s, null)} className="py-6 rounded-xl bg-white/5 border border-white/5 hover:bg-cyan-500/20 hover:border-cyan-500/50 hover:text-white text-gray-300 font-bold transition-all">{s === 'Голова' ? '🤪 Головой' : s}</button>)}</div>}
+                        {getSportType(selectedSportForCheckIn) === 'reps' && <div className="grid grid-cols-2 gap-3">{[30, 60, 100, 200].map(r => <button key={r} onClick={() => completeCheckIn(selectedSportForCheckIn, r, 'повт')} className="py-6 rounded-xl bg-white/5 border border-white/5 hover:bg-cyan-500/20 hover:border-cyan-500/50 hover:text-white font-display font-black text-2xl text-gray-300 transition-all">{r}</button>)}</div>}
+                        {getSportType(selectedSportForCheckIn) === 'cardio' && <div className="space-y-8 flex flex-col items-center"><div className="flex items-end gap-2"><input type="number" autoFocus placeholder="0" className="text-center text-7xl font-display font-black text-white w-32 bg-transparent outline-none border-b-2 border-white/20 focus:border-cyan-500 transition-colors pb-2" onChange={(e) => setCheckInValue(e.target.value)} /><span className="text-xl font-bold text-gray-500 pb-4">КМ</span></div><NeonButton onClick={() => completeCheckIn(selectedSportForCheckIn, checkInValue, 'км')} disabled={!checkInValue} variant={checkInValue ? 'primary' : 'disabled'}>Записать результат</NeonButton></div>}
+                    </div>
+                )}
+            </div></div>
+        );
+    }
+
+    if (editingProfile) {
+        return (
+            <div className="absolute inset-0 z-50 bg-[#050505] p-6 animate-fade-in overflow-y-auto">
+                <div className="flex justify-between items-center mb-8"><h2 className="text-2xl font-display font-bold text-white tracking-wider">НАСТРОЙКИ</h2><button onClick={() => setEditingProfile(false)} className="p-2 bg-white/5 rounded-full hover:bg-white/10"><X size={20} className="text-gray-400" /></button></div>
+                <div className="space-y-8">
+                    <GlassCard className="p-4 flex justify-between items-center"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400"><Bell size={20} /></div><div><div className="font-bold text-white">Уведомления</div><div className="text-xs text-gray-500">Напоминания о тренировке</div></div></div><ToggleSwitch checked={user.notifications} onChange={(val) => setUser({...user, notifications: val})} /></GlassCard>
+                    <div><label className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-4 block px-1">Твои дисциплины</label><div className="flex flex-wrap gap-2">{popularSports.map(s => <button key={s} onClick={() => toggleDiscipline(s)} className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${user.disciplines.includes(s) ? 'bg-cyan-500/20 border-cyan-500 text-white shadow-[0_0_10px_rgba(6,182,212,0.3)]' : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/30 hover:text-white'}`}>{s}</button>)}{!isAddingCustom ? <button onClick={() => setIsAddingCustom(true)} className="px-4 py-2 rounded-lg text-xs font-bold border border-dashed border-white/20 text-gray-500 hover:border-cyan-500 hover:text-cyan-400 bg-transparent flex items-center gap-2 transition-colors"><Plus size={14} /> Своя</button> : <div className="flex items-center gap-2 mt-2 sm:mt-0"><input type="text" value={customInput} onChange={(e) => setCustomInput(e.target.value)} className="px-3 py-2 rounded-lg bg-black/30 border border-cyan-500/50 outline-none text-white text-xs w-32 focus:ring-1 focus:ring-cyan-500" autoFocus onKeyDown={(e) => e.key === 'Enter' && handleAddCustom()} /><button onClick={handleAddCustom} className="p-2 bg-cyan-500 text-white rounded-lg shadow-lg hover:bg-cyan-600"><CheckCircle size={14}/></button></div>}</div></div>
+                    <div className="pb-10"><label className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-4 block px-1">Цель</label><div className="flex gap-2 bg-black/20 p-1.5 rounded-xl border border-white/5">{[30, 60, 100].map(d => <button key={d} onClick={() => setUser({...user, goal: d})} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${user.goal === d ? 'bg-cyan-600 text-white shadow-lg' : 'text-gray-400 hover:bg-white/5'}`}>{d}</button>)}</div></div>
+                </div>
+                <div className="sticky bottom-6"><NeonButton onClick={() => setEditingProfile(false)}>Сохранить</NeonButton></div>
             </div>
         );
+    }
 
-        const Button = ({ children, onClick, variant = 'primary', disabled = false, className = "" }) => {
-            const variants = {
-                primary: "bg-cyan-600 text-white shadow-lg shadow-cyan-200",
-                danger: "bg-rose-500 text-white shadow-lg shadow-rose-200",
-                secondary: "bg-slate-100 text-slate-600",
-                gold: "bg-amber-500 text-white shadow-lg shadow-amber-200",
-                disabled: "bg-slate-200 text-slate-400 cursor-not-allowed"
-            };
-            return (
-                <button 
-                    onClick={onClick} 
-                    disabled={disabled}
-                    className={`w-full py-4 rounded-xl font-bold text-sm uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 ${disabled ? variants.disabled : variants[variant]} ${className}`}
-                >
-                    {children}
-                </button>
-            );
-        };
+    if (selectedUser) {
+        const uStats = getStatsSummary(selectedUser.history || []);
+        return (
+            <div className="absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in p-4 overflow-y-auto"><div className="w-full max-w-sm bg-[#1a1025] rounded-3xl p-6 shadow-2xl border border-white/10 relative overflow-hidden">
+                <div className="absolute -top-20 -right-20 w-40 h-40 bg-cyan-500/20 blur-[50px] rounded-full pointer-events-none"></div>
+                <div className="flex justify-end relative z-10"><button onClick={() => setSelectedUser(null)} className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors"><X size={20} className="text-gray-400" /></button></div>
+                <div className="flex flex-col items-center -mt-4 mb-8 relative z-10"><Avatar name={selectedUser.name} className="w-24 h-24 text-3xl shadow-[0_0_20px_rgba(6,182,212,0.4)] mb-4" /><h3 className="text-2xl font-display font-black text-white tracking-wide">{selectedUser.name}</h3><div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mt-2 border ${selectedUser.status === 'active' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}>{selectedUser.status === 'active' ? 'В строю' : 'Заморожен'}</div></div>
+                <div className="grid grid-cols-2 gap-3 mb-6 relative z-10"><div className="bg-white/5 p-3 rounded-xl border border-white/5 flex flex-col items-center justify-center hover:bg-white/10 transition-colors"><div className="text-[10px] font-bold text-gray-500 uppercase mb-1">Дистанция</div><div className="font-display font-black text-xl text-cyan-400 flex items-center gap-1"><Ruler size={14}/> {uStats.totalKm} <span className="text-[10px] text-gray-500 font-normal font-sans">км</span></div></div><div className="bg-white/5 p-3 rounded-xl border border-white/5 flex flex-col items-center justify-center hover:bg-white/10 transition-colors"><div className="text-[10px] font-bold text-gray-500 uppercase mb-1">Повторений</div><div className="font-display font-black text-xl text-purple-400 flex items-center gap-1"><Dumbbell size={14}/> {uStats.totalReps}</div></div></div>
+                <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 pl-1 relative z-10">Дисциплины</h4><div className="flex flex-wrap gap-2 mb-8 relative z-10">{selectedUser.disciplines?.map(d => <span key={d} className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-xs font-bold text-gray-300">{d}</span>)}</div>
+                <NeonButton className="py-3 text-sm relative z-10" variant="secondary"><Zap size={16} className="text-amber-400 fill-amber-400" /> Отправить мотивацию</NeonButton>
+            </div></div>
+        );
+    }
 
-        // --- GOOGLE SHEETS SYNC ---
-        const syncWithGoogleSheets = async (userData, actionType = 'UPDATE') => {
-            const payload = {
-                action: actionType,
-                timestamp: new Date().toISOString(),
-                telegramId: userData.telegramId,
-                username: userData.username,
-                firstName: userData.firstName,
-                lastName: userData.lastName,
-                arsenal: userData.disciplines.join(', '),
-                goal: userData.goal,
-                diamonds: userData.diamonds,
-                streak: userData.streak,
-                completedToday: userData.todayActivity.join(', ')
-            };
-
-            console.log("📤 Отправка в Google Sheets:", payload);
-
-            if (GOOGLE_SCRIPT_URL) {
-                try {
-                    await fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors', // Важно для Google Scripts
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                } catch (e) {
-                    console.error("Ошибка отправки:", e);
-                }
-            }
-        };
-
-        // --- MAIN APP ---
-
-        function App() {
-            // State
-            const [step, setStep] = useState('loading');
-            const [user, setUser] = useState({
-                firstName: '',
-                lastName: '',
-                username: '',
-                telegramId: null,
-                disciplines: [],
-                goal: 0,
-                diamonds: 3,
-                streak: 0,
-                todayActivity: [],
-                history: [],
-                isAdmin: false
-            });
-
-            // Для регистрации
-            const [regForm, setRegForm] = useState({ firstName: '', lastName: '' });
-            const [customDiscipline, setCustomDiscipline] = useState('');
-            const [isAddingCustom, setIsAddingCustom] = useState(false);
-
-            // UI State
-            const [checkInModalOpen, setCheckInModalOpen] = useState(false);
-            const [adminPanelOpen, setAdminPanelOpen] = useState(false);
-            const [popularSports, setPopularSports] = useState(['Бег', 'Зал', 'Отжимания', 'Плавание', 'Воркаут', 'Вело', 'Приседания', 'Ходьба']);
-
-            // Init
-            useEffect(() => {
-                // Telegram setup
-                const tg = window.Telegram?.WebApp;
-                if (tg) {
-                    tg.ready();
-                    tg.expand(); // Fullscreen
-                    // Set header color to match body
-                    tg.setHeaderColor('#f8fafc');
-                    tg.setBackgroundColor('#f8fafc');
-                }
-
-                // Check Local Storage
-                const savedUser = localStorage.getItem('fitness_quarter_user');
-                
-                if (savedUser) {
-                    const parsed = JSON.parse(savedUser);
-                    // Обновляем админские права при каждом входе, вдруг юзернейм сменился
-                    const tgUser = tg?.initDataUnsafe?.user;
-                    const isAdmin = (tgUser?.username === ADMIN_USERNAME) || parsed.isAdmin;
-                    
-                    setUser({ ...parsed, isAdmin });
-                    setStep('dashboard');
-                } else {
-                    // Pre-fill from Telegram if available
-                    const tgUser = tg?.initDataUnsafe?.user;
-                    if (tgUser) {
-                        setRegForm({
-                            firstName: tgUser.first_name || '',
-                            lastName: tgUser.last_name || ''
-                        });
-                        setUser(prev => ({
-                            ...prev,
-                            telegramId: tgUser.id,
-                            username: tgUser.username,
-                            isAdmin: tgUser.username === ADMIN_USERNAME
-                        }));
-                    }
-                    setStep('welcome');
-                }
-            }, []);
-
-            // Save to LocalStorage on change
-            useEffect(() => {
-                if (user.firstName) { // Only save if registered
-                    localStorage.setItem('fitness_quarter_user', JSON.stringify(user));
-                }
-            }, [user]);
-
-            // --- Logic Helpers ---
-
-            const calculateGoalOptions = () => {
-                const now = new Date();
-                const diffTime = Math.abs(now - MARATHON_START_DATE);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                
-                // Если марафон еще не начался или только начался, diffDays = 0 (или отрицательное)
-                // Если марафон идет 10 дней, то для цели 100 осталось 90.
-                
-                const passed = (now < MARATHON_START_DATE) ? 0 : diffDays;
-                
-                const goals = [
-                    { label: 'Новичок', days: 30 - passed, original: 30 },
-                    { label: 'Атлет', days: 60 - passed, original: 60 },
-                    { label: 'Титан', days: 100 - passed, original: 100 }
-                ];
-
-                return goals.filter(g => g.days > 0);
-            };
-
-            const handleRegistration = () => {
-                if (!regForm.firstName) return;
-                setUser(prev => ({ ...prev, firstName: regForm.firstName, lastName: regForm.lastName }));
-                setStep('arsenal');
-            };
-
-            const toggleDiscipline = (sport) => {
-                setUser(prev => {
-                    const exists = prev.disciplines.includes(sport);
-                    if (exists) return { ...prev, disciplines: prev.disciplines.filter(d => d !== sport) };
-                    if (prev.disciplines.length >= 5) return prev;
-                    return { ...prev, disciplines: [...prev.disciplines, sport] };
-                });
-            };
-
-            const finalizeRegistration = (goalDays) => {
-                const newUser = { ...user, goal: goalDays };
-                setUser(newUser);
-                // First Sync
-                syncWithGoogleSheets(newUser, 'REGISTER');
-                setStep('dashboard');
-            };
-
-            const handleCheckIn = (sport) => {
-                const newUser = {
-                    ...user,
-                    todayActivity: [...user.todayActivity, sport],
-                    streak: user.todayActivity.length === 0 ? user.streak + 1 : user.streak, // Streak only increments on first activity
-                    history: [{ date: new Date().toISOString(), sport }, ...user.history]
-                };
-                setUser(newUser);
-                setCheckInModalOpen(false);
-                syncWithGoogleSheets(newUser, 'CHECK_IN');
-            };
-
-            const handleLogout = () => {
-                if(confirm("Сбросить прогресс и выйти?")) {
-                    localStorage.removeItem('fitness_quarter_user');
-                    window.location.reload();
-                }
-            };
-
-            // --- Views ---
-
-            const WelcomeScreen = () => (
-                <div className="min-h-screen pt-safe-top flex flex-col p-6 animate-fade-in">
-                    <div className="flex-grow flex flex-col items-center justify-center text-center space-y-6">
-                        <div className="w-32 h-32 bg-cyan-50 rounded-full flex items-center justify-center shadow-inner">
-                            <Hexagon size={64} className="text-cyan-600 stroke-1" />
+    return (
+        <div className="pb-24 relative min-h-screen z-10">
+            {/* Header */}
+            <div className="sticky top-0 bg-[#050505]/90 backdrop-blur-md z-20 px-6 py-4 border-b border-white/5">
+                <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-3 cursor-pointer group" onClick={() => user.isAdmin && setAdminPanelOpen(true)}>
+                        <div className="relative">
+                            <Avatar name={user.firstName} />
+                            {user.isAdmin && <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white rounded-full p-0.5 border-2 border-[#050505]"><Shield size={10} /></div>}
                         </div>
-                        <div>
-                            <h1 className="text-4xl font-display font-bold text-slate-900 mb-2">Fitness Квартал</h1>
-                            <p className="text-slate-500">Твоя территория спорта</p>
-                        </div>
+                        <div><div className="font-display font-bold text-white text-lg leading-tight group-hover:text-cyan-400 transition-colors">{user.firstName}</div><div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Статус: <span className="text-emerald-400">{user.status === 'active' ? 'В строю' : 'Заморожен'}</span></div></div>
                     </div>
-                    <div className="pb-8">
-                        <Button onClick={() => setStep('registration')}>Начать Челлендж</Button>
+                    <div className="flex gap-2">
+                        <div onClick={() => setStep('redemption')} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer hover:bg-white/10 transition-colors"><Diamond size={16} className="text-cyan-400 fill-cyan-400" /><span className="font-display font-bold text-white text-lg">{user.diamonds}</span></div>
+                        <button onClick={() => setEditingProfile(true)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"><Settings size={18} /></button>
                     </div>
                 </div>
-            );
+                <div className="flex justify-between text-[10px] font-bold text-gray-500 mb-2 font-display uppercase tracking-widest"><span>{user.streak} Days Streak</span><span>Goal: {user.goal}</span></div>
+                <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden relative"><div className="bg-gradient-to-r from-cyan-500 to-purple-500 h-full shadow-[0_0_10px_rgba(6,182,212,0.5)]" style={{ width: `${progressPercent}%` }}></div></div>
+            </div>
 
-            const RegistrationScreen = () => (
-                <div className="min-h-screen pt-safe-top flex flex-col p-6 animate-slide-up">
-                    <h2 className="text-2xl font-display font-bold text-slate-900 mb-6">Представься</h2>
-                    <div className="space-y-4 flex-grow">
-                        <div>
-                            <label className="text-xs font-bold text-slate-400 uppercase ml-1">Имя</label>
-                            <input 
-                                type="text" 
-                                value={regForm.firstName}
-                                onChange={e => setRegForm({...regForm, firstName: e.target.value})}
-                                className="w-full p-4 rounded-xl bg-white border border-slate-200 font-bold focus:border-cyan-500 outline-none shadow-sm"
-                                placeholder="Твое имя"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-400 uppercase ml-1">Фамилия (опционально)</label>
-                            <input 
-                                type="text" 
-                                value={regForm.lastName}
-                                onChange={e => setRegForm({...regForm, lastName: e.target.value})}
-                                className="w-full p-4 rounded-xl bg-white border border-slate-200 font-bold focus:border-cyan-500 outline-none shadow-sm"
-                                placeholder="Фамилия"
-                            />
-                        </div>
-                    </div>
-                    <div className="pb-8">
-                        <Button onClick={handleRegistration} disabled={!regForm.firstName}>Далее</Button>
-                    </div>
-                </div>
-            );
+            {adminPanelOpen && <AdminPanel />}
 
-            const ArsenalScreen = () => (
-                <div className="min-h-screen pt-safe-top flex flex-col p-6 animate-slide-up">
-                    <h2 className="text-2xl font-display font-bold text-slate-900 mb-2">Твой Арсенал</h2>
-                    <p className="text-slate-500 text-sm mb-6">Выбери до 5 дисциплин.</p>
-                    
-                    <div className="flex-grow overflow-y-auto pb-4">
-                        <div className="flex flex-wrap gap-3">
-                            {popularSports.map(sport => (
-                                <button 
-                                    key={sport} 
-                                    onClick={() => toggleDiscipline(sport)}
-                                    className={`px-5 py-3 rounded-xl font-bold text-sm border transition-all ${user.disciplines.includes(sport) ? 'bg-cyan-600 text-white border-cyan-600 shadow-md' : 'bg-white text-slate-600 border-slate-200'}`}
-                                >
-                                    {sport}
-                                </button>
-                            ))}
-                            
-                            {!isAddingCustom ? (
-                                <button onClick={() => setIsAddingCustom(true)} className="px-5 py-3 rounded-xl font-bold text-sm border border-dashed border-slate-300 text-slate-400 flex items-center gap-2">
-                                    <Plus size={16} /> Своя
-                                </button>
+            {/* Main Action */}
+            <div className="p-6">
+                {isCheckedIn ? (
+                    <GlassCard className="p-8 text-center bg-emerald-900/20 border-emerald-500/30">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 mb-4 shadow-[0_0_15px_rgba(16,185,129,0.3)]"><CheckCircle size={32} className="text-emerald-400" /></div>
+                        <h3 className="text-xl font-display font-bold text-white mb-2 tracking-wide">ДЕНЬ ЗАСЧИТАН</h3>
+                        <div className="flex flex-wrap justify-center gap-2 mt-2 mb-6">{user.todayActivity.map(act => <span key={act} className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-[10px] font-bold text-emerald-300 uppercase tracking-wider">{act}</span>)}</div>
+                        <NeonButton variant="secondary" onClick={() => setCheckInModalOpen(true)} className="py-3 text-xs"><Plus size={14} /> Добавить еще</NeonButton>
+                    </GlassCard>
+                ) : (
+                    <button onClick={() => setCheckInModalOpen(true)} disabled={user.diamonds <= 0} className="w-full aspect-[2/1] rounded-2xl bg-gradient-to-br from-[#1a1025] to-[#0f0518] border border-white/10 shadow-[0_0_30px_rgba(6,182,212,0.15)] relative group overflow-hidden active:scale-[0.98] transition-all hover:border-cyan-500/50">
+                        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay"></div>
+                        <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform skew-x-12 group-hover:animate-shine"></div>
+                        <div className="relative z-10 flex flex-col items-center justify-center h-full gap-4">
+                            {user.diamonds > 0 ? (
+                                <><div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.5)] group-hover:scale-110 transition-transform duration-500 text-white"><Zap size={32} className="fill-white" /></div><div className="text-center"><span className="block text-2xl font-display font-black text-white uppercase tracking-[0.2em] group-hover:text-cyan-400 transition-colors">ОТМЕТИТЬ</span><span className="text-gray-500 text-[10px] uppercase tracking-widest font-bold mt-1">Запиши свой прогресс</span></div></>
                             ) : (
-                                <div className="flex items-center gap-2 w-full animate-fade-in">
-                                    <input 
-                                        autoFocus
-                                        type="text" 
-                                        value={customDiscipline}
-                                        onChange={e => setCustomDiscipline(e.target.value)}
-                                        className="flex-grow p-3 rounded-xl border border-cyan-500 outline-none text-sm"
-                                        placeholder="Название..."
-                                        onKeyDown={e => {
-                                            if (e.key === 'Enter' && customDiscipline) {
-                                                setPopularSports([...popularSports, customDiscipline]);
-                                                toggleDiscipline(customDiscipline);
-                                                setCustomDiscipline('');
-                                                setIsAddingCustom(false);
-                                            }
-                                        }}
-                                    />
-                                    <button onClick={() => setIsAddingCustom(false)} className="p-3 bg-slate-200 rounded-xl"><X size={18}/></button>
-                                </div>
+                                <><div className="w-16 h-16 rounded-full bg-red-900/30 border border-red-500/30 flex items-center justify-center"><X size={32} className="text-red-500" /></div><div className="text-center px-6"><span className="block text-xl font-display font-black text-red-500 uppercase tracking-widest mb-1">ЗАМОРОЖЕН</span><p className="text-[10px] text-gray-500 font-bold uppercase">Алмазы закончились.<br/>Иди в магазин искупления.</p></div></>
                             )}
                         </div>
-                    </div>
+                    </button>
+                )}
+            </div>
 
-                    <div className="pb-8">
-                        <div className="flex justify-between text-xs font-bold uppercase text-slate-400 mb-4">
-                            <span>Выбрано</span>
-                            <span className={user.disciplines.length > 0 ? "text-cyan-600" : ""}>{user.disciplines.length} / 5</span>
-                        </div>
-                        <Button onClick={() => setStep('goal')} disabled={user.disciplines.length === 0}>Далее</Button>
+            {/* Dashboard / Leaderboard Toggle */}
+            <div className="px-6">
+                <div className="flex justify-between items-center mb-4 pl-1">
+                    <h3 className="text-gray-500 uppercase text-[10px] font-bold tracking-[0.2em]">{dashboardView === 'leaderboard' ? 'РЕЙТИНГ АГЕНТОВ' : 'ЛИЧНОЕ ДЕЛО'}</h3>
+                    <div className="bg-white/5 p-1 rounded-lg flex gap-1 border border-white/5">
+                        <button onClick={() => setDashboardView('leaderboard')} className={`p-1.5 rounded-md transition-all ${dashboardView === 'leaderboard' ? 'bg-cyan-600 text-white shadow-sm' : 'text-gray-500 hover:text-white'}`}><Users size={14} /></button>
+                        <button onClick={() => setDashboardView('progress')} className={`p-1.5 rounded-md transition-all ${dashboardView === 'progress' ? 'bg-cyan-600 text-white shadow-sm' : 'text-gray-500 hover:text-white'}`}><BarChart3 size={14} /></button>
                     </div>
                 </div>
-            );
 
-            const GoalScreen = () => {
-                const goals = calculateGoalOptions();
-                return (
-                    <div className="min-h-screen pt-safe-top flex flex-col p-6 animate-slide-up">
-                        <h2 className="text-2xl font-display font-bold text-slate-900 mb-8 text-center">Твоя Цель</h2>
-                        <div className="flex flex-col gap-4 flex-grow justify-center">
-                            {goals.map((g, idx) => (
-                                <Card key={idx} onClick={() => finalizeRegistration(g.days)} className="flex items-center justify-between border-l-4 border-l-cyan-500 hover:shadow-md transition-shadow">
-                                    <div>
-                                        <div className="text-3xl font-display font-black text-slate-800">{g.days} <span className="text-sm font-sans font-normal text-slate-400">Дней</span></div>
-                                        <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{g.label}</div>
-                                    </div>
-                                    <ChevronRight className="text-slate-300" />
-                                </Card>
-                            ))}
-                            {goals.length === 0 && (
-                                <p className="text-center text-rose-500">Марафон уже заканчивается, целей нет!</p>
-                            )}
-                        </div>
-                    </div>
-                );
-            };
-
-            const AdminPanel = () => {
-                if (!user.isAdmin) return null;
-                return (
-                    <div className="fixed inset-0 z-50 bg-slate-50 overflow-y-auto animate-slide-up">
-                        <div className="pt-safe-top px-6 pb-6">
-                            <div className="flex justify-between items-center mb-8">
-                                <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2"><Shield className="text-amber-500"/> MASTER PANEL</h2>
-                                <button onClick={() => setAdminPanelOpen(false)} className="p-2 bg-white border rounded-full"><X size={20}/></button>
-                            </div>
-                            
-                            <div className="space-y-6">
-                                <Card className="bg-amber-50 border-amber-200">
-                                    <h3 className="font-bold text-amber-800 mb-2">Экспорт данных</h3>
-                                    <p className="text-xs text-amber-600 mb-4">Скачать всех участников в CSV</p>
-                                    <button className="w-full py-3 bg-white border border-amber-200 rounded-xl font-bold text-amber-600 flex items-center justify-center gap-2">
-                                        <Download size={16}/> Скачать CSV
-                                    </button>
-                                </Card>
-
-                                <div>
-                                    <h3 className="text-xs font-bold text-slate-400 uppercase mb-3">Участники (Демо)</h3>
-                                    {/* Здесь в реальности был бы список из БД */}
-                                    <div className="space-y-2">
-                                        <div className="bg-white p-3 rounded-xl border border-slate-100 flex justify-between">
-                                            <span className="font-bold text-slate-700">@solomin_d</span>
-                                            <span className="text-xs bg-emerald-100 text-emerald-600 px-2 py-1 rounded">Active</span>
-                                        </div>
-                                        <div className="bg-white p-3 rounded-xl border border-slate-100 flex justify-between">
-                                            <span className="font-bold text-slate-700">User 2</span>
-                                            <span className="text-xs bg-rose-100 text-rose-600 px-2 py-1 rounded">Frozen</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-
-            const Dashboard = () => {
-                const progress = Math.min((user.streak / user.goal) * 100, 100) || 0;
-                
-                return (
-                    <div className="min-h-screen pt-safe-top pb-20 bg-slate-50">
-                        {/* Header */}
-                        <div className="px-6 mb-6">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="flex items-center gap-3" onClick={() => user.isAdmin && setAdminPanelOpen(true)}>
-                                    <div className="w-12 h-12 bg-white rounded-full border border-slate-200 flex items-center justify-center font-display font-bold text-slate-700 shadow-sm relative">
-                                        {user.firstName[0]}{user.lastName ? user.lastName[0] : ''}
-                                        {user.isAdmin && <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white rounded-full p-0.5 border-2 border-white"><Shield size={10}/></div>}
+                {dashboardView === 'leaderboard' ? (
+                    <div className="space-y-3">
+                        {leaderboard.map((u, idx) => (
+                            <GlassCard key={u.id} onClick={() => setSelectedUser(u)} className={`p-4 flex items-center justify-between transition-colors ${u.status === 'frozen' ? 'opacity-50 grayscale' : ''}`}>
+                                <div className="flex items-center gap-4">
+                                    <div className="relative">
+                                        <Avatar name={u.name} className="w-10 h-10 text-xs" />
+                                        <div className="absolute -top-1 -right-1 bg-[#1a1025] rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold border border-white/20 text-white">{idx + 1}</div>
                                     </div>
                                     <div>
-                                        <div className="font-bold text-slate-800 text-lg">{user.firstName}</div>
-                                        <div className="text-xs text-slate-400 font-bold uppercase">В строю</div>
+                                        <div className="flex items-center gap-2">
+                                            <div className={`font-bold text-white tracking-wide ${u.status === 'frozen' ? 'line-through text-gray-500' : ''}`}>{u.name}</div>
+                                            <div className="flex gap-1">{u.badges?.slice(0, 4).map(b => badgeConfig[b] && (<div key={b} className={`w-3 h-3 rounded-full flex items-center justify-center border ${badgeConfig[b].bg.replace('bg-', 'bg-').replace('/10', '/30')} ${badgeConfig[b].color}`}>{React.cloneElement(badgeConfig[b].icon, { size: 8 })}</div>))}</div>
+                                        </div>
+                                        <div className="flex gap-1 mt-1">{Array.from({ length: 3 }).map((_, i) => (<div key={i} className={`w-1.5 h-1.5 rotate-45 ${i < u.diamonds ? 'bg-cyan-500 shadow-[0_0_5px_#06b6d4]' : 'bg-white/10'}`}></div>))}</div>
                                     </div>
                                 </div>
-                                <div className="flex gap-2">
-                                    <div className="bg-white px-3 py-1.5 rounded-lg border border-slate-200 flex items-center gap-2 shadow-sm">
-                                        <Diamond size={16} className="text-cyan-500 fill-cyan-500"/>
-                                        <span className="font-bold text-slate-700">{user.diamonds}</span>
-                                    </div>
-                                    <button onClick={handleLogout} className="w-9 h-9 bg-white rounded-lg border border-slate-200 flex items-center justify-center text-slate-400"><LogOut size={16}/></button>
-                                </div>
-                            </div>
-                            
-                            {/* Progress */}
-                            <div className="flex justify-between text-xs font-bold text-slate-400 mb-2 uppercase">
-                                <span>День {user.streak}</span>
-                                <span>Цель {user.goal}</span>
-                            </div>
-                            <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                                <div className="bg-cyan-500 h-full transition-all duration-1000" style={{width: `${progress}%`}}></div>
-                            </div>
-                        </div>
-
-                        {/* Action Area */}
-                        <div className="px-6 mb-8">
-                            {user.todayActivity.length > 0 ? (
-                                <Card className="text-center py-8 border-emerald-200 bg-emerald-50/50">
-                                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-500 shadow-sm"><CheckCircle size={32}/></div>
-                                    <h3 className="text-xl font-bold text-slate-800 mb-2">Отличная работа!</h3>
-                                    <div className="flex flex-wrap gap-2 justify-center mb-6">
-                                        {user.todayActivity.map(act => <span key={act} className="text-xs font-bold bg-white px-3 py-1 rounded-full border border-emerald-100 text-emerald-600">{act}</span>)}
-                                    </div>
-                                    <Button variant="secondary" onClick={() => setCheckInModalOpen(true)} className="py-3 text-xs h-auto"><Plus size={14}/> Добавить еще</Button>
-                                </Card>
-                            ) : (
-                                <button 
-                                    onClick={() => setCheckInModalOpen(true)}
-                                    disabled={user.diamonds <= 0}
-                                    className="w-full aspect-video rounded-3xl bg-white border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center justify-center gap-3 active:scale-95 transition-all group relative overflow-hidden"
-                                >
-                                    {user.diamonds > 0 ? (
-                                        <>
-                                            <div className="w-16 h-16 bg-cyan-50 rounded-full flex items-center justify-center text-cyan-500 group-hover:scale-110 transition-transform"><Zap size={32} className="fill-cyan-500"/></div>
-                                            <span className="text-2xl font-black text-slate-800 uppercase tracking-widest">ОТМЕТИТЬСЯ</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center text-rose-500"><X size={32}/></div>
-                                            <span className="text-xl font-black text-rose-500 uppercase tracking-widest">ЗАМОРОЖЕН</span>
-                                            <span className="text-xs text-slate-400">Нужен алмаз</span>
-                                        </>
-                                    )}
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Modals */}
-                        {checkInModalOpen && (
-                            <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-end sm:items-center justify-center animate-fade-in p-4">
-                                <div className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl animate-slide-up">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h3 className="text-lg font-bold text-slate-800">Что сделано?</h3>
-                                        <button onClick={() => setCheckInModalOpen(false)} className="p-2 bg-slate-100 rounded-full"><X size={20}/></button>
-                                    </div>
-                                    <div className="space-y-3">
-                                        {user.disciplines.map(d => (
-                                            <button 
-                                                key={d}
-                                                onClick={() => handleCheckIn(d)}
-                                                className="w-full p-4 rounded-xl border border-slate-100 bg-slate-50 font-bold text-slate-700 hover:bg-cyan-50 hover:border-cyan-200 hover:text-cyan-700 transition-colors text-left flex justify-between"
-                                            >
-                                                {d}
-                                                {user.todayActivity.includes(d) && <CheckCircle size={18} className="text-emerald-500"/>}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {adminPanelOpen && <AdminPanel />}
+                                <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-gray-500 hover:text-amber-400 hover:bg-amber-400/10 transition-colors"><Zap size={14} /></div>
+                            </GlassCard>
+                        ))}
                     </div>
-                );
-            };
+                ) : (
+                    <div className="animate-fade-in space-y-6">
+                        <GlassCard className="p-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-3">
+                                    <Avatar name={user.firstName} className="w-12 h-12 text-lg shadow-md border-2 border-white/10" />
+                                    <div><div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Ранг</div><div className="font-display font-black text-lg text-white tracking-wide">{getUserTitle(user.goal)}</div></div>
+                                </div>
+                                <div className="text-right"><div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Цель</div><div className="font-display font-black text-xl text-cyan-400">{user.goal} <span className="text-sm text-white/50">Дней</span></div></div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-black/20 p-3 rounded-xl border border-white/5 text-center"><Ruler size={16} className="mx-auto text-cyan-400 mb-1" /><div className="font-display font-bold text-lg text-white">{userStats.totalKm}</div><div className="text-[9px] text-gray-500 uppercase font-bold">КМ Всего</div></div>
+                                <div className="bg-black/20 p-3 rounded-xl border border-white/5 text-center"><Dumbbell size={16} className="mx-auto text-purple-400 mb-1" /><div className="font-display font-bold text-lg text-white">{userStats.totalReps}</div><div className="text-[9px] text-gray-500 uppercase font-bold">Повторений</div></div>
+                            </div>
+                        </GlassCard>
+                        <div>
+                            <div className="flex justify-between items-center mb-3 pl-1 pr-1"><h3 className="text-gray-500 uppercase text-[10px] font-bold tracking-[0.2em]">Награды</h3><button onClick={() => setShowAllBadges(!showAllBadges)} className="text-[10px] font-bold text-cyan-500 hover:text-white flex items-center gap-1 uppercase transition-colors">{showAllBadges ? 'Скрыть' : 'Раскрыть'}{showAllBadges ? <ChevronUp size={10}/> : <ChevronDown size={10}/>}</button></div>
+                            <div className="grid gap-2 grid-cols-3">{visibleBadges.map(b => (<div key={b.id} className={`flex flex-col items-center p-3 rounded-xl border text-center transition-all ${b.condition ? 'bg-white/5 border-white/20' : 'bg-black/20 border-white/5 opacity-40 grayscale'}`}><div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 border bg-opacity-20 ${b.bg} ${b.color}`}>{b.icon}</div><div className="font-bold text-gray-300 text-[9px] uppercase leading-tight mb-1">{b.label}</div></div>))}</div>
+                        </div>
+                        <div>
+                            <h3 className="text-gray-500 uppercase text-[10px] font-bold tracking-[0.2em] mb-3 pl-1">Хронология</h3>
+                            <div className="space-y-2">{user.history.map((item, i) => (<div key={i} className="bg-white/5 p-3 rounded-xl border border-white/5 flex items-center justify-between"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400">{item.type === 'cardio' ? <Ruler size={14}/> : item.type === 'gym' ? <Dumbbell size={14}/> : <Activity size={14}/>}</div><div><div className="font-bold text-white text-xs tracking-wide">{item.sport}</div><div className="text-[9px] text-gray-500 uppercase tracking-wider">{new Date(item.date).toLocaleDateString('ru-RU', {day: 'numeric', month: 'short'})}</div></div></div><div className="text-right"><div className="font-display font-bold text-white text-sm">{item.value} <span className="text-[10px] font-normal text-gray-500">{item.unit || ''}</span></div></div></div>))}</div>
+                        </div>
+                    </div>
+                )}
+            </div>
 
-            // --- RENDER ---
-            if (step === 'loading') return null;
-            if (step === 'welcome') return <WelcomeScreen />;
-            if (step === 'registration') return <RegistrationScreen />;
-            if (step === 'arsenal') return <ArsenalScreen />;
-            if (step === 'goal') return <GoalScreen />;
-            return <Dashboard />;
-        }
+            {showConfetti && (
+               <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-50 overflow-hidden"><div className="text-6xl animate-bounce">💎</div><div className="absolute top-20 left-10 text-4xl animate-pulse text-cyan-400">✨</div><div className="absolute bottom-40 right-10 text-5xl animate-spin text-purple-500">💠</div></div>
+            )}
+        </div>
+    );
+  };
 
-        const root = createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+  const RedemptionShop = () => {
+      const [processing, setProcessing] = useState(false);
+      const [task, setTask] = useState("Ищу наказание...");
+      const [isSpinning, setIsSpinning] = useState(false);
+      const [hasSpun, setHasSpun] = useState(false);
+      const [fileUploaded, setFileUploaded] = useState(false);
+      const [rerollCount, setRerollCount] = useState(0); 
+      const tasks = ["Сделай селфи с надписью 'Я ЛЕНИВАЯ ПАНДА' на лбу", "Сфоткайся в планке с котом (или пылесосом) на спине", "Сделай фото 'Лицо после 20 бёрпи'", "Сфоткайся с табличкой 'Обещаю больше не пропускать'", "Селфи в позе 'Умирающий лебедь' на коврике"];
+      const handleSpin = () => { if (hasSpun && rerollCount >= 1) return; if (hasSpun) setRerollCount(prev => prev + 1); setIsSpinning(true); setHasSpun(false); setFileUploaded(false); let interval = setInterval(() => { setTask(tasks[Math.floor(Math.random() * tasks.length)]); }, 80); setTimeout(() => { clearInterval(interval); setIsSpinning(false); setHasSpun(true); setTask(tasks[Math.floor(Math.random() * tasks.length)]); }, 2000); };
+      const handleBuyLife = () => { setProcessing(true); setTimeout(() => { setProcessing(false); setUser(prev => ({ ...prev, diamonds: prev.diamonds + 1, status: 'active' })); setStep('dashboard'); }, 4000); };
+      if (processing) return <div className="h-full flex flex-col items-center justify-center p-6 text-center space-y-8 relative z-10 bg-[#050505]"><div className="relative"><div className="w-24 h-24 border-4 border-white/10 border-t-rose-500 rounded-full animate-spin"></div><div className="absolute inset-0 flex items-center justify-center"><Flame className="text-rose-500 animate-pulse" size={32} /></div></div><div><h3 className="text-2xl font-display font-bold text-white mb-2 tracking-widest uppercase">AI ищет совесть...</h3><p className="text-gray-500 text-xs uppercase tracking-widest">"Генерирую унизительную подпись..."</p></div></div>;
+      return (
+          <div className="h-full flex flex-col relative z-10 bg-[#050505] overflow-y-auto">
+              <div className="sticky top-0 z-20 bg-[#050505]/90 backdrop-blur-md px-4 py-4 flex items-center gap-3 border-b border-rose-900/30"><button onClick={() => setStep('dashboard')} className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white active:scale-95 transition-transform">←</button><span className="font-display font-bold text-white uppercase tracking-wider">Магазин искупления</span></div>
+              <div className="p-6 pb-20">
+                  <div className="relative rounded-2xl overflow-hidden mb-8 border border-rose-500/30 shadow-[0_0_30px_rgba(244,63,94,0.15)] bg-rose-950/20"><div className="absolute inset-0 bg-stripe-danger opacity-20 pointer-events-none"></div><div className="p-8 text-center relative z-10"><div className="inline-flex items-center justify-center w-16 h-16 bg-rose-500/20 rounded-full mb-4 border border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.4)] animate-pulse-slow"><Skull className="text-rose-500" size={32} /></div><h2 className="text-2xl font-display font-black text-white uppercase leading-none mb-2 tracking-widest">ВЕРНУТЬ <span className="text-rose-500">АЛМАЗ</span></h2><p className="text-rose-200/70 text-xs font-bold uppercase tracking-wider">Цена: Твоя гордость</p></div></div>
+                  <GlassCard className="p-1 border-rose-500/20 mb-6 bg-black/40"><div className="border border-dashed border-rose-500/30 rounded-lg p-5"><div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2"><Siren size={14} className="text-rose-500 animate-pulse" /><span className="text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em]">ТВОЕ ЗАДАНИЕ</span></div>{isSpinning && <span className="text-[10px] text-gray-500 animate-pulse">ВЫБОР...</span>}</div><h3 className={`font-sans font-bold text-lg text-white leading-snug mb-6 min-h-[4rem] ${isSpinning ? 'opacity-50 blur-[1px]' : ''}`}>{(!hasSpun && !isSpinning) ? "Испытай удачу..." : `"${task}"`}</h3>{!hasSpun && !isSpinning ? (<NeonButton variant="danger" onClick={handleSpin} className="py-2 text-xs shadow-none">Крутить Рулетку 🎲</NeonButton>) : (<div className="flex gap-2 animate-fade-in"><span className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-[10px] font-bold text-white uppercase tracking-wider flex-1 text-center">Награда: +1 💎</span>{hasSpun && !isSpinning && rerollCount < 1 && (<button onClick={handleSpin} className="px-3 py-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase"><RefreshCw size={12}/> <span>Обновить ({1 - rerollCount})</span></button>)}</div>)}</div></GlassCard>
+                  {hasSpun && (<div className="animate-slide-up"><button onClick={() => setFileUploaded(true)} disabled={isSpinning} className={`w-full border border-dashed rounded-xl p-8 mb-6 transition-all group relative overflow-hidden active:scale-[0.99] ${fileUploaded ? 'bg-emerald-500/10 border-emerald-500/50' : 'bg-white/5 border-white/20 hover:border-cyan-500/50 hover:bg-cyan-500/5'}`}><div className="flex flex-col items-center gap-3 relative z-10"><div className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${fileUploaded ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-gray-400 group-hover:text-white'}`}>{fileUploaded ? <CheckCircle size={24}/> : <Camera size={24} />}</div><div className="text-center"><span className={`block text-xs font-bold uppercase tracking-wider transition-colors ${fileUploaded ? 'text-emerald-400' : 'text-gray-300 group-hover:text-white'}`}>{fileUploaded ? 'Фото загружено' : 'Загрузить фото'}</span></div></div></button><NeonButton variant={fileUploaded ? "danger" : "disabled"} onClick={handleBuyLife} disabled={!fileUploaded} className={fileUploaded ? "shadow-[0_0_20px_rgba(244,63,94,0.4)]" : ""}><div className="flex items-center gap-2"><span>{fileUploaded ? "ОТПРАВИТЬ НА ПРОЖАРКУ" : "СНАЧАЛА ЗАГРУЗИ ФОТО"}</span>{fileUploaded && <Send size={14} />}</div></NeonButton><p className="text-center text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-6 px-4 leading-relaxed opacity-50"><FileWarning size={10} className="inline mr-1 mb-0.5"/> Внимание: Фото будет опубликовано в общем чате.</p></div>)}
+              </div>
+          </div>
+      );
+  };
+
+  // --- Render ---
+  if (step === 'loading') return null;
+  if (step === 'welcome') return <WelcomeScreen />;
+  if (step === 'registration') return <RegistrationScreen />;
+  if (step === 'arsenal') return <ArsenalScreen />;
+  if (step === 'goal') return <GoalScreen />;
+  return <Dashboard />;
+}
