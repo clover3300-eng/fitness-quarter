@@ -25,9 +25,6 @@
                         sans: ['Inter', 'sans-serif'],
                         display: ['Space Grotesk', 'sans-serif'],
                     },
-                    spacing: {
-                        'safe-top': '20px',
-                    },
                     animation: {
                         'aurora-flow': 'aurora 15s ease infinite alternate',
                         'float': 'float 6s ease-in-out infinite',
@@ -67,7 +64,6 @@
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
             min-height: 100vh;
-            /* Fix for mobile viewport height */
             min-height: 100dvh; 
         }
         
@@ -96,21 +92,6 @@
             left: -20%;
         }
         
-        .aurora-glow-2 {
-            position: fixed;
-            width: 90vw;
-            height: 90vw;
-            background: radial-gradient(circle, rgba(168,85,247,0.1) 0%, rgba(0,0,0,0) 70%);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: -1;
-            bottom: -20%;
-            right: -20%;
-        }
-
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
         .glass-panel {
             background: rgba(30, 41, 59, 0.3);
             backdrop-filter: blur(16px);
@@ -118,63 +99,34 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
-        
-        /* Error Box Style */
-        #error-box {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(220, 38, 38, 0.9);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            z-index: 9999;
-            max-width: 90%;
-            text-align: center;
+
+        /* Safe Area Padding for Notch */
+        .safe-area-top {
+            padding-top: 80px;
         }
     </style>
 </head>
 <body>
     <div class="aurora-bg"></div>
     <div class="aurora-glow"></div>
-    <div class="aurora-glow-2"></div>
     
     <div id="root" class="min-h-[100dvh]"></div>
 
-    <div id="error-box">
-        <h3 style="font-weight:bold; margin-bottom:10px;">Ошибка запуска</h3>
-        <p id="error-text">Инициализация...</p>
-    </div>
-
-    <script>
-        window.onerror = function(msg, url, line, col, error) {
-            const box = document.getElementById('error-box');
-            const text = document.getElementById('error-text');
-            box.style.display = 'block';
-            text.innerText = `${msg}\nLine: ${line}`;
-            return false;
-        };
-    </script>
-
     <script type="text/babel" data-type="module">
-        // Direct Imports
         import React, { useState, useEffect } from 'https://esm.sh/react@18.2.0';
         import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
         import { 
             Trophy, Diamond, Zap, Camera, CheckCircle, Activity, User, Settings, Plus, X, 
             Hexagon, Flame, Send, Bell, Skull, Dumbbell, Ruler, 
-            BarChart3, Users, Calendar, ChevronUp, ChevronDown, Siren
+            BarChart3, Users, Calendar, ChevronUp, ChevronDown, Siren, Shield, Edit3, Save, CalendarDays
         } from 'https://esm.sh/lucide-react@0.263.1';
 
-        // --- CONSTANTS ---
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydULT-3CWngM-jmKIuVH5f0LvcwDiSqMgEBCbR2FroObYhwKZqG_DeVc4pDa8-WL5A/exec'; 
-        const ADMIN_USERNAME = 'solomin_d';
+        // --- CONFIGURATION ---
+        // ВСТАВЬТЕ СЮДА ССЫЛКУ ИЗ GOOGLE APPS SCRIPT
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/library/d/1zIhoIYV8JDFhRzaiAqIVwDanbakHeJprh8xY5IB9MtfocMqm9gd545VT/4'; 
         
-        // ! ВАЖНО: Устанавливаем дату в будущем, чтобы уровни сложности отображались корректно
-        // Используем 1 Апреля 2026 года
-        const DEFAULT_START_DATE = new Date('2026-04-01'); 
+        const ADMIN_USERNAME = 'solomin_d'; // Мастер аккаунт
+        const DEFAULT_START_DATE = new Date('2026-04-01'); // Фолбэк дата
 
         // --- UI COMPONENTS ---
 
@@ -186,29 +138,23 @@
         );
 
         const NeonButton = ({ children, onClick, variant = 'primary', disabled = false, className = "" }) => {
-            const baseStyle = "w-full py-4 font-bold tracking-wider uppercase transition-all active:scale-95 flex items-center justify-center gap-2 relative overflow-hidden group rounded-xl";
-            
             const variants = {
-                primary: "bg-cyan-600/80 text-white shadow-[0_0_20px_rgba(8,145,178,0.4)] hover:bg-cyan-500 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] border border-cyan-400/30 backdrop-blur-sm",
-                danger: "bg-rose-600/80 text-white shadow-[0_0_20px_rgba(225,29,72,0.4)] hover:bg-rose-500 border border-rose-400/30 backdrop-blur-sm",
-                disabled: "bg-slate-800/50 text-slate-500 border border-slate-700 cursor-not-allowed shadow-none backdrop-blur-sm"
+                primary: "bg-cyan-600/80 text-white border-cyan-400/30 shadow-[0_0_15px_rgba(34,211,238,0.3)]",
+                danger: "bg-rose-600/80 text-white border-rose-400/30 shadow-[0_0_15px_rgba(225,29,72,0.3)]",
+                gold: "bg-amber-500/80 text-white border-amber-300/30 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
+                disabled: "bg-slate-800/50 text-slate-500 border-slate-700 cursor-not-allowed"
             };
-            
             return (
-                <button onClick={onClick} disabled={disabled} className={`${baseStyle} ${disabled ? variants.disabled : variants[variant]} ${className}`}>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine"></div>
+                <button onClick={onClick} disabled={disabled} className={`w-full py-4 font-bold tracking-wider uppercase rounded-xl border backdrop-blur-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${disabled ? variants.disabled : variants[variant]} ${className}`}>
                     {children}
                 </button>
             );
         };
 
-        const ToggleSwitch = ({ checked, onChange }) => (
-            <button onClick={() => onChange(!checked)} className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 relative ${checked ? 'bg-cyan-500' : 'bg-slate-700/50 border border-slate-600'}`}>
-                <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${checked ? 'translate-x-6' : 'translate-x-0'}`} />
-            </button>
-        );
-
-        const Avatar = ({ name, className = "", size = "w-10 h-10" }) => {
+        const Avatar = ({ name, photoUrl, className = "", size = "w-10 h-10" }) => {
+            if (photoUrl) {
+                return <img src={photoUrl} alt={name} className={`${size} rounded-full object-cover border border-white/20 shadow-lg ${className}`} />;
+            }
             const initials = name ? name.slice(0, 2).toUpperCase() : "FQ";
             const gradients = ["from-cyan-500 to-blue-600", "from-purple-500 to-indigo-600", "from-emerald-400 to-teal-600"];
             return (
@@ -218,469 +164,456 @@
             );
         };
 
-        // --- HELPERS ---
-        const getSportType = (sport) => {
-            const s = sport.toLowerCase();
-            if (['бег', 'ходьба', 'плавание', 'вело', 'лыжи'].some(x => s.includes(x))) return 'cardio';
-            if (['зал', 'качалка', 'gym'].some(x => s.includes(x))) return 'gym';
-            if (['воркаут', 'отжимания', 'приседания', 'пресс', 'подтягивания'].some(x => s.includes(x))) return 'reps';
-            return 'other';
-        };
-
-        const getStatsSummary = (history = []) => {
-            let totalKm = 0, totalReps = 0, gymSessions = { 'Верх': 0, 'Низ': 0, 'Всё тело': 0, 'Голова': 0 };
-            history.forEach(entry => {
-                if (entry.type === 'cardio' && entry.value) totalKm += parseFloat(entry.value);
-                if (entry.type === 'reps' && entry.value) totalReps += parseInt(entry.value);
-                if (entry.type === 'gym' && entry.value && gymSessions[entry.value] !== undefined) gymSessions[entry.value]++;
-            });
-            const totalGym = Object.values(gymSessions).reduce((a, b) => a + b, 0);
-            return { totalKm, totalReps, gymSessions, totalGym };
-        };
-
-        const getUserTitle = (goal) => {
-            if (goal >= 100) return 'Киборг';
-            if (goal >= 60) return 'Атлет';
-            return 'Новичок';
-        };
-
-        // --- SCREENS ---
-
-        const WelcomeScreen = ({ onStart }) => (
-            <div className="flex flex-col h-full min-h-[100dvh] p-6 animate-fade-in relative z-10 pt-safe-top">
-                <div className="flex-grow flex flex-col items-center justify-center text-center space-y-8">
-                    <div className="relative w-40 h-40 flex items-center justify-center">
-                        <div className="absolute inset-0 bg-cyan-500 blur-[60px] opacity-30 rounded-full animate-pulse"></div>
-                        <Hexagon size={130} className="text-cyan-400 stroke-[1.5] animate-float drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
-                        <Activity size={50} className="text-white absolute drop-shadow-lg" />
-                    </div>
-                    <div>
-                        <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-white to-purple-200 uppercase tracking-tighter leading-tight mb-2 font-display drop-shadow-sm">Fitness<br/>Aurora</h1>
-                        <p className="text-cyan-200/80 font-medium tracking-[0.2em] uppercase text-xs bg-white/5 inline-block px-4 py-1.5 rounded-full border border-white/10 backdrop-blur-md mt-4">Северный квартал</p>
-                    </div>
-                </div>
-                <div className="mt-auto w-full pb-8">
-                    <NeonButton onClick={onStart}>Начать Путь</NeonButton>
-                </div>
-            </div>
-        );
-
-        const RegistrationScreen = ({ regForm, setRegForm, onNext }) => (
-            <div className="flex flex-col h-full min-h-[100dvh] p-6 animate-slide-up pt-safe-top relative z-10">
-                <h2 className="text-3xl font-display font-bold text-white mb-6 tracking-wide">ИДЕНТИФИКАЦИЯ</h2>
-                <div className="space-y-6 flex-grow">
-                    <GlassCard className="p-1">
-                        <input 
-                            type="text" 
-                            value={regForm.firstName} 
-                            onChange={e => setRegForm(prev => ({...prev, firstName: e.target.value}))} 
-                            className="w-full p-4 bg-transparent text-white font-bold outline-none placeholder:text-slate-500" 
-                            placeholder="Имя агента" 
-                        />
-                    </GlassCard>
-                    <GlassCard className="p-1">
-                        <input 
-                            type="text" 
-                            value={regForm.lastName} 
-                            onChange={e => setRegForm(prev => ({...prev, lastName: e.target.value}))} 
-                            className="w-full p-4 bg-transparent text-white font-bold outline-none placeholder:text-slate-500" 
-                            placeholder="Позывной (Фамилия)" 
-                        />
-                    </GlassCard>
-                </div>
-                <div className="pb-8"><NeonButton onClick={onNext} disabled={!regForm.firstName}>Далее</NeonButton></div>
-            </div>
-        );
-
-        const ArsenalScreen = ({ disciplines, popularSports, onToggle, onCustomAdd, onNext }) => {
-            const [customInput, setCustomInput] = useState("");
-            const [isAdding, setIsAdding] = useState(false);
-
-            const handleAdd = () => {
-                if(customInput.trim()) {
-                    onCustomAdd(customInput.trim());
-                    setCustomInput("");
-                    setIsAdding(false);
-                }
-            };
-
-            return (
-                <div className="p-6 flex flex-col h-full min-h-[100dvh] animate-slide-up relative z-10 pt-safe-top">
-                    <h2 className="text-3xl font-display font-bold text-white mb-2 tracking-wide">ВЫБОР ОРУЖИЯ</h2>
-                    <p className="text-slate-400 text-sm mb-8 leading-relaxed">Собери свой сет.<br/>Максимум 5 дисциплин.</p>
-                    <div className="flex flex-wrap gap-3 mb-4 max-h-[60vh] overflow-y-auto content-start pb-20 no-scrollbar">
-                        {popularSports.map(sport => (
-                            <button key={sport} onClick={() => onToggle(sport)} className={`px-5 py-3 rounded-xl text-sm font-bold tracking-wide transition-all duration-300 border backdrop-blur-md ${disciplines.includes(sport) ? 'bg-cyan-600/80 text-white border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'bg-white/5 text-slate-300 border-white/10 hover:border-cyan-500/50 hover:text-cyan-300'}`}>{sport}</button>
-                        ))}
-                        {!isAdding ? (
-                            <button onClick={() => setIsAdding(true)} className="px-5 py-3 rounded-xl text-sm border border-dashed border-slate-600 text-slate-500 hover:border-cyan-500 hover:text-cyan-400 bg-transparent flex items-center gap-2 transition-colors"><Plus size={16} /> Своя</button>
-                        ) : (
-                            <div className="flex items-center gap-2 animate-fade-in w-full sm:w-auto mt-2 sm:mt-0">
-                                <input type="text" value={customInput} onChange={(e) => setCustomInput(e.target.value)} placeholder="Название..." className="px-4 py-2.5 rounded-xl bg-slate-800/80 border border-cyan-500/50 outline-none text-white text-sm w-32 focus:ring-2 focus:ring-cyan-500/30" autoFocus onKeyDown={(e) => e.key === 'Enter' && handleAdd()} />
-                                <button onClick={handleAdd} className="p-3 bg-cyan-600 text-white rounded-xl shadow-lg hover:bg-cyan-700"><CheckCircle size={16}/></button>
-                            </div>
-                        )}
-                    </div>
-                    <div className="mt-auto pb-8">
-                        <div className="flex justify-between items-center mb-4 text-xs font-bold uppercase tracking-widest"><span className="text-slate-500">Слотов занято</span><span className={disciplines.length > 0 ? "text-cyan-400" : "text-slate-600"}>{disciplines.length} / 5</span></div>
-                        <NeonButton onClick={onNext} disabled={disciplines.length === 0}>Подтвердить</NeonButton>
-                    </div>
-                </div>
-            );
-        };
-
-        const GoalScreen = ({ onSelect, startDate }) => {
-            const calculateGoalOptions = () => {
-                const now = new Date();
-                const start = startDate || DEFAULT_START_DATE;
-                const diffTime = start - now;
-                const daysUntilStart = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
-                // Исправленная логика: Если марафон еще не начался (daysUntilStart > 0), показываем полную длительность.
-                // Если начался, вычитаем прошедшие дни, но не меньше 1 дня.
-                let passed = 0;
-                if (daysUntilStart <= 0) {
-                     passed = Math.abs(daysUntilStart);
-                }
-
-                return [
-                    { label: 'Новичок', days: 30 - passed, original: 30 },
-                    { label: 'Атлет', days: 60 - passed, original: 60 },
-                    { label: 'Киборг', days: 100 - passed, original: 100 }
-                ].filter(g => g.days > 0); // Показываем только если осталось > 0 дней
-            };
-
-            const goals = calculateGoalOptions();
-            
-            return (
-                <div className="p-6 flex flex-col h-full min-h-[100dvh] animate-slide-up relative z-10 pt-safe-top">
-                    <h2 className="text-3xl font-display font-bold text-white mb-10 text-center tracking-wide">УРОВЕНЬ СЛОЖНОСТИ</h2>
-                    <div className="flex flex-col gap-6 flex-grow justify-center pb-8">
-                        {goals.length > 0 ? goals.map((g, idx) => (
-                            <GlassCard key={idx} onClick={() => onSelect(g.days)} className="p-6 flex items-center justify-between group border-l-4 border-l-transparent hover:border-l-cyan-400 transition-all bg-white/5 hover:bg-white/10">
-                                <div className="flex flex-col">
-                                    <span className="text-4xl font-display font-black text-white group-hover:text-cyan-300 transition-colors drop-shadow-md">{g.days} <span className="text-lg font-sans font-normal text-slate-400">Дней</span></span>
-                                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-2 group-hover:text-cyan-200 transition-colors">{g.label}</span>
-                                </div>
-                                <div className="w-14 h-14 rounded-full bg-slate-800/50 flex items-center justify-center group-hover:bg-cyan-500/20 group-hover:text-cyan-300 transition-colors border border-white/10 text-slate-500">
-                                    {idx === 0 ? <Activity size={24} /> : idx === 1 ? <Zap size={24} /> : <Trophy size={24} />}
-                                </div>
-                            </GlassCard>
-                        )) : (
-                             <div className="text-center p-8 glass-panel rounded-2xl">
-                                <h3 className="text-rose-400 font-bold mb-2">СЕЗОН ЗАВЕРШЕН</h3>
-                                <p className="text-slate-400 text-sm">Жди следующего призыва.</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            );
-        };
-
-        // --- MAIN APP ---
+        // --- APP ---
 
         function App() {
             // State
             const [step, setStep] = useState('loading');
             const [user, setUser] = useState({
-                firstName: '', lastName: '', username: '', telegramId: null,
+                firstName: '', lastName: '', username: '', telegramId: null, photoUrl: null,
                 disciplines: [], goal: 0, diamonds: 3, streak: 0,
                 todayActivity: [], history: [], status: 'active', notifications: true, isAdmin: false
             });
-            const [marathonStartDate, setMarathonStartDate] = useState(null);
-
-            // Flow State
-            const [regForm, setRegForm] = useState({ firstName: '', lastName: '' });
-            const [popularSports, setPopularSports] = useState(['Бег', 'Зал', 'Отжимания', 'Плавание', 'Воркаут', 'Вело', 'Приседания', 'Ходьба']);
             
-            // Dashboard UI
+            // Дата старта (синхронизируется с таблицей)
+            const [marathonStartDate, setMarathonStartDate] = useState(DEFAULT_START_DATE);
+            const [isSyncing, setIsSyncing] = useState(false);
+
+            // Flow & UI State
+            const [regForm, setRegForm] = useState({ firstName: '', lastName: '' });
+            const [popularSports, setPopularSports] = useState(['Бег', 'Зал', 'Отжимания', 'Плавание', 'Воркаут', 'Вело']);
+            const [dashboardView, setDashboardView] = useState('leaderboard'); // 'leaderboard' | 'progress' | 'admin' | 'shop'
+            
+            // Modals
             const [checkInModalOpen, setCheckInModalOpen] = useState(false);
             const [checkInStage, setCheckInStage] = useState('select');
             const [selectedSportForCheckIn, setSelectedSportForCheckIn] = useState(null);
             const [checkInValue, setCheckInValue] = useState("");
             const [editingProfile, setEditingProfile] = useState(false);
-            const [dashboardView, setDashboardView] = useState('leaderboard');
-            const [showAllBadges, setShowAllBadges] = useState(false);
-            const [showConfetti, setShowConfetti] = useState(false);
-            const [isAddingCustom, setIsAddingCustom] = useState(false);
-            const [customInput, setCustomInput] = useState("");
-            
-            // Mock Leaderboard
+            const [adminPanelOpen, setAdminPanelOpen] = useState(false);
+            const [selectedUserForDetail, setSelectedUserForDetail] = useState(null);
+            const [adminDateInput, setAdminDateInput] = useState('');
+
+            // Data
             const [leaderboard, setLeaderboard] = useState([
-                { id: 1, name: 'Alex', diamonds: 3, streak: 12, goal: 100, status: 'active', disciplines: ['Бег', 'Воркаут'], history: [], badges: ['streak', 'runner'] },
-                { id: 2, name: 'Elena', diamonds: 5, streak: 45, goal: 60, status: 'active', disciplines: ['Зал', 'Плавание'], history: [], badges: ['gym', 'reps', 'early'] },
-                { id: 3, name: 'Max', diamonds: 0, streak: 8, goal: 30, status: 'frozen', disciplines: ['Бокс'], history: [], badges: [] },
+                { id: 1, name: 'Alex', photoUrl: null, diamonds: 3, streak: 12, goal: 100, status: 'active', disciplines: ['Бег', 'Воркаут'], history: [], badges: ['streak', 'runner'] },
+                { id: 2, name: 'Elena', photoUrl: null, diamonds: 5, streak: 45, goal: 60, status: 'active', disciplines: ['Зал', 'Плавание'], history: [], badges: ['gym'] },
+                { id: 3, name: 'Max', photoUrl: null, diamonds: 0, streak: 8, goal: 30, status: 'frozen', disciplines: ['Бокс'], history: [], badges: [] },
             ]);
 
-            // --- INIT ---
+            // --- INITIALIZATION ---
             useEffect(() => {
-                // Telegram setup
-                const tg = window.Telegram?.WebApp;
-                if (tg) {
-                    tg.ready(); 
-                    tg.expand(); // Force Full Screen
-                    tg.setHeaderColor('#020617'); 
-                    tg.setBackgroundColor('#020617');
-                }
-
-                // Check Local Storage
-                const savedUser = localStorage.getItem('fitness_aurora_user');
-                
-                if (savedUser) {
-                    const parsed = JSON.parse(savedUser);
-                    setUser({ ...parsed });
-                    setStep('dashboard');
-                } else {
-                    const tgUser = tg?.initDataUnsafe?.user;
-                    if (tgUser) {
-                        setRegForm({ firstName: tgUser.first_name || '', lastName: tgUser.last_name || '' });
-                        setUser(prev => ({ ...prev, telegramId: tgUser.id, username: tgUser.username, isAdmin: tgUser.username === ADMIN_USERNAME }));
+                const init = async () => {
+                    // Telegram Init
+                    const tg = window.Telegram?.WebApp;
+                    if (tg) {
+                        tg.ready();
+                        tg.expand(); // Force Full Screen
+                        tg.setHeaderColor('#020617');
+                        tg.setBackgroundColor('#020617');
                     }
-                    setStep('welcome');
-                }
-                
-                setMarathonStartDate(DEFAULT_START_DATE);
 
+                    // Fetch Date from Google Sheet
+                    if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.startsWith('http')) {
+                        try {
+                            const res = await fetch(GOOGLE_SCRIPT_URL);
+                            const data = await res.json();
+                            if (data.result === 'success' && data.config?.MARATHON_START_DATE) {
+                                const fetchedDate = new Date(data.config.MARATHON_START_DATE);
+                                setMarathonStartDate(fetchedDate);
+                                setAdminDateInput(data.config.MARATHON_START_DATE);
+                                console.log("Date synced:", fetchedDate);
+                            }
+                        } catch (e) {
+                            console.error("Sync failed, using default date", e);
+                        }
+                    }
+
+                    // Load User
+                    const savedUser = localStorage.getItem('fitness_aurora_user');
+                    const tgUser = tg?.initDataUnsafe?.user;
+                    
+                    if (savedUser) {
+                        const parsed = JSON.parse(savedUser);
+                        // Update photo and admin status from TG
+                        if (tgUser) {
+                            parsed.photoUrl = tgUser.photo_url;
+                            parsed.isAdmin = (tgUser.username === ADMIN_USERNAME);
+                        }
+                        setUser(parsed);
+                        setStep('dashboard');
+                    } else {
+                        if (tgUser) {
+                            setRegForm({ firstName: tgUser.first_name || '', lastName: tgUser.last_name || '' });
+                            setUser(prev => ({ 
+                                ...prev, 
+                                telegramId: tgUser.id, 
+                                username: tgUser.username, 
+                                photoUrl: tgUser.photo_url,
+                                isAdmin: tgUser.username === ADMIN_USERNAME 
+                            }));
+                        }
+                        setStep('welcome');
+                    }
+                };
+                init();
             }, []);
 
-            useEffect(() => { if (user.firstName) localStorage.setItem('fitness_aurora_user', JSON.stringify(user)); }, [user]);
+            useEffect(() => { 
+                if (user.firstName) localStorage.setItem('fitness_aurora_user', JSON.stringify(user)); 
+            }, [user]);
 
-            // --- ACTION HANDLERS ---
-            const handleRegNext = () => { if (regForm.firstName) { setUser(p => ({ ...p, firstName: regForm.firstName, lastName: regForm.lastName })); setStep('arsenal'); } };
-            const handleArsenalToggle = (sport) => { setUser(prev => { const exists = prev.disciplines.includes(sport); if (exists) return { ...prev, disciplines: prev.disciplines.filter(d => d !== sport) }; if (prev.disciplines.length >= 5) return prev; return { ...prev, disciplines: [...prev.disciplines, sport] }; }); };
-            const handleArsenalCustom = (sport) => { setPopularSports(prev => [...prev, sport]); handleArsenalToggle(sport); };
-            const handleGoalSelect = (goal) => { const newUser = { ...user, goal }; setUser(newUser); setStep('dashboard'); };
-            
-            const toggleDiscipline = (sport) => {
-                 setUser(prev => {
-                    if (prev.disciplines.includes(sport)) {
-                        return { ...prev, disciplines: prev.disciplines.filter(s => s !== sport) };
-                    } else {
-                        if (prev.disciplines.length < 5) return { ...prev, disciplines: [...prev.disciplines, sport] };
-                        return prev;
-                    }
-                });
+            // --- LOGIC: DYNAMIC GOALS ---
+            const getAdjustedGoals = () => {
+                const now = new Date();
+                // Рассчитываем, сколько дней прошло с начала марафона
+                // Если старт в будущем, diffDays будет отрицательным
+                const diffTime = now - marathonStartDate;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+
+                // Если марафон еще не начался (diffDays <= 0), цели полные.
+                // Если начался, вычитаем прошедшие дни из цели.
+                // Пример: Старт 1 янв. Сейчас 5 янв (прошло 4 дня). Цель 30 -> осталось 26.
+                const daysPassed = diffDays > 0 ? diffDays : 0;
+
+                const baseGoals = [30, 60, 100];
+                
+                return baseGoals.map(g => {
+                    const remaining = g - daysPassed;
+                    return {
+                        original: g,
+                        remaining: remaining,
+                        label: g === 30 ? 'Новичок' : g === 60 ? 'Атлет' : 'Киборг'
+                    };
+                }).filter(g => g.remaining > 5); // Скрываем цели, если осталось меньше 5 дней
             };
-            
-            const handleAddCustom = () => {
-                if (customInput.trim()) {
-                    setPopularSports(prev => [...prev, customInput.trim()]);
-                    toggleDiscipline(customInput.trim());
-                    setCustomInput("");
-                    setIsAddingCustom(false);
+
+            // --- ADMIN ACTIONS ---
+            const handleUpdateDate = async () => {
+                if (!adminDateInput) return;
+                setIsSyncing(true);
+                try {
+                    // Optimistic update
+                    setMarathonStartDate(new Date(adminDateInput));
+                    
+                    if (GOOGLE_SCRIPT_URL) {
+                        // Send to Google Sheet (using no-cors workaround for GAS simple triggers if needed, but fetch usually works for WebApp)
+                        await fetch(GOOGLE_SCRIPT_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({ action: 'UPDATE_DATE', date: adminDateInput })
+                        });
+                    }
+                    setAdminPanelOpen(false);
+                    alert("Дата обновлена и синхронизирована!");
+                } catch (e) {
+                    alert("Ошибка синхронизации: " + e.message);
+                } finally {
+                    setIsSyncing(false);
                 }
             };
 
-            const initCheckIn = (sport) => { setSelectedSportForCheckIn(sport); const type = getSportType(sport); if (type === 'other') { completeCheckIn(sport, null, null); } else { setCheckInStage('details'); setCheckInValue(""); } };
+            // --- HANDLERS ---
+            const handleRegNext = () => { if (regForm.firstName) { setUser(p => ({ ...p, firstName: regForm.firstName, lastName: regForm.lastName })); setStep('arsenal'); } };
+            const handleArsenalToggle = (sport) => setUser(prev => { const exists = prev.disciplines.includes(sport); if (exists) return { ...prev, disciplines: prev.disciplines.filter(d => d !== sport) }; if (prev.disciplines.length >= 5) return prev; return { ...prev, disciplines: [...prev.disciplines, sport] }; });
+            const handleGoalSelect = (goal) => { setUser(prev => ({ ...prev, goal })); setStep('dashboard'); };
             
-            const completeCheckIn = (sport, value, unit) => {
-                const type = getSportType(sport);
-                setUser(prev => {
-                    const isFirstCheckIn = prev.todayActivity.length === 0;
-                    const newItem = { date: new Date().toISOString(), sport, type, value, unit };
-                    return { 
-                        ...prev, 
-                        streak: isFirstCheckIn ? prev.streak + 1 : prev.streak, 
-                        diamonds: isFirstCheckIn ? prev.diamonds : prev.diamonds, 
-                        todayActivity: [...prev.todayActivity, sport], 
-                        history: [newItem, ...prev.history] 
-                    };
-                });
-                setShowConfetti(true); setTimeout(() => setShowConfetti(false), 3000);
-                setCheckInModalOpen(false); setCheckInStage('select');
+            const handleCheckInComplete = (val, unit) => {
+                const sport = selectedSportForCheckIn;
+                setUser(prev => ({
+                    ...prev,
+                    streak: prev.todayActivity.length === 0 ? prev.streak + 1 : prev.streak,
+                    todayActivity: [...prev.todayActivity, sport],
+                    history: [{ date: new Date().toISOString(), sport, value: val, unit }, ...prev.history]
+                }));
+                setCheckInModalOpen(false);
+                setCheckInStage('select');
             };
 
-            const badgeConfig = {
-                'streak': { icon: <Flame size={10} />, color: 'text-orange-400', bg: 'bg-orange-500/20' },
-                'runner': { icon: <Ruler size={10} />, color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
-                'gym': { icon: <Dumbbell size={10} />, color: 'text-purple-400', bg: 'bg-purple-500/20' },
-                'reps': { icon: <Activity size={10} />, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
+            const sendMotivation = (e, userName) => {
+                e.stopPropagation(); // Не открывать профиль при клике на молнию
+                alert(`Мотивация отправлена ${userName}! ⚡️`);
             };
 
-            const badges = [
-                { id: 'streak', icon: <Flame size={16} />, label: 'На огне', condition: user.streak >= 3 },
-                { id: 'runner', icon: <Ruler size={16} />, label: 'Бегун', condition: getStatsSummary(user.history).totalKm >= 10 },
-                { id: 'gym', icon: <Dumbbell size={16} />, label: 'Терминатор', condition: getStatsSummary(user.history).totalGym >= 5 },
-                { id: 'reps', icon: <Activity size={16} />, label: 'Машина', condition: getStatsSummary(user.history).totalReps >= 500 },
-            ].map(b => ({...b, ...badgeConfig[b.id]}));
-            
-            const visibleBadges = showAllBadges ? badges : badges.slice(0, 3);
-            const isCheckedIn = user.todayActivity.length > 0;
+            // --- VIEWS COMPONENTS ---
 
-            const RedemptionShop = () => {
-                const [processing, setProcessing] = useState(false);
-                const [task, setTask] = useState("Ищу наказание...");
-                const [isSpinning, setIsSpinning] = useState(false);
-                const [hasSpun, setHasSpun] = useState(false);
-                const [fileUploaded, setFileUploaded] = useState(false);
-                
-                const tasks = ["Сделай селфи с надписью 'Я ЛЕНИВАЯ ПАНДА'", "Планка с котом на спине", "Лицо после 20 бёрпи"];
-                const handleSpin = () => { 
-                    setIsSpinning(true); setHasSpun(false); setFileUploaded(false); 
-                    let interval = setInterval(() => { setTask(tasks[Math.floor(Math.random() * tasks.length)]); }, 80); 
-                    setTimeout(() => { clearInterval(interval); setIsSpinning(false); setHasSpun(true); setTask(tasks[Math.floor(Math.random() * tasks.length)]); }, 2000); 
-                };
-                
-                const handleBuyLife = () => { 
-                    setProcessing(true); 
-                    setTimeout(() => { 
-                        setProcessing(false); setUser(prev => ({ ...prev, diamonds: prev.diamonds + 1, status: 'active' })); setStep('dashboard'); 
-                    }, 2000); 
-                };
+            const AdminPanelModal = () => (
+                <div className="fixed inset-0 z-50 bg-[#020617] p-6 pt-safe-top overflow-y-auto animate-fade-in">
+                    <div className="flex justify-between items-center mb-8">
+                        <h2 className="text-2xl font-display font-bold text-amber-500 tracking-wider flex items-center gap-2"><Shield /> MASTER ADMIN</h2>
+                        <button onClick={() => setAdminPanelOpen(false)} className="p-2 bg-white/10 rounded-full text-white"><X size={20}/></button>
+                    </div>
+                    
+                    <div className="space-y-6">
+                        <GlassCard className="p-6">
+                            <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">Дата Старта Марафона</h3>
+                            <div className="flex gap-2">
+                                <input 
+                                    type="date" 
+                                    value={adminDateInput}
+                                    onChange={(e) => setAdminDateInput(e.target.value)}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-cyan-500"
+                                />
+                            </div>
+                            <p className="text-[10px] text-slate-500 mt-2">Текущая: {marathonStartDate.toLocaleDateString()}</p>
+                            <p className="text-[10px] text-emerald-500 mt-1">Синхронизируется с Google Таблицей (Ячейка B2)</p>
+                        </GlassCard>
 
-                if (processing) return <div className="h-full min-h-[100dvh] flex flex-col items-center justify-center p-6 text-center space-y-8 relative z-10"><div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div><h3 className="text-xl font-display font-bold text-white uppercase tracking-widest">Воскрешение...</h3></div>;
-                
+                        <NeonButton variant="gold" onClick={handleUpdateDate} disabled={isSyncing}>
+                            {isSyncing ? "Синхронизация..." : "Сохранить Дату"} <Save size={18} />
+                        </NeonButton>
+
+                        <div className="pt-4 border-t border-white/10">
+                            <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">Управление Участниками</h3>
+                            {leaderboard.map(u => (
+                                <div key={u.id} className="flex justify-between items-center py-2 border-b border-white/5 last:border-0">
+                                    <span className="text-white font-bold">{u.name}</span>
+                                    <button className="text-xs text-rose-400 border border-rose-400/30 px-2 py-1 rounded">Kick</button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const UserDetailModal = ({ detailUser, onClose }) => {
+                if (!detailUser) return null;
+                const stats = detailUser.history?.length || 0; // Mock stat logic
                 return (
-                    <div className="h-full min-h-[100dvh] flex flex-col relative z-10 overflow-y-auto">
-                        <div className="sticky top-0 z-20 bg-slate-900/90 backdrop-blur-md px-4 py-4 flex items-center gap-3 border-b border-white/10 pt-safe-top"><button onClick={() => setStep('dashboard')} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-transform">←</button><span className="font-display font-bold text-white uppercase tracking-wider">Магазин искупления</span></div>
-                        <div className="p-6 pb-20">
-                            <div className="relative rounded-2xl overflow-hidden mb-8 border border-rose-500/30 shadow-[0_0_30px_rgba(244,63,94,0.2)] bg-rose-900/20"><div className="p-8 text-center relative z-10"><div className="inline-flex items-center justify-center w-16 h-16 bg-rose-500/20 rounded-full mb-4 border border-rose-500/50 shadow-sm animate-pulse"><Skull className="text-rose-400" size={32} /></div><h2 className="text-2xl font-display font-black text-white uppercase leading-none mb-2 tracking-widest">ВЕРНУТЬ <span className="text-rose-500">АЛМАЗ</span></h2></div></div>
-                            <GlassCard className="p-1 border-rose-500/30 mb-6"><div className="border border-dashed border-rose-500/30 rounded-lg p-5"><div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2"><Siren size={14} className="text-rose-500 animate-pulse" /><span className="text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em]">ТВОЕ ЗАДАНИЕ</span></div></div><h3 className={`font-sans font-bold text-lg text-white leading-snug mb-6 min-h-[4rem] ${isSpinning ? 'opacity-50 blur-[1px]' : ''}`}>{(!hasSpun && !isSpinning) ? "Испытай удачу..." : `"${task}"`}</h3>{!hasSpun && !isSpinning ? (<NeonButton variant="danger" onClick={handleSpin} className="py-2 text-xs shadow-none">Крутить Рулетку 🎲</NeonButton>) : (<div className="flex gap-2 animate-fade-in"><span className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-[10px] font-bold text-slate-300 uppercase tracking-wider flex-1 text-center">Награда: +1 💎</span></div>)}</div></GlassCard>
-                            {hasSpun && (<div className="animate-slide-up"><button onClick={() => setFileUploaded(true)} disabled={isSpinning} className={`w-full border border-dashed rounded-xl p-8 mb-6 transition-all group relative overflow-hidden active:scale-[0.99] ${fileUploaded ? 'bg-emerald-900/20 border-emerald-500/50' : 'bg-transparent border-slate-600 hover:border-rose-400 hover:bg-rose-900/10'}`}><div className="flex flex-col items-center gap-3 relative z-10"><div className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${fileUploaded ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400 group-hover:text-rose-500'}`}>{fileUploaded ? <CheckCircle size={24}/> : <Camera size={24} />}</div><div className="text-center"><span className={`block text-xs font-bold uppercase tracking-wider transition-colors ${fileUploaded ? 'text-emerald-400' : 'text-slate-500 group-hover:text-rose-400'}`}>{fileUploaded ? 'Фото загружено' : 'Загрузить фото'}</span></div></div></button><NeonButton variant={fileUploaded ? "danger" : "disabled"} onClick={handleBuyLife} disabled={!fileUploaded}><div className="flex items-center gap-2"><span>{fileUploaded ? "ОТПРАВИТЬ" : "СНАЧАЛА ФОТО"}</span>{fileUploaded && <Send size={14} />}</div></NeonButton></div>)}
+                    <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+                        <div className="w-full max-w-sm bg-[#0f172a] border border-white/10 rounded-3xl p-6 relative">
+                            <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white"><X size={24}/></button>
+                            <div className="flex flex-col items-center mb-6">
+                                <Avatar name={detailUser.name} photoUrl={detailUser.photoUrl} size="w-20 h-20" className="mb-4" />
+                                <h3 className="text-2xl font-display font-bold text-white">{detailUser.name}</h3>
+                                <span className={`text-xs uppercase font-bold px-2 py-1 rounded mt-2 ${detailUser.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>{detailUser.status}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 mb-6">
+                                <div className="bg-white/5 p-3 rounded-xl text-center"><Flame className="mx-auto text-orange-400 mb-1" size={16}/><div className="font-bold text-white">{detailUser.streak}</div><div className="text-[9px] text-slate-400 uppercase">Стрик</div></div>
+                                <div className="bg-white/5 p-3 rounded-xl text-center"><Diamond className="mx-auto text-cyan-400 mb-1" size={16}/><div className="font-bold text-white">{detailUser.diamonds}</div><div className="text-[9px] text-slate-400 uppercase">Алмазы</div></div>
+                            </div>
+                            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Дисциплины</h4>
+                            <div className="flex flex-wrap gap-2 mb-6">
+                                {detailUser.disciplines.map(d => <span key={d} className="px-2 py-1 bg-white/5 rounded text-xs text-slate-300">{d}</span>)}
+                            </div>
+                            <NeonButton variant="secondary" onClick={onClose}>Закрыть дело</NeonButton>
                         </div>
                     </div>
                 );
             };
 
-            // --- RENDER ---
-            if (step === 'loading') return null;
-            if (step === 'welcome') return <WelcomeScreen onStart={() => setStep('registration')} />;
-            if (step === 'registration') return <RegistrationScreen regForm={regForm} setRegForm={setRegForm} onNext={handleRegNext} />;
-            if (step === 'arsenal') return <ArsenalScreen disciplines={user.disciplines} popularSports={popularSports} onToggle={handleArsenalToggle} onCustomAdd={handleArsenalCustom} onNext={() => setStep('goal')} />;
-            if (step === 'goal') return <GoalScreen onSelect={handleGoalSelect} startDate={marathonStartDate} />;
-            
-            // --- DASHBOARD RENDER ---
+            const RedemptionShop = () => (
+                <div className="fixed inset-0 z-30 bg-[#020617] pt-safe-top overflow-y-auto animate-slide-up">
+                    <div className="p-6">
+                        <div className="flex items-center gap-3 mb-8">
+                            <button onClick={() => setDashboardView('leaderboard')} className="p-2 bg-white/10 rounded-full text-white"><X size={20}/></button>
+                            <h2 className="text-2xl font-display font-bold text-rose-500 tracking-wider">МАГАЗИН ИСКУПЛЕНИЯ</h2>
+                        </div>
+                        <div className="relative rounded-2xl overflow-hidden mb-8 border border-rose-500/30 bg-rose-900/10 p-8 text-center">
+                            <div className="inline-flex items-center justify-center w-16 h-16 bg-rose-500/20 rounded-full mb-4 animate-pulse"><Skull className="text-rose-500" size={32} /></div>
+                            <h3 className="text-xl font-bold text-white uppercase mb-2">КУПИТЬ ЖИЗНЬ</h3>
+                            <p className="text-rose-400 text-xs mb-6">Цена: Твоя гордость (фото)</p>
+                            <NeonButton variant="danger">КРУТИТЬ РУЛЕТКУ ЗАДАНИЙ</NeonButton>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            // --- RENDER STEPS ---
+
+            if (step === 'welcome') return (
+                <div className="flex flex-col h-full min-h-[100dvh] p-6 pt-safe-top relative z-10">
+                    <div className="flex-grow flex flex-col items-center justify-center text-center">
+                         <div className="relative w-40 h-40 flex items-center justify-center mb-8">
+                            <div className="absolute inset-0 bg-cyan-500 blur-[60px] opacity-30 rounded-full animate-pulse"></div>
+                            <Hexagon size={130} className="text-cyan-400 stroke-[1.5] animate-float" />
+                            <Activity size={50} className="text-white absolute" />
+                        </div>
+                        <h1 className="text-4xl font-black text-white font-display uppercase">Fitness<br/>Aurora</h1>
+                        <p className="text-cyan-200/80 text-xs mt-4 uppercase tracking-widest">Твоя территория спорта</p>
+                    </div>
+                    <NeonButton onClick={() => setStep('registration')}>Начать</NeonButton>
+                </div>
+            );
+
+            if (step === 'registration') return (
+                <div className="flex flex-col h-full min-h-[100dvh] p-6 pt-safe-top relative z-10 animate-slide-up">
+                    <h2 className="text-2xl font-display font-bold text-white mb-6">ИДЕНТИФИКАЦИЯ</h2>
+                    <div className="space-y-4 flex-grow">
+                        <input type="text" value={regForm.firstName} onChange={e => setRegForm({...regForm, firstName: e.target.value})} className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-cyan-500" placeholder="Имя" />
+                        <input type="text" value={regForm.lastName} onChange={e => setRegForm({...regForm, lastName: e.target.value})} className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-cyan-500" placeholder="Фамилия" />
+                    </div>
+                    <NeonButton onClick={handleRegNext} disabled={!regForm.firstName}>Далее</NeonButton>
+                </div>
+            );
+
+            if (step === 'arsenal') return (
+                <div className="flex flex-col h-full min-h-[100dvh] p-6 pt-safe-top relative z-10 animate-slide-up">
+                    <h2 className="text-2xl font-display font-bold text-white mb-2">АРСЕНАЛ</h2>
+                    <p className="text-slate-400 text-xs mb-6">Выбери до 5 дисциплин</p>
+                    <div className="flex flex-wrap gap-3 mb-6">
+                        {popularSports.map(s => (
+                            <button key={s} onClick={() => handleArsenalToggle(s)} className={`px-4 py-3 rounded-xl text-sm font-bold border transition-all ${user.disciplines.includes(s) ? 'bg-cyan-600/80 text-white border-cyan-400' : 'bg-white/5 text-slate-400 border-white/10'}`}>{s}</button>
+                        ))}
+                    </div>
+                    <div className="mt-auto">
+                        <NeonButton onClick={() => setStep('goal')} disabled={user.disciplines.length === 0}>Далее</NeonButton>
+                    </div>
+                </div>
+            );
+
+            if (step === 'goal') {
+                const goals = getAdjustedGoals();
+                return (
+                    <div className="flex flex-col h-full min-h-[100dvh] p-6 pt-safe-top relative z-10 animate-slide-up">
+                        <h2 className="text-2xl font-display font-bold text-white mb-6 text-center">ВЫБЕРИ ЦЕЛЬ</h2>
+                        <div className="space-y-4 flex-grow">
+                            {goals.length > 0 ? goals.map((g, idx) => (
+                                <GlassCard key={idx} onClick={() => handleGoalSelect(g.remaining)} className="p-6 flex items-center justify-between group hover:bg-white/10 transition-colors">
+                                    <div>
+                                        <span className="text-3xl font-display font-black text-white">{g.remaining} <span className="text-sm font-sans font-normal text-slate-400">Дней</span></span>
+                                        <div className="text-[10px] text-cyan-400 font-bold uppercase mt-1">Ранг: {g.label}</div>
+                                    </div>
+                                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white"><Trophy size={20}/></div>
+                                </GlassCard>
+                            )) : (
+                                <div className="text-center text-slate-400 p-8 border border-white/10 rounded-xl">
+                                    Марафон завершен или подходит к концу.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            }
+
+            // --- DASHBOARD ---
             const progressPercent = Math.min((user.streak / (user.goal || 1)) * 100, 100);
-            const userStats = getStatsSummary(user.history);
 
             return (
-                <div className="pb-24 relative min-h-[100dvh] z-10">
+                <div className="pb-24 relative min-h-[100dvh] pt-safe-top">
+                    
                     {/* Header */}
-                    <div className="sticky top-0 bg-[#020617]/80 backdrop-blur-xl z-20 px-6 py-4 border-b border-white/5 pt-safe-top shadow-lg">
+                    <div className="sticky top-0 bg-[#020617]/90 backdrop-blur-xl z-20 px-6 py-4 border-b border-white/5">
                         <div className="flex justify-between items-start mb-4">
-                            <div className="flex items-center gap-3 cursor-pointer group">
-                                <div className="relative"><Avatar name={user.firstName} /></div>
-                                <div><div className="font-display font-bold text-white text-lg leading-tight group-hover:text-cyan-400 transition-colors">{user.firstName}</div><div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Статус: <span className="text-emerald-400">{user.status === 'active' ? 'В строю' : 'Заморожен'}</span></div></div>
+                            <div className="flex items-center gap-3">
+                                <Avatar name={user.firstName} photoUrl={user.photoUrl} />
+                                <div>
+                                    <div className="font-display font-bold text-white leading-tight">{user.firstName}</div>
+                                    <div className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">
+                                        Статус: <span className="text-emerald-400">В строю</span>
+                                    </div>
+                                </div>
                             </div>
                             <div className="flex gap-2">
-                                <div onClick={() => setStep('redemption')} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer hover:bg-white/10 transition-colors shadow-sm"><Diamond size={16} className="text-cyan-400 fill-cyan-400" /><span className="font-display font-bold text-white text-lg">{user.diamonds}</span></div>
-                                <button onClick={() => setEditingProfile(true)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-slate-400 transition-colors"><Settings size={18} /></button>
-                            </div>
-                        </div>
-                        <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-2 font-display uppercase tracking-widest"><span>{user.streak} Days Streak</span><span>Goal: {user.goal}</span></div>
-                        <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden relative"><div className="bg-gradient-to-r from-cyan-500 to-purple-500 h-full shadow-[0_0_10px_rgba(34,211,238,0.5)]" style={{ width: `${progressPercent}%` }}></div></div>
-                    </div>
-
-                    {/* Main Action */}
-                    <div className="p-6">
-                        {isCheckedIn ? (
-                            <GlassCard className="p-8 text-center bg-emerald-900/10 border-emerald-500/20">
-                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 mb-4 text-emerald-400 border border-emerald-500/20 shadow-[0_0_20px_rgba(52,211,153,0.2)]"><CheckCircle size={32} /></div>
-                                <h3 className="text-xl font-display font-bold text-white mb-2 tracking-wide">ДЕНЬ ЗАСЧИТАН</h3>
-                                <div className="flex flex-wrap justify-center gap-2 mt-2 mb-6">{user.todayActivity.map(act => <span key={act} className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-[10px] font-bold text-emerald-400 uppercase tracking-wider shadow-sm">{act}</span>)}</div>
-                                <NeonButton variant="secondary" onClick={() => setCheckInModalOpen(true)} className="py-3 text-xs"><Plus size={14} /> Добавить еще</NeonButton>
-                            </GlassCard>
-                        ) : (
-                            <button onClick={() => setCheckInModalOpen(true)} disabled={user.diamonds <= 0} className="w-full aspect-[2/1] rounded-2xl glass-panel shadow-lg relative group overflow-hidden active:scale-[0.98] transition-all hover:border-cyan-400/50">
-                                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 opacity-50"></div>
-                                <div className="relative z-10 flex flex-col items-center justify-center h-full gap-4">
-                                    {user.diamonds > 0 ? (
-                                        <><div className="w-16 h-16 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/30 group-hover:scale-110 transition-transform duration-500 shadow-[0_0_20px_rgba(34,211,238,0.2)]"><Zap size={32} className="fill-cyan-400" /></div><div className="text-center"><span className="block text-2xl font-display font-black text-white uppercase tracking-[0.2em] group-hover:text-cyan-300 transition-colors text-shadow">ОТМЕТИТЬ</span><span className="text-slate-400 text-[10px] uppercase tracking-widest font-bold mt-1">Запиши прогресс</span></div></>
-                                    ) : (
-                                        <><div className="w-16 h-16 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center border border-red-500/30"><X size={32} /></div><div className="text-center px-6"><span className="block text-xl font-display font-black text-red-500 uppercase tracking-widest mb-1">ЗАМОРОЖЕН</span><p className="text-[10px] text-slate-500 font-bold uppercase">Нужен выкуп.</p></div></>
-                                    )}
+                                {/* Admin Button */}
+                                {user.isAdmin && (
+                                    <button onClick={() => setAdminPanelOpen(true)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-amber-500/20 text-amber-500 border border-amber-500/30">
+                                        <Shield size={18} />
+                                    </button>
+                                )}
+                                <div className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                                    <Diamond size={16} className="text-cyan-400 fill-cyan-400" />
+                                    <span className="font-bold text-white">{user.diamonds}</span>
                                 </div>
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Lists Toggle */}
-                    <div className="px-6">
-                        <div className="flex justify-between items-center mb-4 pl-1">
-                            <h3 className="text-slate-500 uppercase text-[10px] font-bold tracking-[0.2em]">{dashboardView === 'leaderboard' ? 'РЕЙТИНГ АГЕНТОВ' : 'ЛИЧНОЕ ДЕЛО'}</h3>
-                            <div className="bg-slate-800/50 p-1 rounded-lg flex gap-1 border border-white/5">
-                                <button onClick={() => setDashboardView('leaderboard')} className={`p-1.5 rounded-md transition-all ${dashboardView === 'leaderboard' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}><Users size={14} /></button>
-                                <button onClick={() => setDashboardView('progress')} className={`p-1.5 rounded-md transition-all ${dashboardView === 'progress' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}><BarChart3 size={14} /></button>
                             </div>
                         </div>
+                        {/* Progress Bar */}
+                        <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-widest">
+                            <span>{user.streak} Days</span>
+                            <span>Goal: {user.goal}</span>
+                        </div>
+                        <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden relative">
+                            <div className="bg-gradient-to-r from-cyan-500 to-purple-500 h-full shadow-[0_0_10px_rgba(34,211,238,0.5)]" style={{ width: `${progressPercent}%` }}></div>
+                        </div>
+                    </div>
 
-                        {dashboardView === 'leaderboard' ? (
+                    {/* Content */}
+                    <div className="p-6 space-y-6">
+                        {/* Check-in Button */}
+                        <button onClick={() => setCheckInModalOpen(true)} className="w-full aspect-[2.5/1] rounded-2xl glass-panel relative group overflow-hidden active:scale-[0.98] transition-all">
+                            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 opacity-50"></div>
+                            <div className="relative z-10 flex flex-col items-center justify-center h-full gap-2">
+                                <Zap size={28} className="text-cyan-400 fill-cyan-400 mb-1" />
+                                <span className="text-xl font-display font-black text-white uppercase tracking-widest">ОТМЕТИТЬСЯ</span>
+                            </div>
+                        </button>
+
+                        {/* Tabs */}
+                        <div className="flex gap-4 border-b border-white/10 pb-2">
+                            <button onClick={() => setDashboardView('leaderboard')} className={`text-xs font-bold uppercase tracking-widest pb-2 transition-colors ${dashboardView === 'leaderboard' ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-500'}`}>Рейтинг</button>
+                            <button onClick={() => setDashboardView('shop')} className={`text-xs font-bold uppercase tracking-widest pb-2 transition-colors ${dashboardView === 'shop' ? 'text-rose-400 border-b-2 border-rose-400' : 'text-slate-500'}`}>Магазин</button>
+                        </div>
+
+                        {/* Leaderboard View */}
+                        {dashboardView === 'leaderboard' && (
                             <div className="space-y-3">
                                 {leaderboard.map((u, idx) => (
-                                    <GlassCard key={u.id} className={`p-4 flex items-center justify-between transition-colors ${u.status === 'frozen' ? 'opacity-50 grayscale' : 'hover:bg-white/5'}`}>
+                                    <GlassCard key={u.id} onClick={() => setSelectedUserForDetail(u)} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors">
                                         <div className="flex items-center gap-4">
                                             <div className="relative">
-                                                <Avatar name={u.name} size="w-10 h-10" />
+                                                <Avatar name={u.name} photoUrl={u.photoUrl} />
                                                 <div className="absolute -top-1 -right-1 bg-slate-900 rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold border border-slate-700 text-white">{idx + 1}</div>
                                             </div>
                                             <div>
-                                                <div className="flex items-center gap-2">
-                                                    <div className={`font-bold text-slate-200 tracking-wide ${u.status === 'frozen' ? 'line-through text-slate-500' : ''}`}>{u.name}</div>
-                                                    <div className="flex gap-1">{u.badges?.slice(0, 4).map(b => badgeConfig[b] && (<div key={b} className={`w-3 h-3 rounded-full flex items-center justify-center border ${badgeConfig[b].bg.replace('bg-', 'bg-').replace('/10', '/30')} ${badgeConfig[b].color}`}>{React.cloneElement(badgeConfig[b].icon, { size: 8 })}</div>))}</div>
-                                                </div>
-                                                <div className="flex gap-1 mt-1">{Array.from({ length: 3 }).map((_, i) => (<div key={i} className={`w-1.5 h-1.5 rotate-45 ${i < u.diamonds ? 'bg-cyan-500 shadow-[0_0_5px_rgba(34,211,238,0.8)]' : 'bg-slate-800'}`}></div>))}</div>
+                                                <div className="font-bold text-slate-200">{u.name}</div>
+                                                <div className="text-[10px] text-slate-500 uppercase">{u.disciplines.slice(0, 2).join(', ')}</div>
                                             </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="text-right">
+                                                <div className="font-bold text-white text-sm">{u.streak} <span className="text-[10px] text-orange-400">🔥</span></div>
+                                            </div>
+                                            {/* Motivation Button */}
+                                            <button 
+                                                onClick={(e) => sendMotivation(e, u.name)}
+                                                className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-cyan-400 hover:bg-cyan-400 hover:text-white transition-colors"
+                                            >
+                                                <Zap size={14} />
+                                            </button>
                                         </div>
                                     </GlassCard>
                                 ))}
                             </div>
-                        ) : (
-                            <div className="animate-fade-in space-y-6">
-                                <GlassCard className="p-6">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <div className="flex items-center gap-3"><Avatar name={user.firstName} size="w-12 h-12" /><div><div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Ранг</div><div className="font-display font-black text-lg text-white tracking-wide">{getUserTitle(user.goal)}</div></div></div>
-                                        <div className="text-right"><div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Цель</div><div className="font-display font-black text-xl text-cyan-400">{user.goal} <span className="text-sm text-slate-500 font-sans font-normal">Дней</span></div></div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 text-center"><Ruler size={16} className="mx-auto text-cyan-500 mb-1" /><div className="font-display font-bold text-lg text-slate-200">{userStats.totalKm}</div><div className="text-[9px] text-slate-500 uppercase font-bold">КМ Всего</div></div>
-                                        <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 text-center"><Dumbbell size={16} className="mx-auto text-purple-500 mb-1" /><div className="font-display font-bold text-lg text-slate-200">{userStats.totalReps}</div><div className="text-[9px] text-slate-500 uppercase font-bold">Повторений</div></div>
-                                    </div>
-                                </GlassCard>
-                                <div>
-                                    <div className="flex justify-between items-center mb-3 pl-1 pr-1"><h3 className="text-slate-500 uppercase text-[10px] font-bold tracking-[0.2em]">Награды</h3><button onClick={() => setShowAllBadges(!showAllBadges)} className="text-[10px] font-bold text-cyan-500 hover:text-cyan-400 flex items-center gap-1 uppercase transition-colors">{showAllBadges ? 'Скрыть' : 'Раскрыть'}{showAllBadges ? <ChevronUp size={10}/> : <ChevronDown size={10}/>}</button></div>
-                                    <div className="grid gap-2 grid-cols-3">{visibleBadges.map(b => (<div key={b.id} className={`flex flex-col items-center p-3 rounded-xl border text-center transition-all ${b.condition ? 'bg-white/5 border-white/10 shadow-sm' : 'bg-slate-900/50 border-white/5 opacity-40 grayscale'}`}><div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 border bg-opacity-20 ${b.bg} ${b.color}`}>{b.icon}</div><div className="font-bold text-slate-400 text-[9px] uppercase leading-tight mb-1">{b.label}</div></div>))}</div>
-                                </div>
-                            </div>
                         )}
                     </div>
 
+                    {/* Modals & Overlays */}
+                    {adminPanelOpen && <AdminPanelModal />}
+                    {selectedUserForDetail && <UserDetailModal detailUser={selectedUserForDetail} onClose={() => setSelectedUserForDetail(null)} />}
+                    {dashboardView === 'shop' && <RedemptionShop />}
+
+                    {/* Check In Modal */}
                     {checkInModalOpen && (
-                        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-end sm:items-center justify-center animate-fade-in p-4"><div className="w-full max-w-md bg-[#0f172a] border border-white/10 rounded-t-3xl p-8 pb-10 sm:rounded-3xl shadow-2xl">
-                            {checkInStage === 'select' ? (
-                                <>
-                                    <div className="flex justify-between items-center mb-8"><h3 className="text-xl font-display font-bold text-white tracking-wider">ЧТО СДЕЛАНО?</h3><button onClick={() => setCheckInModalOpen(false)} className="p-2 bg-slate-800 rounded-full hover:bg-slate-700 text-white"><X size={20} /></button></div>
-                                    <div className="grid grid-cols-1 gap-3">
-                                        {user.disciplines.map(sport => (<button key={sport} onClick={() => initCheckIn(sport)} className="py-4 rounded-xl font-bold transition-all border bg-slate-800/50 text-slate-300 border-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/30 hover:text-cyan-400 flex justify-between px-6 shadow-sm"><span>{sport}</span>{user.todayActivity.includes(sport) && <span className="text-emerald-400">✓</span>}</button>))}
-                                        <div className="mt-6 text-center"><button onClick={() => { setCheckInModalOpen(false); setEditingProfile(true); }} className="text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-cyan-400 transition-colors">Добавить дисциплину</button></div>
+                        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-end sm:items-center justify-center p-4 animate-fade-in">
+                            <div className="w-full max-w-md bg-[#0f172a] border border-white/10 rounded-t-3xl p-6 sm:rounded-3xl">
+                                {checkInStage === 'select' ? (
+                                    <>
+                                        <div className="flex justify-between items-center mb-6">
+                                            <h3 className="text-lg font-bold text-white">ЧТО СДЕЛАНО?</h3>
+                                            <button onClick={() => setCheckInModalOpen(false)}><X className="text-slate-500" /></button>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {user.disciplines.map(s => (
+                                                <button key={s} onClick={() => { setSelectedSportForCheckIn(s); setCheckInStage('value'); }} className="w-full p-4 bg-white/5 rounded-xl text-left font-bold text-slate-300 hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors flex justify-between">
+                                                    {s} <ChevronDown size={16} className="-rotate-90 text-slate-600" />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="text-center">
+                                        <h3 className="text-lg font-bold text-white mb-6">{selectedSportForCheckIn}</h3>
+                                        <div className="flex items-end justify-center gap-2 mb-8">
+                                            <input type="number" autoFocus onChange={e => setCheckInValue(e.target.value)} className="bg-transparent border-b-2 border-slate-700 text-center text-5xl font-black text-white w-32 outline-none focus:border-cyan-500" placeholder="0" />
+                                            <span className="text-slate-500 font-bold mb-2">ЕД.</span>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <NeonButton variant="disabled" onClick={() => setCheckInStage('select')}>Назад</NeonButton>
+                                            <NeonButton onClick={() => handleCheckInComplete(checkInValue, 'units')} disabled={!checkInValue}>Сохранить</NeonButton>
+                                        </div>
                                     </div>
-                                </>
-                            ) : (
-                                <div className="animate-slide-up">
-                                    <div className="flex justify-between items-center mb-8"><button onClick={() => setCheckInStage('select')} className="text-slate-500 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors">← Назад</button><h3 className="text-xl font-display font-bold text-white tracking-wider">{selectedSportForCheckIn}</h3><div className="w-8"></div></div>
-                                    {getSportType(selectedSportForCheckIn) === 'gym' && <div className="grid grid-cols-2 gap-3">{['Всё тело', 'Верх', 'Низ', 'Голова'].map(s => <button key={s} onClick={() => completeCheckIn(selectedSportForCheckIn, s, null)} className="py-6 rounded-xl bg-slate-800/50 border border-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/30 hover:text-cyan-400 text-slate-300 font-bold transition-all shadow-sm">{s === 'Голова' ? '🤪 Головой' : s}</button>)}</div>}
-                                    {getSportType(selectedSportForCheckIn) === 'reps' && <div className="grid grid-cols-2 gap-3">{[30, 60, 100, 200].map(r => <button key={r} onClick={() => completeCheckIn(selectedSportForCheckIn, r, 'повт')} className="py-6 rounded-xl bg-slate-800/50 border border-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/30 hover:text-cyan-400 font-display font-black text-2xl text-slate-300 transition-all shadow-sm">{r}</button>)}</div>}
-                                    {getSportType(selectedSportForCheckIn) === 'cardio' && <div className="space-y-8 flex flex-col items-center"><div className="flex items-end gap-2"><input type="number" autoFocus placeholder="0" className="text-center text-7xl font-display font-black text-white w-40 bg-transparent outline-none border-b-2 border-slate-700 focus:border-cyan-500 transition-colors pb-2" onChange={(e) => setCheckInValue(e.target.value)} /><span className="text-xl font-bold text-slate-500 pb-4">КМ</span></div><NeonButton onClick={() => completeCheckIn(selectedSportForCheckIn, checkInValue, 'км')} disabled={!checkInValue} variant={checkInValue ? 'primary' : 'disabled'}>Записать результат</NeonButton></div>}
-                                </div>
-                            )}
-                        </div></div>
-                    )}
-
-                    {editingProfile && (
-                        <div className="fixed inset-0 z-50 bg-[#020617] p-6 animate-fade-in overflow-y-auto pt-safe-top">
-                            <div className="flex justify-between items-center mb-8"><h2 className="text-2xl font-display font-bold text-white tracking-wider">НАСТРОЙКИ</h2><button onClick={() => setEditingProfile(false)} className="p-2 bg-white/5 rounded-full shadow-sm border border-white/10 text-white"><X size={20} /></button></div>
-                            <div className="space-y-8">
-                                <GlassCard className="p-4 flex justify-between items-center"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400"><Bell size={20} /></div><div><div className="font-bold text-slate-200">Уведомления</div><div className="text-xs text-slate-500">Напоминания о тренировке</div></div></div><ToggleSwitch checked={user.notifications} onChange={(val) => setUser({...user, notifications: val})} /></GlassCard>
-                                <div><label className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-4 block px-1">Твои дисциплины</label><div className="flex flex-wrap gap-2">{popularSports.map(s => <button key={s} onClick={() => toggleDiscipline(s)} className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${user.disciplines.includes(s) ? 'bg-cyan-600/50 text-white border-cyan-500/50 shadow-sm' : 'bg-white/5 border-white/10 text-slate-400 hover:border-cyan-500/30 hover:text-cyan-400'}`}>{s}</button>)}{!isAddingCustom ? <button onClick={() => setIsAddingCustom(true)} className="px-4 py-2 rounded-lg text-xs font-bold border border-dashed border-slate-700 text-slate-500 hover:border-cyan-500 hover:text-cyan-400 bg-transparent flex items-center gap-2 transition-colors"><Plus size={14} /> Своя</button> : <div className="flex items-center gap-2 mt-2 sm:mt-0"><input type="text" value={customInput} onChange={(e) => setCustomInput(e.target.value)} className="px-3 py-2 rounded-lg bg-slate-800 border border-cyan-500 outline-none text-white text-xs w-32 focus:ring-1 focus:ring-cyan-500" autoFocus onKeyDown={(e) => e.key === 'Enter' && handleAddCustom()} /><button onClick={handleAddCustom} className="p-2 bg-cyan-600 text-white rounded-lg shadow-sm hover:bg-cyan-700"><CheckCircle size={14}/></button></div>}</div></div>
-                                <div className="pb-10"><label className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-4 block px-1">Цель</label><div className="flex gap-2 bg-slate-900 p-1.5 rounded-xl border border-white/5">{[30, 60, 100].map(d => <button key={d} onClick={() => setUser({...user, goal: d})} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${user.goal === d ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-500 hover:bg-white/5'}`}>{d}</button>)}</div></div>
+                                )}
                             </div>
-                            <div className="sticky bottom-6"><NeonButton onClick={() => setEditingProfile(false)}>Сохранить</NeonButton></div>
                         </div>
-                    )}
-
-                    {step === 'redemption' && <RedemptionShop />}
-                    
-                    {showConfetti && (
-                       <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-50 overflow-hidden"><div className="text-6xl animate-bounce">💎</div><div className="absolute top-20 left-10 text-4xl animate-pulse text-cyan-500">✨</div><div className="absolute bottom-40 right-10 text-5xl animate-spin text-purple-500">💠</div></div>
                     )}
                 </div>
             );
