@@ -43,7 +43,7 @@
     <script src="https://unpkg.com/@babel/standalone@7.26.9/babel.min.js"></script>
 
     <style>
-        /* Блокировка прокрутки и полный экран */
+        /* Глобальные стили для блокировки скролла подложки */
         html, body { 
             margin: 0; padding: 0;
             background-color: #020617; color: #f1f5f9;
@@ -73,16 +73,36 @@
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
-        /* Увеличенный отступ сверху для челки и кнопок TG */
-        .pt-safe-top { padding-top: 140px; }
+        /* ЕДИНЫЙ ОТСТУП ДЛЯ ВСЕХ ЭКРАНОВ */
+        .screen-container {
+            padding-top: 140px; /* 80px челка + 60px кнопки */
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+            padding-bottom: 6rem;
+            height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
 
-        #root { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        /* Заголовок дашборда фиксирован, но учитывает отступ */
+        .dashboard-header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            padding-top: 20px; /* Системный статус бар */
+            padding-bottom: 1rem;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+            background: rgba(2, 6, 23, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 40;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
     </style>
 </head>
 <body>
     <div class="aurora-bg"></div>
     <div class="aurora-glow"></div>
-    <div id="root"></div>
+    <div id="root" class="h-full"></div>
 
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect } from 'https://esm.sh/react@18.2.0';
@@ -145,7 +165,7 @@
             const [marathonStartDate, setMarathonStartDate] = useState(DEFAULT_START_DATE);
             const [isSyncing, setIsSyncing] = useState(false);
 
-            // Flow
+            // Inputs
             const [regForm, setRegForm] = useState({ firstName: '', lastName: '' });
             const [popularSports, setPopularSports] = useState(['Бег', 'Зал', 'Отжимания', 'Плавание', 'Воркаут', 'Вело']);
             const [dashboardView, setDashboardView] = useState('leaderboard');
@@ -156,7 +176,7 @@
             const [checkInCustomInput, setCheckInCustomInput] = useState("");
             const [isAddingInCheckIn, setIsAddingInCheckIn] = useState(false);
 
-            // Modals
+            // Modals & Overlays
             const [checkInModalOpen, setCheckInModalOpen] = useState(false);
             const [checkInStage, setCheckInStage] = useState('select');
             const [selectedSportForCheckIn, setSelectedSportForCheckIn] = useState(null);
@@ -165,9 +185,10 @@
             const [adminPanelOpen, setAdminPanelOpen] = useState(false);
             const [adminDateInput, setAdminDateInput] = useState('');
             const [showAllBadges, setShowAllBadges] = useState(false);
+            const [selectedUserForDetail, setSelectedUserForDetail] = useState(null);
 
             // Admin Logic
-            const [editUser, setEditUser] = useState(null); // User currently being edited by admin
+            const [editUser, setEditUser] = useState(null);
             const [isAddingUser, setIsAddingUser] = useState(false);
             const [newUserNick, setNewUserNick] = useState("");
 
@@ -236,6 +257,8 @@
                 });
                 return { totalKm, totalReps, gymSessions };
             };
+
+            const getUserTitle = (goal) => goal >= 100 ? 'Киборг' : goal >= 60 ? 'Атлет' : 'Новичок';
 
             // --- HANDLERS ---
             const handleRegNext = () => { if (regForm.firstName) { setUser(p => ({ ...p, firstName: regForm.firstName, lastName: regForm.lastName })); setStep('arsenal'); } };
@@ -324,65 +347,53 @@
                 }
             };
 
-            // --- SUB-COMPONENTS ---
+            // --- SUB-COMPONENTS (FULL SCREENS) ---
 
             const RedemptionShop = () => {
                 const [spinState, setSpinState] = useState('idle'); // idle, spinning, result, upload
                 const [task, setTask] = useState("");
-                
                 const tasks = ["Селфи с котом", "Планка 1 мин", "30 Берпи на видео", "Смешное лицо"];
                 
                 const spin = () => {
                     setSpinState('spinning');
                     let counter = 0;
-                    const interval = setInterval(() => {
-                        setTask(tasks[counter % tasks.length]);
-                        counter++;
-                    }, 100);
-                    setTimeout(() => {
-                        clearInterval(interval);
-                        setTask(tasks[Math.floor(Math.random() * tasks.length)]);
-                        setSpinState('result');
-                    }, 2000);
+                    const interval = setInterval(() => { setTask(tasks[counter % tasks.length]); counter++; }, 100);
+                    setTimeout(() => { clearInterval(interval); setTask(tasks[Math.floor(Math.random() * tasks.length)]); setSpinState('result'); }, 2000);
                 };
 
                 return (
-                    <div className="fixed inset-0 z-50 bg-[#020617] pt-safe-top overflow-y-auto animate-slide-up">
-                        <div className="p-6">
-                            <div className="flex items-center gap-3 mb-8">
-                                <button onClick={() => setStep('dashboard')} className="p-2 bg-white/10 rounded-full text-white"><ArrowLeft size={20}/></button>
-                                <h2 className="text-2xl font-display font-bold text-rose-500 tracking-wider">МАГАЗИН ИСКУПЛЕНИЯ</h2>
-                            </div>
-                            
-                            <GlassCard className="p-8 text-center border-rose-500/30 bg-rose-900/10 mb-6">
-                                <div className="inline-flex items-center justify-center w-20 h-20 bg-rose-500/20 rounded-full mb-4 animate-pulse"><Skull className="text-rose-500" size={40} /></div>
-                                <h3 className="text-2xl font-black text-white uppercase mb-2">КУПИТЬ ЖИЗНЬ</h3>
-                                <p className="text-rose-400 text-sm mb-6">Цена: Твоя гордость</p>
-                                
-                                {spinState === 'idle' && <NeonButton variant="danger" onClick={spin}>КРУТИТЬ РУЛЕТКУ</NeonButton>}
-                                {spinState === 'spinning' && <div className="text-xl font-bold text-white animate-pulse">{task}</div>}
-                                {spinState === 'result' && (
-                                    <div className="animate-fade-in">
-                                        <div className="text-lg font-bold text-white mb-4 border p-4 rounded-xl border-dashed border-rose-500/50">{task}</div>
-                                        <NeonButton onClick={() => setSpinState('upload')} variant="danger"><Camera size={18}/> ЗАГРУЗИТЬ ФОТО</NeonButton>
-                                    </div>
-                                )}
-                                {spinState === 'upload' && (
-                                    <div className="animate-fade-in">
-                                        <div className="w-full h-32 bg-slate-800 rounded-xl flex items-center justify-center mb-4 border border-dashed border-slate-600">
-                                            <span className="text-slate-500 text-xs">Фото загружено</span>
-                                        </div>
-                                        <NeonButton onClick={() => { alert("Отправлено на проверку!"); setStep('dashboard'); }} variant="gold">ОТПРАВИТЬ</NeonButton>
-                                    </div>
-                                )}
-                            </GlassCard>
+                    <div className="fixed inset-0 z-50 bg-[#020617] screen-container animate-slide-up">
+                        <div className="flex items-center gap-3 mb-8">
+                            <button onClick={() => setStep('dashboard')} className="p-2 bg-white/10 rounded-full text-white"><ArrowLeft size={20}/></button>
+                            <h2 className="text-2xl font-display font-bold text-rose-500 tracking-wider">МАГАЗИН ИСКУПЛЕНИЯ</h2>
                         </div>
+                        
+                        <GlassCard className="p-8 text-center border-rose-500/30 bg-rose-900/10 mb-6">
+                            <div className="inline-flex items-center justify-center w-20 h-20 bg-rose-500/20 rounded-full mb-4 animate-pulse"><Skull className="text-rose-500" size={40} /></div>
+                            <h3 className="text-2xl font-black text-white uppercase mb-2">КУПИТЬ ЖИЗНЬ</h3>
+                            <p className="text-rose-400 text-sm mb-6">Цена: Твоя гордость</p>
+                            
+                            {spinState === 'idle' && <NeonButton variant="danger" onClick={spin}>КРУТИТЬ РУЛЕТКУ</NeonButton>}
+                            {spinState === 'spinning' && <div className="text-xl font-bold text-white animate-pulse">{task}</div>}
+                            {spinState === 'result' && (
+                                <div className="animate-fade-in">
+                                    <div className="text-lg font-bold text-white mb-4 border p-4 rounded-xl border-dashed border-rose-500/50">{task}</div>
+                                    <NeonButton onClick={() => setSpinState('upload')} variant="danger"><Camera size={18}/> ЗАГРУЗИТЬ ФОТО</NeonButton>
+                                </div>
+                            )}
+                            {spinState === 'upload' && (
+                                <div className="animate-fade-in">
+                                    <div className="w-full h-32 bg-slate-800 rounded-xl flex items-center justify-center mb-4 border border-dashed border-slate-600"><span className="text-slate-500 text-xs">Фото загружено</span></div>
+                                    <NeonButton onClick={() => { alert("Отправлено на проверку!"); setStep('dashboard'); }} variant="gold">ОТПРАВИТЬ</NeonButton>
+                                </div>
+                            )}
+                        </GlassCard>
                     </div>
                 );
             };
 
-            const AdminModal = () => (
-                <div className="fixed inset-0 z-50 bg-[#020617] p-6 pt-safe-top overflow-y-auto animate-fade-in">
+            const AdminPanel = () => (
+                <div className="fixed inset-0 z-50 bg-[#020617] screen-container animate-fade-in">
                     <div className="flex justify-between items-center mb-8">
                         <h2 className="text-2xl font-display font-bold text-amber-500 tracking-wider flex items-center gap-2"><Shield /> ADMIN</h2>
                         <button onClick={() => setAdminPanelOpen(false)} className="p-2 bg-white/10 rounded-full text-white"><X size={20}/></button>
@@ -390,29 +401,23 @@
 
                     {!editUser ? (
                         <div className="space-y-6">
-                            {/* Date Config */}
                             <GlassCard className="p-6">
                                 <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">Дата Старта</h3>
                                 <input type="date" value={adminDateInput} onChange={(e) => setAdminDateInput(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-cyan-500 mb-4" />
                                 <NeonButton variant="gold" onClick={adminUpdateDate} disabled={isSyncing}>{isSyncing ? "..." : "Сохранить"} <Save size={18} /></NeonButton>
                             </GlassCard>
 
-                            {/* Add User */}
                             {!isAddingUser ? (
                                 <NeonButton variant="secondary" onClick={() => setIsAddingUser(true)}><UserPlus size={18}/> Добавить Участника</NeonButton>
                             ) : (
                                 <GlassCard className="p-4 animate-fade-in">
                                     <input type="text" value={newUserNick} onChange={e => setNewUserNick(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white outline-none mb-3" placeholder="Nickname" />
-                                    <div className="flex gap-2">
-                                        <NeonButton variant="disabled" onClick={() => setIsAddingUser(false)}>Отмена</NeonButton>
-                                        <NeonButton onClick={adminAddUser}>Добавить</NeonButton>
-                                    </div>
+                                    <div className="flex gap-2"><NeonButton variant="disabled" onClick={() => setIsAddingUser(false)}>Отмена</NeonButton><NeonButton onClick={adminAddUser}>Добавить</NeonButton></div>
                                 </GlassCard>
                             )}
 
-                            {/* User List */}
                             <div className="space-y-2">
-                                <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Список участников</h3>
+                                <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Участники</h3>
                                 {leaderboard.map(u => (
                                     <div key={u.id} className="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/10">
                                         <span className="text-white font-bold">{u.name}</span>
@@ -430,25 +435,51 @@
                             <div><label className="text-xs text-slate-400">Алмазы</label><input type="number" value={editUser.diamonds} onChange={e => setEditUser({...editUser, diamonds: parseInt(e.target.value)})} className="w-full bg-slate-900 p-2 rounded text-white"/></div>
                             <div><label className="text-xs text-slate-400">Стрик</label><input type="number" value={editUser.streak} onChange={e => setEditUser({...editUser, streak: parseInt(e.target.value)})} className="w-full bg-slate-900 p-2 rounded text-white"/></div>
                             <div><label className="text-xs text-slate-400">Цель</label><input type="number" value={editUser.goal} onChange={e => setEditUser({...editUser, goal: parseInt(e.target.value)})} className="w-full bg-slate-900 p-2 rounded text-white"/></div>
-                            <div className="flex gap-2 pt-4">
-                                <NeonButton variant="disabled" onClick={() => setEditUser(null)}>Назад</NeonButton>
-                                <NeonButton onClick={adminSaveUserChanges}>Сохранить</NeonButton>
-                            </div>
+                            <div className="flex gap-2 pt-4"><NeonButton variant="disabled" onClick={() => setEditUser(null)}>Назад</NeonButton><NeonButton onClick={adminSaveUserChanges}>Сохранить</NeonButton></div>
                         </GlassCard>
                     )}
                 </div>
             );
 
-            // --- RENDER STEPS ---
-
-            if (step === 'welcome') return (
-                <div className="flex flex-col h-full p-6 pt-safe-top relative z-10">
-                    <div className="flex-grow flex flex-col items-center justify-center text-center">
-                         <div className="relative w-40 h-40 flex items-center justify-center mb-8">
-                            <div className="absolute inset-0 bg-cyan-500 blur-[60px] opacity-30 rounded-full animate-pulse"></div>
-                            <Hexagon size={130} className="text-cyan-400 stroke-[1.5] animate-float" />
-                            <Activity size={50} className="text-white absolute" />
+            const SettingsPanel = () => (
+                <div className="fixed inset-0 z-50 bg-[#020617] screen-container animate-fade-in">
+                    <div className="flex justify-between items-center mb-8"><h2 className="text-2xl font-display font-bold text-white tracking-wider">НАСТРОЙКИ</h2><button onClick={() => setEditingProfile(false)} className="p-2 bg-white/5 rounded-full shadow-sm border border-white/10 text-white"><X size={20} /></button></div>
+                    <div className="space-y-6">
+                        <GlassCard className="p-4 flex flex-col gap-4">
+                            <div className="flex justify-between items-center"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400"><Bell size={20} /></div><div className="font-bold text-slate-200">Уведомления</div></div><ToggleSwitch checked={user.notifications} onChange={(val) => setUser({...user, notifications: val})} /></div>
+                            {user.notifications && (
+                                <div className="flex items-center gap-3 mt-2 border-t border-white/10 pt-4"><Clock size={16} className="text-slate-400" /><input type="time" value={user.notificationTime} onChange={(e) => { setUser({...user, notificationTime: e.target.value}); }} className="bg-slate-900 text-white rounded p-2 text-sm border border-slate-700 outline-none" /><span className="text-xs text-slate-500">Время</span></div>
+                            )}
+                        </GlassCard>
+                        <button onClick={handleDeleteAccount} className="w-full py-4 text-xs font-bold text-rose-500 border border-rose-500/30 bg-rose-500/10 rounded-xl hover:bg-rose-500/20 transition-colors flex items-center justify-center gap-2 uppercase tracking-widest"><Trash2 size={16} /> Удалить Аккаунт</button>
+                    </div>
+                </div>
+            );
+            
+            const UserDetailModal = ({ detailUser, onClose }) => {
+                if (!detailUser) return null;
+                return (
+                    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+                        <div className="w-full max-w-sm bg-[#0f172a] border border-white/10 rounded-3xl p-6 relative">
+                            <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white"><X size={24}/></button>
+                            <div className="flex flex-col items-center mb-6">
+                                <Avatar name={detailUser.name} photoUrl={detailUser.photoUrl} size="w-20 h-20" className="mb-4" />
+                                <h3 className="text-2xl font-display font-bold text-white">{detailUser.name}</h3>
+                                <div className="flex gap-2 mt-2"><span className="px-2 py-1 bg-white/5 rounded text-[10px] text-slate-300 border border-white/10">Streak: {detailUser.streak} 🔥</span><span className="px-2 py-1 bg-white/5 rounded text-[10px] text-slate-300 border border-white/10">💎 {detailUser.diamonds}</span></div>
+                            </div>
+                            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Дисциплины</h4>
+                            <div className="flex flex-wrap gap-2 mb-6">{detailUser.disciplines.map(d => <span key={d} className="px-2 py-1 bg-cyan-500/10 text-cyan-400 rounded-lg text-xs font-bold border border-cyan-500/20">{d}</span>)}</div>
+                            <NeonButton variant="secondary" onClick={onClose}>Закрыть</NeonButton>
                         </div>
+                    </div>
+                );
+            };
+
+            // --- RENDER STEPS ---
+            if (step === 'welcome') return (
+                <div className="flex flex-col h-full screen-container relative z-10">
+                    <div className="flex-grow flex flex-col items-center justify-center text-center">
+                        <div className="relative w-40 h-40 flex items-center justify-center mb-8"><div className="absolute inset-0 bg-cyan-500 blur-[60px] opacity-30 rounded-full animate-pulse"></div><Hexagon size={130} className="text-cyan-400 stroke-[1.5] animate-float" /><Activity size={50} className="text-white absolute" /></div>
                         <h1 className="text-4xl font-black text-white font-display uppercase">Fitness<br/>Aurora</h1>
                     </div>
                     <NeonButton onClick={() => setStep('registration')}>Начать</NeonButton>
@@ -456,36 +487,26 @@
             );
 
             if (step === 'registration') return (
-                <div className="flex flex-col h-full p-6 pt-safe-top relative z-10 animate-slide-up">
+                <div className="flex flex-col h-full screen-container relative z-10 animate-slide-up">
                     <h2 className="text-2xl font-display font-bold text-white mb-6">ИДЕНТИФИКАЦИЯ</h2>
                     <div className="space-y-4 flex-grow">
-                        <input type="text" placeholder="Имя" value={regForm.firstName} onChange={e => setRegForm({...regForm, firstName: e.target.value})} className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-cyan-500 placeholder:text-slate-500" />
-                        <input type="text" placeholder="Фамилия" value={regForm.lastName} onChange={e => setRegForm({...regForm, lastName: e.target.value})} className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-cyan-500 placeholder:text-slate-500" />
+                        <input type="text" placeholder="Имя" value={regForm.firstName} onChange={e => setRegForm({...regForm, firstName: e.target.value})} className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-cyan-500 placeholder:text-slate-500 font-bold" />
+                        <input type="text" placeholder="Фамилия" value={regForm.lastName} onChange={e => setRegForm({...regForm, lastName: e.target.value})} className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-cyan-500 placeholder:text-slate-500 font-bold" />
                     </div>
                     <NeonButton onClick={handleRegNext} disabled={!regForm.firstName}>Далее</NeonButton>
                 </div>
             );
 
             if (step === 'arsenal') return (
-                <div className="flex flex-col h-full p-6 pt-safe-top relative z-10 animate-slide-up">
+                <div className="flex flex-col h-full screen-container relative z-10 animate-slide-up">
                     <h2 className="text-2xl font-display font-bold text-white mb-2">АРСЕНАЛ</h2>
                     <p className="text-slate-400 text-xs mb-4">Выбери до 5 дисциплин ({user.disciplines.length}/5)</p>
-                    
-                    <div className="flex flex-wrap gap-3 mb-4">
-                        {popularSports.map(s => (
-                            <button key={s} onClick={() => handleArsenalToggle(s)} className={`px-4 py-3 rounded-xl text-sm font-bold border transition-all ${user.disciplines.includes(s) ? 'bg-cyan-600/80 text-white border-cyan-400' : 'bg-white/5 text-slate-400 border-white/10'}`}>{s}</button>
-                        ))}
-                    </div>
-
+                    <div className="flex flex-wrap gap-3 mb-4">{popularSports.map(s => (<button key={s} onClick={() => handleArsenalToggle(s)} className={`px-4 py-3 rounded-xl text-sm font-bold border transition-all ${user.disciplines.includes(s) ? 'bg-cyan-600/80 text-white border-cyan-400' : 'bg-white/5 text-slate-400 border-white/10'}`}>{s}</button>))}</div>
                     {!isAddingCustom ? (
                         <button onClick={() => setIsAddingCustom(true)} className="w-full p-3 border border-dashed border-slate-600 rounded-xl text-slate-400 flex items-center justify-center gap-2 hover:border-cyan-500 hover:text-cyan-400 transition-colors"><Plus size={16}/> Своя дисциплина</button>
                     ) : (
-                        <div className="flex gap-2 animate-fade-in mb-4">
-                            <input type="text" value={customInput} onChange={e => setCustomInput(e.target.value)} className="flex-1 bg-slate-900 border border-cyan-500 rounded-xl px-4 text-white outline-none" placeholder="Название..." autoFocus />
-                            <button onClick={handleAddCustom} className="p-3 bg-cyan-600 rounded-xl text-white"><CheckCircle size={20}/></button>
-                        </div>
+                        <div className="flex gap-2 animate-fade-in mb-4"><input type="text" value={customInput} onChange={e => setCustomInput(e.target.value)} className="flex-1 bg-slate-900 border border-cyan-500 rounded-xl px-4 text-white outline-none" placeholder="Название..." autoFocus /><button onClick={handleAddCustom} className="p-3 bg-cyan-600 rounded-xl text-white"><CheckCircle size={20}/></button></div>
                     )}
-                    
                     <p className="text-slate-600 text-[10px] mt-4 text-center">Вы сможете изменить выбор позже в настройках</p>
                     <div className="mt-auto"><NeonButton onClick={() => setStep('goal')} disabled={user.disciplines.length === 0}>Далее</NeonButton></div>
                 </div>
@@ -494,7 +515,7 @@
             if (step === 'goal') {
                 const goals = getAdjustedGoals();
                 return (
-                    <div className="flex flex-col h-full p-6 pt-safe-top relative z-10 animate-slide-up">
+                    <div className="flex flex-col h-full screen-container relative z-10 animate-slide-up">
                         <h2 className="text-2xl font-display font-bold text-white mb-6 text-center">ВЫБЕРИ ЦЕЛЬ</h2>
                         <div className="space-y-4 flex-grow">
                             {goals.map((g, idx) => (
@@ -515,28 +536,16 @@
             const userStats = getStatsSummary(user.history);
 
             return (
-                <div className="pb-24 relative pt-safe-top">
-                    {/* Header */}
-                    <div className="sticky top-0 bg-[#020617]/90 backdrop-blur-xl z-20 px-6 py-4 border-b border-white/5">
-                        <div className="flex justify-between items-center mb-4">
-                            <h1 className="text-lg font-display font-bold text-white tracking-widest">ПРОФИЛЬ</h1>
-                            <div className="flex gap-2">
-                                {user.isAdmin && <button onClick={() => setAdminPanelOpen(true)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-amber-500/20 text-amber-500 border border-amber-500/30"><Shield size={18} /></button>}
-                                <div onClick={() => setStep('redemption')} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer active:scale-95 transition-transform"><Diamond size={16} className="text-cyan-400 fill-cyan-400" /><span className="font-bold text-white">{user.diamonds}</span></div>
-                                <button onClick={() => setEditingProfile(true)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-slate-400 transition-colors"><Settings size={18} /></button>
-                            </div>
-                        </div>
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="flex items-center gap-3">
-                                <Avatar name={user.firstName} photoUrl={user.photoUrl} />
-                                <div><div className="font-display font-bold text-white leading-tight">{user.firstName}</div><div className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Статус: <span className="text-emerald-400">В строю</span></div></div>
-                            </div>
-                        </div>
+                <div className="relative">
+                    {/* Header Fixed */}
+                    <div className="dashboard-header">
+                        <div className="flex justify-between items-center mb-4"><h1 className="text-lg font-display font-bold text-white tracking-widest">ПРОФИЛЬ</h1><div className="flex gap-2">{user.isAdmin && <button onClick={() => setAdminPanelOpen(true)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-amber-500/20 text-amber-500 border border-amber-500/30"><Shield size={18} /></button>}<div onClick={() => setStep('redemption')} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer active:scale-95 transition-transform"><Diamond size={16} className="text-cyan-400 fill-cyan-400" /><span className="font-bold text-white">{user.diamonds}</span></div><button onClick={() => setEditingProfile(true)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-slate-400 transition-colors"><Settings size={18} /></button></div></div>
+                        <div className="flex justify-between items-start mb-4"><div className="flex items-center gap-3"><Avatar name={user.firstName} photoUrl={user.photoUrl} /><div><div className="font-display font-bold text-white leading-tight">{user.firstName}</div><div className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Статус: <span className="text-emerald-400">В строю</span></div></div></div></div>
                         <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-widest"><span>{user.streak} Days</span><span>Goal: {user.goal}</span></div>
                         <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden relative"><div className="bg-gradient-to-r from-cyan-500 to-purple-500 h-full shadow-[0_0_10px_rgba(34,211,238,0.5)]" style={{ width: `${progressPercent}%` }}></div></div>
                     </div>
 
-                    <div className="p-6 space-y-6">
+                    <div className="screen-container space-y-6">
                         {/* Check-in Card */}
                         {user.todayActivity.length > 0 ? (
                             <GlassCard className="p-8 text-center bg-emerald-900/10 border-emerald-500/20">
@@ -546,69 +555,33 @@
                                 <NeonButton variant="secondary" onClick={() => setCheckInModalOpen(true)} className="py-3 text-xs"><Plus size={14} /> Добавить еще</NeonButton>
                             </GlassCard>
                         ) : (
-                            <button onClick={() => setCheckInModalOpen(true)} className="w-full aspect-[2.5/1] rounded-2xl glass-panel relative group overflow-hidden active:scale-[0.98] transition-all">
-                                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 opacity-50"></div>
-                                <div className="relative z-10 flex flex-col items-center justify-center h-full gap-2"><Zap size={28} className="text-cyan-400 fill-cyan-400 mb-1" /><span className="text-xl font-display font-black text-white uppercase tracking-widest">ОТМЕТИТЬСЯ</span></div>
-                            </button>
+                            <button onClick={() => setCheckInModalOpen(true)} className="w-full aspect-[2.5/1] rounded-2xl glass-panel relative group overflow-hidden active:scale-[0.98] transition-all"><div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 opacity-50"></div><div className="relative z-10 flex flex-col items-center justify-center h-full gap-2"><Zap size={28} className="text-cyan-400 fill-cyan-400 mb-1" /><span className="text-xl font-display font-black text-white uppercase tracking-widest">ОТМЕТИТЬСЯ</span></div></button>
                         )}
 
-                        {/* Toggle Switch */}
-                        <div className="flex justify-between items-center bg-white/5 p-1 rounded-xl border border-white/10">
-                            <button onClick={() => setDashboardView('leaderboard')} className={`flex-1 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${dashboardView === 'leaderboard' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500'}`}><Users size={14}/> Рейтинг</button>
-                            <button onClick={() => setDashboardView('progress')} className={`flex-1 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${dashboardView === 'progress' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500'}`}><BarChart3 size={14}/> Прогресс</button>
-                        </div>
+                        <div className="flex justify-between items-center bg-white/5 p-1 rounded-xl border border-white/10"><button onClick={() => setDashboardView('leaderboard')} className={`flex-1 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${dashboardView === 'leaderboard' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500'}`}><Users size={14}/> Рейтинг</button><button onClick={() => setDashboardView('progress')} className={`flex-1 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${dashboardView === 'progress' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500'}`}><BarChart3 size={14}/> Прогресс</button></div>
 
-                        {/* Views */}
                         {dashboardView === 'leaderboard' ? (
                             <div className="space-y-3">
                                 {leaderboard.map((u, idx) => (
-                                    <GlassCard key={u.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors">
-                                        <div className="flex items-center gap-4">
-                                            <div className="relative"><Avatar name={u.name} photoUrl={u.photoUrl} /><div className="absolute -top-1 -right-1 bg-slate-900 rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold border border-slate-700 text-white">{idx + 1}</div></div>
-                                            <div><div className="font-bold text-slate-200">{u.name}</div><div className="text-[10px] text-slate-500 uppercase">{u.disciplines.slice(0, 2).join(', ')}</div></div>
-                                        </div>
-                                        <div className="flex items-center gap-3"><div className="text-right"><div className="font-bold text-white text-sm">{u.streak} <span className="text-[10px] text-orange-400">🔥</span></div></div><button className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-cyan-400 hover:bg-cyan-400 hover:text-white transition-colors"><Zap size={14} /></button></div>
+                                    <GlassCard key={u.id} onClick={() => setSelectedUserForDetail(u)} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors">
+                                        <div className="flex items-center gap-4"><div className="relative"><Avatar name={u.name} photoUrl={u.photoUrl} /><div className="absolute -top-1 -right-1 bg-slate-900 rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold border border-slate-700 text-white">{idx + 1}</div></div><div><div className="font-bold text-slate-200">{u.name}</div><div className="text-[10px] text-slate-500 uppercase">{u.disciplines.slice(0, 2).join(', ')}</div></div></div>
+                                        <div className="flex items-center gap-3"><div className="text-right"><div className="font-bold text-white text-sm">{u.streak} <span className="text-[10px] text-orange-400">🔥</span></div></div></div>
                                     </GlassCard>
                                 ))}
                             </div>
                         ) : (
-                            <div className="animate-fade-in space-y-6">
-                                <GlassCard className="p-6">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <div className="flex items-center gap-3"><Avatar name={user.firstName} photoUrl={user.photoUrl} size="w-12 h-12" /><div><div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Ранг</div><div className="font-display font-black text-lg text-white tracking-wide">{getUserTitle(user.goal)}</div></div></div>
-                                        <div className="text-right"><div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Цель</div><div className="font-display font-black text-xl text-cyan-400">{user.goal} <span className="text-sm text-slate-500 font-sans font-normal">Дней</span></div></div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 text-center"><Ruler size={16} className="mx-auto text-cyan-500 mb-1" /><div className="font-display font-bold text-lg text-slate-200">{userStats.totalKm}</div><div className="text-[9px] text-slate-500 uppercase font-bold">КМ Всего</div></div>
-                                        <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 text-center"><Dumbbell size={16} className="mx-auto text-purple-500 mb-1" /><div className="font-display font-bold text-lg text-slate-200">{userStats.totalReps}</div><div className="text-[9px] text-slate-500 uppercase font-bold">Повторений</div></div>
-                                    </div>
-                                </GlassCard>
-                            </div>
+                            <GlassCard className="p-6">
+                                <div className="flex items-center justify-between mb-6"><div className="flex items-center gap-3"><Avatar name={user.firstName} photoUrl={user.photoUrl} size="w-12 h-12" /><div><div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Ранг</div><div className="font-display font-black text-lg text-white tracking-wide">{getUserTitle(user.goal)}</div></div></div><div className="text-right"><div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Цель</div><div className="font-display font-black text-xl text-cyan-400">{user.goal} <span className="text-sm text-slate-500 font-sans font-normal">Дней</span></div></div></div>
+                                <div className="grid grid-cols-2 gap-3"><div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 text-center"><Ruler size={16} className="mx-auto text-cyan-500 mb-1" /><div className="font-display font-bold text-lg text-slate-200">{userStats.totalKm}</div><div className="text-[9px] text-slate-500 uppercase font-bold">КМ Всего</div></div><div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 text-center"><Dumbbell size={16} className="mx-auto text-purple-500 mb-1" /><div className="font-display font-bold text-lg text-slate-200">{userStats.totalReps}</div><div className="text-[9px] text-slate-500 uppercase font-bold">Повторений</div></div></div>
+                            </GlassCard>
                         )}
                     </div>
 
                     {/* Modals */}
-                    {adminPanelOpen && <AdminModal />}
-
-                    {editingProfile && (
-                        <div className="fixed inset-0 z-50 bg-[#020617] p-6 animate-fade-in overflow-y-auto pt-safe-top">
-                            <div className="flex justify-between items-center mb-8"><h2 className="text-2xl font-display font-bold text-white tracking-wider">НАСТРОЙКИ</h2><button onClick={() => setEditingProfile(false)} className="p-2 bg-white/5 rounded-full shadow-sm border border-white/10 text-white"><X size={20} /></button></div>
-                            <div className="space-y-6">
-                                <GlassCard className="p-4 flex flex-col gap-4">
-                                    <div className="flex justify-between items-center"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400"><Bell size={20} /></div><div className="font-bold text-slate-200">Уведомления</div></div><ToggleSwitch checked={user.notifications} onChange={(val) => setUser({...user, notifications: val})} /></div>
-                                    {user.notifications && (
-                                        <div className="flex items-center gap-3 mt-2 border-t border-white/10 pt-4">
-                                            <Clock size={16} className="text-slate-400" />
-                                            <input type="time" value={user.notificationTime} onChange={(e) => { setUser({...user, notificationTime: e.target.value}); alert(`Уведомление установлено на ${e.target.value}`); }} className="bg-slate-900 text-white rounded p-2 text-sm border border-slate-700 outline-none" />
-                                            <span className="text-xs text-slate-500">Время напоминания</span>
-                                        </div>
-                                    )}
-                                </GlassCard>
-                                <button onClick={handleDeleteAccount} className="w-full py-4 text-xs font-bold text-rose-500 border border-rose-500/30 bg-rose-500/10 rounded-xl hover:bg-rose-500/20 transition-colors flex items-center justify-center gap-2 uppercase tracking-widest"><Trash2 size={16} /> Удалить Аккаунт</button>
-                            </div>
-                        </div>
-                    )}
-
+                    {adminPanelOpen && <AdminPanel />}
+                    {editingProfile && <SettingsPanel />}
+                    {selectedUserForDetail && <UserDetailModal detailUser={selectedUserForDetail} onClose={() => setSelectedUserForDetail(null)} />}
+                    
                     {checkInModalOpen && (
                         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-end sm:items-center justify-center p-4 animate-fade-in">
                             <div className="w-full max-w-md bg-[#0f172a] border border-white/10 rounded-t-3xl p-6 sm:rounded-3xl">
