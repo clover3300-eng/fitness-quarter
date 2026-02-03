@@ -112,7 +112,7 @@
              padding-top: calc(80px + env(safe-area-inset-top)); 
         }
 
-        /* Fullscreen Modal */
+        /* Fullscreen Modal - Fixed to cover everything */
         .modal-fullscreen {
             position: fixed; 
             top: 0; left: 0; right: 0; bottom: 0;
@@ -124,7 +124,7 @@
             width: 100%;
         }
         
-        /* Modal content safe area */
+        /* Modal content needs proper spacing from top safe area */
         .modal-content-safe {
             flex: 1;
             overflow-y: auto;
@@ -320,121 +320,24 @@
                 { id: 104, name: 'Dima', photoUrl: null, diamonds: 3, streak: 1, goal: 30, status: 'active', disciplines: ['Бег'], history: [], badges: [] },
             ]);
 
-            // --- FUNCTIONS DEFINED BEFORE USE ---
-            
-            const checkDiamondsOnLoad = (usr) => {
-                if (!usr.lastCheckInDate) return usr;
-                const last = new Date(usr.lastCheckInDate);
-                const today = new Date();
-                last.setHours(0,0,0,0); today.setHours(0,0,0,0);
-                const diffDays = Math.ceil(Math.abs(today - last) / (1000 * 60 * 60 * 24));
-                if (diffDays === 0) return usr; 
-                let allowedGap = 1; 
-                if (usr.frequency === '3 раза в неделю') allowedGap = 2; 
-                else if (usr.frequency === 'МИКС' || usr.frequency === 'На лайте') allowedGap = 3; 
-                if (diffDays > allowedGap + 1) { 
-                    const newDiamonds = Math.max(0, usr.diamonds - 1);
-                    return { ...usr, diamonds: newDiamonds };
-                }
-                return usr;
-            };
-
-            const fetchConfigDate = async () => {}; 
-
-            const getAdjustedGoals = () => {
-                const daysPassed = Math.max(0, Math.ceil((new Date() - marathonStartDate) / (86400000)));
-                return [ 
-                    { o: 30, r: Math.max(0, 30-daysPassed), l: 'Новичок', i: <Star size={20} className="text-emerald-400"/> }, 
-                    { o: 60, r: Math.max(0, 60-daysPassed), l: 'Атлет', i: <Dumbbell size={20} className="text-cyan-400"/> }, 
-                    { o: 100, r: Math.max(0, 100-daysPassed), l: 'Гигант', i: <Crown size={20} className="text-amber-400"/> } 
-                ];
-            };
-
-            const getUserRankTitle = (g) => { if (g >= 100) return 'Гигант'; if (g >= 60) return 'Атлет'; return 'Новичок'; };
-            const getUserRankIcon = (g) => { if (g >= 100) return <Crown size={32} className="text-amber-400"/>; if (g >= 60) return <Dumbbell size={32} className="text-cyan-400"/>; return <Star size={32} className="text-emerald-400"/>; };
-            const getStats = (hist) => { let k=0,r=0; hist.forEach(h=>{if(h.unit==='км')k+=+h.value;if(h.unit==='повт')r+=+h.value;}); return {k,r}; };
-            const toggleDiscipline = (s) => setUser(p => ({ ...p, disciplines: p.disciplines.includes(s) ? p.disciplines.filter(d => d !== s) : [...p.disciplines, s] }));
-            
-            const getUnitForSport = (sport) => { 
-                const distanceSports = ['Бег', 'Плавание', 'Вело', 'Велосипед', 'Ходьба', 'Лыжи']; 
-                return distanceSports.some(ds => sport.includes(ds)) ? 'км' : 'повт'; 
-            };
-            
-            const isGymWorkout = (sport) => {
-                const gymWords = ['Зал', 'Спортзал', 'Качалка', 'Фитнес'];
-                return gymWords.some(w => sport.includes(w));
-            };
-
-            const generateAchievements = (disciplines) => {
-                const isRun = disciplines.some(d => ['Бег', 'Ходьба', 'Лыжи'].includes(d));
-                const isGym = disciplines.some(d => ['Зал', 'Спортзал', 'Воркаут', 'Отжимания', 'Турник'].includes(d));
-                const isSwim = disciplines.includes('Плавание');
-
-                const base = [
-                    { id: 2, title: "Неделя Выживания", desc: "7 дней подряд. Ты не слился!", icon: <Flame size={20}/>, condition: (u) => u.streak >= 7 },
-                    { id: 3, title: "Привычка", desc: "21 день. Теперь это часть тебя.", icon: <Zap size={20}/>, condition: (u) => u.streak >= 21 },
-                    { id: 4, title: "Экватор", desc: "50 дней. Половина пути пройдена!", icon: <Layers size={20}/>, condition: (u) => u.streak >= 50 },
-                    { id: 5, title: "Легенда Марафона", desc: "100 дней. Ты прошел игру!", icon: <Crown size={20}/>, condition: (u) => u.streak >= 100 },
-                    { id: 8, title: "Ранняя Пташка", desc: "Тренировка выполнена (любая).", icon: <Sun size={20}/>, condition: (u) => u.history.length > 0 }, 
-                    { id: 9, title: "Воин Ночи", desc: "Тренировка выполнена (любая).", icon: <Moon size={20}/>, condition: (u) => u.history.length > 5 }
-                ];
-
-                if (isRun) base.push({ id: 6, title: "Форест Гамп", desc: "Набрано 50 км суммарно.", icon: <Ruler size={20}/>, condition: (u, stats) => stats.k >= 50 });
-                if (isGym) base.push({ id: 7, title: "Железный Человек", desc: "1000 повторений суммарно.", icon: <Dumbbell size={20}/>, condition: (u, stats) => stats.r >= 1000 });
-                if (isSwim) base.push({ id: 10, title: "Аквамен", desc: "Проплыви 10 км суммарно", icon: <Activity size={20}/>, condition: (u, stats) => stats.k >= 10 });
+            // --- MOVED useMemo HERE ---
+            // Build Sorted Leaderboard including Current User
+            const finalLeaderboard = useMemo(() => {
+                const currentUserEntry = { 
+                    id: 999, // user ID
+                    name: `${user.firstName} (Вы)`,
+                    photoUrl: user.photoUrl,
+                    diamonds: user.diamonds,
+                    streak: user.streak,
+                    goal: user.goal,
+                    isUser: true,
+                    badges: [] // simplistic badges for now
+                };
                 
-                if (base.length < 9) {
-                     base.push({ id: 11, title: "Упорство", desc: "Сделай 10 отметок", icon: <CheckCircle size={20}/>, condition: (u) => u.history.length >= 10 });
-                }
-                
-                return base.slice(0, 9);
-            };
+                const all = [...leaderboard, currentUserEntry];
+                return all.sort((a, b) => b.streak - a.streak);
+            }, [leaderboard, user]);
 
-            const handleCheckInComplete = (val) => {
-                const sport = selectedSportForCheckIn;
-                const unit = isGymWorkout(sport) ? 'тип' : getUnitForSport(sport);
-                const now = new Date();
-                const todayStr = now.toDateString();
-                const dateDisplay = now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }); 
-                const isNewDay = user.lastCheckInDate !== todayStr;
-                let newStreak = isNewDay ? user.streak + 1 : user.streak;
-                let newDiamonds = user.diamonds;
-                if (isNewDay && newStreak % 7 === 0 && newDiamonds < 3) { newDiamonds++; alert("💎 Алмаз восстановлен за стрик!"); }
-                setUser(prev => ({ ...prev, streak: newStreak, diamonds: newDiamonds, lastCheckInDate: todayStr, todayActivity: [...prev.todayActivity, sport], history: [{date: dateDisplay, fullDate: now.toISOString(), sport, value: val, unit}, ...prev.history] }));
-                setActiveModal(null); setCheckInStage('select'); setCheckInValue("");
-            };
-
-            const addCustomSport = (name, checkIn = false) => {
-                if(!name.trim()) return;
-                setPopularSports(p => [...p, name]); setUser(p => ({...p, disciplines: [...p.disciplines, name]}));
-                if(checkIn) { setSelectedSportForCheckIn(name); setCheckInStage('value'); }
-                setIsAddingCustom(false); setIsAddingInCheckIn(false); setCustomInput(""); setCheckInCustomInput("");
-            };
-            
-            const handleAdminUpdateDate = async () => {
-                if (!adminDateInput) return; setIsSyncing(true);
-                try { await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'UPDATE_DATE', date: adminDateInput }) }); setMarathonStartDate(new Date(adminDateInput)); alert("Дата обновлена и отправлена!"); } catch (e) { setMarathonStartDate(new Date(adminDateInput)); alert("Дата обновлена (локально)!"); } finally { setIsSyncing(false); }
-            };
-            
-            const openAdmin = () => { setActiveModal('admin'); setAdminDateInput(marathonStartDate.toISOString().split('T')[0]); fetchConfigDate(); };
-            const handleDeleteAccount = () => { if(confirm("Удалить аккаунт?")) { localStorage.removeItem('fitness_aurora_user'); window.location.reload(); } };
-
-            const sendMotivation = (targetName) => {
-                const sender = user.firstName || "Аноним";
-                const phraseTemplate = MOTIVATION_PHRASES[Math.floor(Math.random() * MOTIVATION_PHRASES.length)];
-                const msg = phraseTemplate.replace("[N]", targetName).replace("[S]", sender);
-                if (window.Telegram?.WebApp?.showPopup) { window.Telegram.WebApp.showPopup({ title: 'Отправлено 🚀', message: `Пуш для ${targetName}:\n"${msg}"`, buttons: [{id: 'ok', type: 'ok'}] }); } else { alert(`Пуш отправлен ${targetName}:\n"${msg}"`); }
-            };
-
-            const handleShowAll = (show) => {
-                setShowAllLeaderboard(show);
-                if (!show && contentRef.current) {
-                    contentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-            };
-
-
-            // --- USE EFFECTS ---
             useEffect(() => {
                 const tg = window.Telegram?.WebApp;
                 if (tg) { 
@@ -505,30 +408,121 @@
             // Save user state
             useEffect(() => { if(user.firstName) localStorage.setItem('fitness_aurora_user', JSON.stringify(user)); }, [user]);
 
-            // --- MEMOS ---
-            const finalLeaderboard = useMemo(() => {
-                const currentUserEntry = { 
-                    id: 999, 
-                    name: `${user.firstName} (Вы)`,
-                    photoUrl: user.photoUrl,
-                    diamonds: user.diamonds,
-                    streak: user.streak,
-                    goal: user.goal,
-                    isUser: true,
-                    badges: [] 
-                };
-                
-                const all = [...leaderboard, currentUserEntry];
-                return all.sort((a, b) => b.streak - a.streak);
-            }, [leaderboard, user]);
+            // Logic: Diamonds & Streak
+            const checkDiamondsOnLoad = (usr) => {
+                if (!usr.lastCheckInDate) return usr;
+                const last = new Date(usr.lastCheckInDate);
+                const today = new Date();
+                last.setHours(0,0,0,0); today.setHours(0,0,0,0);
+                const diffDays = Math.ceil(Math.abs(today - last) / (1000 * 60 * 60 * 24));
+                if (diffDays === 0) return usr; 
+                let allowedGap = 1; 
+                if (usr.frequency === '3 раза в неделю') allowedGap = 2; 
+                else if (usr.frequency === 'МИКС' || usr.frequency === 'На лайте') allowedGap = 3; 
+                if (diffDays > allowedGap + 1) { 
+                    const newDiamonds = Math.max(0, usr.diamonds - 1);
+                    return { ...usr, diamonds: newDiamonds };
+                }
+                return usr;
+            };
 
-            // --- RENDER HELPERS ---
-            const displayedLeaderboard = showAllLeaderboard ? finalLeaderboard : finalLeaderboard.slice(0, 3);
-            const userAchievements = generateAchievements(user.disciplines).map(ach => ({
-                ...ach,
-                unlocked: ach.condition(user, getStats(user.history))
-            }));
+            const fetchConfigDate = async () => {}; 
+
+            const getAdjustedGoals = () => {
+                const daysPassed = Math.max(0, Math.ceil((new Date() - marathonStartDate) / (86400000)));
+                return [ 
+                    { o: 30, r: Math.max(0, 30-daysPassed), l: 'Новичок', i: <Star size={20} className="text-emerald-400"/> }, 
+                    { o: 60, r: Math.max(0, 60-daysPassed), l: 'Атлет', i: <Dumbbell size={20} className="text-cyan-400"/> }, 
+                    { o: 100, r: Math.max(0, 100-daysPassed), l: 'Гигант', i: <Crown size={20} className="text-amber-400"/> } 
+                ];
+            };
             
+            const getUserRankTitle = (g) => { if (g >= 100) return 'Гигант'; if (g >= 60) return 'Атлет'; return 'Новичок'; };
+            const getUserRankIcon = (g) => { if (g >= 100) return <Crown size={32} className="text-amber-400"/>; if (g >= 60) return <Dumbbell size={32} className="text-cyan-400"/>; return <Star size={32} className="text-emerald-400"/>; };
+            const getStats = (hist) => { let k=0,r=0; hist.forEach(h=>{if(h.unit==='км')k+=+h.value;if(h.unit==='повт')r+=+h.value;}); return {k,r}; };
+            const toggleDiscipline = (s) => setUser(p => ({ ...p, disciplines: p.disciplines.includes(s) ? p.disciplines.filter(d => d !== s) : [...p.disciplines, s] }));
+            
+            const getUnitForSport = (sport) => { 
+                const distanceSports = ['Бег', 'Плавание', 'Вело', 'Велосипед', 'Ходьба', 'Лыжи']; 
+                return distanceSports.some(ds => sport.includes(ds)) ? 'км' : 'повт'; 
+            };
+            
+            const isGymWorkout = (sport) => {
+                const gymWords = ['Зал', 'Спортзал', 'Качалка', 'Фитнес'];
+                return gymWords.some(w => sport.includes(w));
+            };
+
+            // DYNAMIC ACHIEVEMENTS
+            const generateAchievements = (disciplines) => {
+                const isRun = disciplines.some(d => ['Бег', 'Ходьба', 'Лыжи'].includes(d));
+                const isGym = disciplines.some(d => ['Зал', 'Спортзал', 'Воркаут', 'Отжимания', 'Турник'].includes(d));
+                const isSwim = disciplines.includes('Плавание');
+
+                const base = [
+                    { id: 2, title: "Неделя Выживания", desc: "7 дней подряд. Ты не слился!", icon: <Flame size={20}/>, condition: (u) => u.streak >= 7 },
+                    { id: 3, title: "Привычка", desc: "21 день. Теперь это часть тебя.", icon: <Zap size={20}/>, condition: (u) => u.streak >= 21 },
+                    { id: 4, title: "Экватор", desc: "50 дней. Половина пути пройдена!", icon: <Layers size={20}/>, condition: (u) => u.streak >= 50 },
+                    { id: 5, title: "Легенда Марафона", desc: "100 дней. Ты прошел игру!", icon: <Crown size={20}/>, condition: (u) => u.streak >= 100 },
+                    { id: 8, title: "Ранняя Пташка", desc: "Тренировка выполнена (любая).", icon: <Sun size={20}/>, condition: (u) => u.history.length > 0 }, 
+                    { id: 9, title: "Воин Ночи", desc: "Тренировка выполнена (любая).", icon: <Moon size={20}/>, condition: (u) => u.history.length > 5 }
+                ];
+
+                if (isRun) base.push({ id: 6, title: "Форест Гамп", desc: "Набрано 50 км суммарно.", icon: <Ruler size={20}/>, condition: (u, stats) => stats.k >= 50 });
+                if (isGym) base.push({ id: 7, title: "Железный Человек", desc: "1000 повторений суммарно.", icon: <Dumbbell size={20}/>, condition: (u, stats) => stats.r >= 1000 });
+                if (isSwim) base.push({ id: 10, title: "Аквамен", desc: "Проплыви 10 км суммарно", icon: <Activity size={20}/>, condition: (u, stats) => stats.k >= 10 });
+                
+                // Fill if less than 9
+                if (base.length < 9) {
+                     base.push({ id: 11, title: "Упорство", desc: "Сделай 10 отметок", icon: <CheckCircle size={20}/>, condition: (u) => u.history.length >= 10 });
+                }
+                
+                return base.slice(0, 9);
+            };
+
+            const handleCheckInComplete = (val) => {
+                const sport = selectedSportForCheckIn;
+                const unit = isGymWorkout(sport) ? 'тип' : getUnitForSport(sport);
+                const now = new Date();
+                const todayStr = now.toDateString();
+                const dateDisplay = now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }); 
+                const isNewDay = user.lastCheckInDate !== todayStr;
+                let newStreak = isNewDay ? user.streak + 1 : user.streak;
+                let newDiamonds = user.diamonds;
+                if (isNewDay && newStreak % 7 === 0 && newDiamonds < 3) { newDiamonds++; alert("💎 Алмаз восстановлен за стрик!"); }
+                setUser(prev => ({ ...prev, streak: newStreak, diamonds: newDiamonds, lastCheckInDate: todayStr, todayActivity: [...prev.todayActivity, sport], history: [{date: dateDisplay, fullDate: now.toISOString(), sport, value: val, unit}, ...prev.history] }));
+                setActiveModal(null); setCheckInStage('select'); setCheckInValue("");
+            };
+
+            const addCustomSport = (name, checkIn = false) => {
+                if(!name.trim()) return;
+                setPopularSports(p => [...p, name]); setUser(p => ({...p, disciplines: [...p.disciplines, name]}));
+                if(checkIn) { setSelectedSportForCheckIn(name); setCheckInStage('value'); }
+                setIsAddingCustom(false); setIsAddingInCheckIn(false); setCustomInput(""); setCheckInCustomInput("");
+            };
+            
+            const handleAdminUpdateDate = async () => {
+                if (!adminDateInput) return; setIsSyncing(true);
+                try { await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'UPDATE_DATE', date: adminDateInput }) }); setMarathonStartDate(new Date(adminDateInput)); alert("Дата обновлена и отправлена!"); } catch (e) { setMarathonStartDate(new Date(adminDateInput)); alert("Дата обновлена (локально)!"); } finally { setIsSyncing(false); }
+            };
+            
+            const openAdmin = () => { setActiveModal('admin'); setAdminDateInput(marathonStartDate.toISOString().split('T')[0]); fetchConfigDate(); };
+            const handleDeleteAccount = () => { if(confirm("Удалить аккаунт?")) { localStorage.removeItem('fitness_aurora_user'); window.location.reload(); } };
+
+            const sendMotivation = (targetName) => {
+                const sender = user.firstName || "Аноним";
+                const phraseTemplate = MOTIVATION_PHRASES[Math.floor(Math.random() * MOTIVATION_PHRASES.length)];
+                const msg = phraseTemplate.replace("[N]", targetName).replace("[S]", sender);
+                if (window.Telegram?.WebApp?.showPopup) { window.Telegram.WebApp.showPopup({ title: 'Отправлено 🚀', message: `Пуш для ${targetName}:\n"${msg}"`, buttons: [{id: 'ok', type: 'ok'}] }); } else { alert(`Пуш отправлен ${targetName}:\n"${msg}"`); }
+            };
+
+            // SCROLL TO TOP
+            const handleShowAll = (show) => {
+                setShowAllLeaderboard(show);
+                if (!show && contentRef.current) {
+                    contentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            };
+
             const renderCheckInModal = () => {
                 const isGym = selectedSportForCheckIn && isGymWorkout(selectedSportForCheckIn);
                 const currentUnit = selectedSportForCheckIn ? getUnitForSport(selectedSportForCheckIn) : '';
@@ -708,6 +702,12 @@
 
             // --- DASHBOARD ---
             const progressPercent = Math.min((user.streak / user.goal) * 100, 100);
+            
+            const displayedLeaderboard = showAllLeaderboard ? finalLeaderboard : finalLeaderboard.slice(0, 3);
+            const userAchievements = generateAchievements(user.disciplines).map(ach => ({
+                ...ach,
+                unlocked: ach.condition(user, getStats(user.history))
+            }));
             
             return (
                 <div className="content-section space-y-8" ref={contentRef}>
