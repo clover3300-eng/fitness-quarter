@@ -179,7 +179,7 @@
         const ADMIN_USERNAME = 'solomin_d';
         const DEFAULT_START_DATE = new Date('2026-04-01');
 
-        // --- MOTIVATION PHRASES ---
+        // --- MOTIVATION PHRASES (Funny & Emotional) ---
         const MOTIVATION_PHRASES = [
             "[N], я видел бабушек в парке, которые делают это быстрее!", 
             "Эй [N], диван по тебе не скучает? А он скучает!",
@@ -203,7 +203,7 @@
             "[N], сделай это ради лайков в сторис (шутка, ради себя)!"
         ];
 
-        // --- GLOBAL DATA ---
+        // --- GLOBAL DATA (Moved here to fix ReferenceError) ---
         const badgesData = [
             { id: 'streak', icon: <Flame size={14} />, color: 'text-orange-400', bg: 'bg-orange-500/20', label: 'На огне', desc: 'Стрик 3+ дней подряд' },
             { id: 'runner', icon: <Ruler size={14} />, color: 'text-cyan-400', bg: 'bg-cyan-500/20', label: 'Бегун', desc: 'Набрано 10+ км' },
@@ -325,19 +325,25 @@
                 if (tg) { 
                     tg.ready(); 
                     
-                    // FIX: Safer fullscreen request
+                    // FIX: Safer fullscreen request to prevent crash on older clients (v6.0)
                     try {
                         if (typeof tg.requestFullscreen === 'function') {
                             tg.requestFullscreen();
                         }
                     } catch (e) {
-                        console.log("Fullscreen not supported");
+                        console.log("Fullscreen not supported on this version");
                     }
 
                     tg.expand(); 
                     tg.setHeaderColor('#020617'); 
                     tg.setBackgroundColor('#020617'); 
-                    tg.enableClosingConfirmation();
+                    
+                    // Also guard closing confirmation
+                    try {
+                        if (typeof tg.enableClosingConfirmation === 'function') {
+                            tg.enableClosingConfirmation();
+                        }
+                    } catch(e) {}
                     
                     const tgUser = tg.initDataUnsafe?.user;
                     if (tgUser) {
