@@ -85,18 +85,18 @@
         }
 
         /* MAIN CONTENT CONTAINER */
-        /* Единый отступ для всех экранов: 80px + безопасная зона */
+        /* Отступ уменьшен до 40px + safe area для "поднятия" контента */
         .content-section {
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             padding: 1.5rem;
-            padding-top: calc(80px + env(safe-area-inset-top)); 
-            padding-bottom: 40px; /* Отступ снизу */
+            padding-top: calc(40px + env(safe-area-inset-top)); 
+            padding-bottom: 40px;
             width: 100%;
             display: flex;
             flex-direction: column;
-            height: 100%; /* Важно для flex-grow */
+            height: 100%;
         }
 
         /* Fullscreen Modal */
@@ -104,6 +104,11 @@
             position: fixed; inset: 0; z-index: 60;
             background-color: #020617;
             display: flex; flex-direction: column;
+        }
+        
+        /* Neon text effect */
+        .text-neon {
+            text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
         }
     </style>
 </head>
@@ -121,12 +126,34 @@
             Trophy, Diamond, Zap, Camera, CheckCircle, Activity, Settings, Plus, X, 
             Hexagon, Flame, Send, Bell, Skull, Dumbbell, Ruler, Star, Crown,
             BarChart3, Users, Calendar, ChevronDown, Shield, Edit3, Save, Trash2, ArrowLeft, Clock, UserPlus, Sun, Moon, Info,
-            Timer, Layers, Gauge, RefreshCw
+            Timer, Layers, Gauge, RefreshCw, ChevronUp, AlertTriangle
         } from 'https://esm.sh/lucide-react@0.263.1';
 
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/library/d/1zIhoIYV8JDFhRzaiAqIVwDanbakHeJprh8xY5IB9MtfocMqm9gd545VT/4'; 
         const ADMIN_USERNAME = 'solomin_d';
         const DEFAULT_START_DATE = new Date('2026-04-01');
+
+        // --- MOTIVATION PHRASES (100 variants) ---
+        const MOTIVATION_PHRASES = [
+            "[N], [S] следит за тобой! Поднимись!", "Эй [N], [S] не видит огня в глазах!", "[N], [S] говорит: хватит жрать, иди пахать!", "[N], [S] ждет рекордов, а не оправданий.", "Вставай [N]! [S] верит в тебя!",
+            "[N], боль временна, слава вечна. [S]", "[N], [S] знает, что ты можешь больше!", "[N], покажи [S], кто тут босс качалки!", "[N], [S] ставит на твою победу!", "[N], [S] уже тренируется, а ты?",
+            "[N], лень - это смерть. [S]", "[N], [S] требует пота и крови!", "Работай, [N]! [S] смотрит.", "[N], [S] не примет поражения.", "[N], стань легендой для [S]!",
+            "[N], [S] видит твой потенциал. Жги!", "Не ной [N], [S] тоже устал, но делает.", "[N], докажи [S], что ты не тряпка!", "[N], [S] ждет отчета. Бегом!", "Только вперед [N]! [S] рядом.",
+            "[N], [S] гордится каждым твоим шагом.", "Сделай это для [S], [N]!", "[N], [S] знает: ты машина!", "Включи режим зверя [N]! [S] ждет.", "[N], [S] не любит слабых.",
+            "Победи себя [N], и [S] похвалит.", "[N], [S] видит твою силу.", "Не останавливайся [N]! [S] следит.", "[N], [S] знает твою цель.", "Дисциплина [N]! [S] напоминает.",
+            "[N], [S] - твой мотиватор.", "Ты сможешь [N]! [S] гарантирует.", "[N], [S] не спит, и ты не спи.", "[N], [S] видит чемпиона.", "Проснись [N]! [S] зовет.",
+            "[N], [S] верит в твой стрик.", "[N], [S] считает твои подходы.", "[N], [S] не простит пропуска.", "Где результат [N]? [S] ждет.", "[N], [S] хочет видеть прогресс.",
+            "[N], [S] знает, что будет тяжело.", "Терпи [N]! [S] с тобой.", "[N], [S] уважает только силу.", "[N], [S] смеется над твоей ленью.", "Соберись [N]! [S] приказывает.",
+            "[N], [S] - это твой знак.", "Время пришло [N]. [S]", "[N], [S] не верит в 'завтра'.", "[N], [S] хочет действия сейчас.", "Взрывай [N]! [S] смотрит.",
+            "[N], ты титан! [S] подтверждает.", "[N], [S] видит, как ты растешь.", "Еще раз [N]! [S] просит.", "[N], [S] не отстанет.", "Будь лучше [N]. [S]",
+            "[N], [S] ставит лайк твоей боли.", "[N], [S] ждет пота.", "Удиви [S], [N]!", "[N], [S] - твой фанат.", "Вперед к славе [N]! [S]",
+            "[N], [S] видит твой страх. Убей его.", "[N], [S] не принимает 'не могу'.", "[N], [S] знает цену успеха.", "Плати цену [N]. [S]", "[N], [S] верит в чудеса труда.",
+            "[N], [S] видит твою мощь.", "Раскройся [N]! [S]", "[N], [S] ждет твой ход.", "Не подведи [S], [N].", "Ты воин [N]. [S] знает.",
+            "[N], [S] видит твою цель.", "Иди к ней [N]. [S]", "[N], [S] не даст тебе упасть.", "Держись [N]! [S]", "[N], [S] знает твой предел. Ломай его.",
+            "[N], [S] - голос твоей совести.", "Слушай [S], [N].", "[N], [S] не врет.", "Ты можешь все [N]. [S]", "[N], [S] ждет твоего триумфа.",
+            "[N], [S] верит в твою звезду.", "Сияй [N]! [S]", "[N], [S] не забудет этот день.", "Сделай историю [N]. [S]", "[N], [S] всегда рядом.",
+            "[N], [S] видит твою душу.", "Закали ее [N]. [S]", "[N], [S] верит в твою волю.", "Покажи характер [N]. [S]", "Ты лучший [N]. [S] сказал."
+        ];
 
         // --- COMPONENTS ---
         const GlassCard = ({ children, className = "", onClick }) => (
@@ -154,7 +181,13 @@
         const Avatar = ({ name, photoUrl, size = "w-10 h-10" }) => {
             if (photoUrl) return <img src={photoUrl} alt={name} className={`${size} rounded-full object-cover border-2 border-white/10 shadow-md`} />;
             const initials = name ? name.slice(0, 2).toUpperCase() : "FQ";
-            return <div className={`${size} rounded-full bg-gradient-to-br from-cyan-600 to-blue-700 flex items-center justify-center text-white font-bold border-2 border-white/10 shadow-md`}>{initials}</div>;
+            // Neon avatar design if no photo
+            return (
+                <div className={`${size} rounded-full bg-[#020617] flex items-center justify-center text-white font-black border border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.4)] relative overflow-hidden`}>
+                     <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-purple-500/20"></div>
+                     <span className="relative z-10 text-neon">{initials}</span>
+                </div>
+            );
         };
 
         const ToggleSwitch = ({ checked, onChange }) => (
@@ -193,6 +226,7 @@
             const [activeModal, setActiveModal] = useState(null); 
             const [expandedUserId, setExpandedUserId] = useState(null);
             const [badgeInfo, setBadgeInfo] = useState(null);
+            const [expandedMode, setExpandedMode] = useState(null); // For mode accordion
 
             // Inputs
             const [customInput, setCustomInput] = useState("");
@@ -223,9 +257,7 @@
                 const tg = window.Telegram?.WebApp;
                 if (tg) { 
                     tg.ready(); 
-                    if (tg.requestFullscreen) {
-                        tg.requestFullscreen();
-                    }
+                    if (tg.requestFullscreen) tg.requestFullscreen();
                     tg.expand(); 
                     tg.setHeaderColor('#020617'); 
                     tg.setBackgroundColor('#020617'); 
@@ -238,7 +270,7 @@
                             username: tgUser.username,
                             photoUrl: tgUser.photo_url,
                             isAdmin: tgUser.username === ADMIN_USERNAME,
-                            firstName: prev.firstName || tgUser.first_name, // Prefill if empty
+                            firstName: prev.firstName || tgUser.first_name, 
                             lastName: prev.lastName || tgUser.last_name
                         }));
                     }
@@ -246,35 +278,58 @@
 
                 const saved = localStorage.getItem('fitness_aurora_user');
                 if(saved) { 
-                    const parsedUser = JSON.parse(saved);
+                    let parsedUser = JSON.parse(saved);
                     if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
                         const tgu = window.Telegram.WebApp.initDataUnsafe.user;
                         parsedUser.photoUrl = tgu.photo_url;
                         parsedUser.isAdmin = tgu.username === ADMIN_USERNAME;
                     }
+                    
+                    // Logic: Check Diamonds on Load
+                    parsedUser = checkDiamondsOnLoad(parsedUser);
+                    
                     setUser(parsedUser); 
                     setStep('dashboard'); 
                 } else { setStep('welcome'); }
                 
-                // Fetch initial date from Google Sheet (simulated)
                 fetchConfigDate();
-
             }, []);
 
             useEffect(() => { if(user.firstName) localStorage.setItem('fitness_aurora_user', JSON.stringify(user)); }, [user]);
 
-            // Sync Logic
-            const fetchConfigDate = async () => {
-                // В реальном приложении здесь будет fetch к скрипту с action=GET
-                // Сейчас мы просто берем дефолт, но имитируем асинхронность
-                /*
-                try {
-                    const res = await fetch(GOOGLE_SCRIPT_URL + '?action=GET_DATE');
-                    const data = await res.json();
-                    if(data.date) setMarathonStartDate(new Date(data.date));
-                } catch(e) {}
-                */
+            // === LOGIC: DIAMONDS & STREAK ===
+            const checkDiamondsOnLoad = (usr) => {
+                if (!usr.lastCheckInDate) return usr;
+                
+                const last = new Date(usr.lastCheckInDate);
+                const now = new Date();
+                // Reset time for accurate day diff
+                last.setHours(0,0,0,0);
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                
+                const diffTime = Math.abs(today - last);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays === 0) return usr; // Checked in today
+
+                let allowedGap = 1; // Default daily
+                if (usr.frequency === '3 раза в неделю') allowedGap = 2; // Can miss 2 days
+                else if (usr.frequency === 'МИКС' || usr.frequency === 'На лайте') allowedGap = 3; // Can miss 3 days
+
+                // Burn diamond if gap exceeded
+                if (diffDays > allowedGap + 1) { // +1 because diffDays=1 means yesterday (ok)
+                    const newDiamonds = Math.max(0, usr.diamonds - 1);
+                    // Just alert/notify visually in real app, here we just update state
+                    if (newDiamonds < usr.diamonds) {
+                         // We can't show alert during state init easily without effects, so just update
+                    }
+                    return { ...usr, diamonds: newDiamonds };
+                }
+                return usr;
             };
+
+            const fetchConfigDate = async () => {}; // Simulated
 
             // Helpers
             const getAdjustedGoals = () => {
@@ -286,18 +341,8 @@
                 ];
             };
             
-            const getUserRankTitle = (g) => {
-                if (g >= 100) return 'Гигант';
-                if (g >= 60) return 'Атлет';
-                return 'Новичок';
-            };
-            
-            const getUserRankIcon = (g) => {
-                 if (g >= 100) return <Crown size={32} className="text-amber-400"/>;
-                 if (g >= 60) return <Dumbbell size={32} className="text-cyan-400"/>;
-                 return <Star size={32} className="text-emerald-400"/>;
-            };
-
+            const getUserRankTitle = (g) => { if (g >= 100) return 'Гигант'; if (g >= 60) return 'Атлет'; return 'Новичок'; };
+            const getUserRankIcon = (g) => { if (g >= 100) return <Crown size={32} className="text-amber-400"/>; if (g >= 60) return <Dumbbell size={32} className="text-cyan-400"/>; return <Star size={32} className="text-emerald-400"/>; };
             const getStats = (hist) => { let k=0,r=0; hist.forEach(h=>{if(h.unit==='км')k+=+h.value;if(h.unit==='повт')r+=+h.value;}); return {k,r}; };
 
             // Logic
@@ -317,9 +362,19 @@
                 const dateDisplay = now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }); 
                 const isNewDay = user.lastCheckInDate !== todayStr;
                 
+                let newStreak = isNewDay ? user.streak + 1 : user.streak;
+                let newDiamonds = user.diamonds;
+
+                // Regen diamond logic: every 7 days streak +1 diamond (max 3)
+                if (isNewDay && newStreak % 7 === 0 && newDiamonds < 3) {
+                    newDiamonds++;
+                    alert("💎 Алмаз восстановлен за стрик!");
+                }
+
                 setUser(prev => ({ 
                     ...prev, 
-                    streak: isNewDay ? prev.streak + 1 : prev.streak, 
+                    streak: newStreak,
+                    diamonds: newDiamonds,
                     lastCheckInDate: todayStr,
                     todayActivity: [...prev.todayActivity, sport], 
                     history: [{date: dateDisplay, fullDate: now.toISOString(), sport, value: val, unit}, ...prev.history] 
@@ -337,34 +392,31 @@
             const handleAdminUpdateDate = async () => {
                 if (!adminDateInput) return; setIsSyncing(true);
                 try { 
-                    // Отправляем POST запрос в Google Sheets
-                    await fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors', // Важно для GAS
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'UPDATE_DATE', date: adminDateInput })
-                    });
-                    
-                    setMarathonStartDate(new Date(adminDateInput)); 
-                    alert("Дата обновлена и отправлена в таблицу!"); 
-                } catch (e) { 
-                    console.error(e);
-                    // Даже если ошибка сети (no-cors непрозрачен), обновляем локально
-                    setMarathonStartDate(new Date(adminDateInput)); 
-                    alert("Дата обновлена (локально)!"); 
-                } 
+                    await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'UPDATE_DATE', date: adminDateInput }) });
+                    setMarathonStartDate(new Date(adminDateInput)); alert("Дата обновлена и отправлена!"); 
+                } catch (e) { setMarathonStartDate(new Date(adminDateInput)); alert("Дата обновлена (локально)!"); } 
                 finally { setIsSyncing(false); }
             };
             
-            // Загрузка даты при открытии админки
-            const openAdmin = () => {
-                setActiveModal('admin');
-                setAdminDateInput(marathonStartDate.toISOString().split('T')[0]);
-                // Повторный фетч для синхронизации "Таблица -> Админка"
-                fetchConfigDate();
-            };
-
+            const openAdmin = () => { setActiveModal('admin'); setAdminDateInput(marathonStartDate.toISOString().split('T')[0]); fetchConfigDate(); };
             const handleDeleteAccount = () => { if(confirm("Удалить аккаунт?")) { localStorage.removeItem('fitness_aurora_user'); window.location.reload(); } };
+
+            const sendMotivation = (targetName) => {
+                const sender = user.firstName || "Аноним";
+                const phraseTemplate = MOTIVATION_PHRASES[Math.floor(Math.random() * MOTIVATION_PHRASES.length)];
+                const msg = phraseTemplate.replace("[N]", targetName).replace("[S]", sender);
+                
+                // Simulate Push Notification UI
+                if (window.Telegram?.WebApp?.showPopup) {
+                    window.Telegram.WebApp.showPopup({
+                        title: 'Отправлено 🚀',
+                        message: `Пуш для ${targetName}:\n"${msg}"`,
+                        buttons: [{id: 'ok', type: 'ok'}]
+                    });
+                } else {
+                    alert(`Пуш отправлен ${targetName}:\n"${msg}"`);
+                }
+            };
 
             const renderCheckInModal = () => {
                 const currentUnit = selectedSportForCheckIn ? getUnitForSport(selectedSportForCheckIn) : '';
@@ -453,14 +505,27 @@
                      <div className="mb-6"><h2 className="text-xl font-bold text-white">РЕЖИМ</h2></div>
                      <p className="text-slate-400 text-sm mb-6">Как часто планируешь тренироваться?</p>
                      <div className="space-y-3 flex-grow">
-                        {['Каждый день', '3 раза в неделю', 'МИКС', 'На лайте'].map((opt) => (
-                            <GlassCard key={opt} onClick={() => setUser(p => ({...p, frequency: opt}))} className={`p-5 flex justify-between items-center border transition-all cursor-pointer ${user.frequency === opt ? 'bg-cyan-600/20 border-cyan-500' : 'bg-white/5 border-transparent hover:bg-white/10'}`}>
-                                <span className={`font-bold ${user.frequency === opt ? 'text-cyan-400' : 'text-white'}`}>{opt}</span>
-                                {opt === 'Каждый день' && <Flame size={18} className="text-orange-400"/>}
-                                {opt === '3 раза в неделю' && <Activity size={18} className="text-cyan-400"/>}
-                                {opt === 'МИКС' && <Layers size={18} className="text-purple-400"/>}
-                                {opt === 'На лайте' && <Sun size={18} className="text-emerald-400"/>}
-                            </GlassCard>
+                        {[
+                            { id: 'Каждый день', icon: <Flame size={18} className="text-orange-400"/>, title: 'Путь Самурая', desc: 'Дисциплина стали. Идеально для утренней зарядки, отжиманий, приседаний. Ты строишь привычку каждый день.' },
+                            { id: '3 раза в неделю', icon: <Activity size={18} className="text-cyan-400"/>, title: 'Сила Титана', desc: 'Классика жанра. Лучший выбор для спортзала. День пашешь — день растешь. Баланс силы и восстановления.' },
+                            { id: 'МИКС', icon: <Layers size={18} className="text-purple-400"/>, title: 'Стратег', desc: 'Гибкий подход. Чтобы не перегореть в зале, но и не заржаветь. Тренировки по самочувствию.' },
+                            { id: 'На лайте', icon: <Sun size={18} className="text-emerald-400"/>, title: 'Инициация', desc: 'Для тех, кто только начинает. Главное — не бросить. Мягкий вход в мир величия.' }
+                        ].map((opt) => (
+                            <div key={opt.id} className="overflow-hidden rounded-2xl glass transition-all duration-300">
+                                <div onClick={() => { setUser(p => ({...p, frequency: opt.id})); setExpandedMode(expandedMode === opt.id ? null : opt.id); }} className={`p-5 flex justify-between items-center cursor-pointer ${user.frequency === opt.id ? 'bg-cyan-600/10 border-b border-cyan-500/30' : 'hover:bg-white/5'}`}>
+                                    <div className="flex items-center gap-3">
+                                        {opt.icon}
+                                        <span className={`font-bold ${user.frequency === opt.id ? 'text-cyan-400' : 'text-white'}`}>{opt.id}</span>
+                                    </div>
+                                    <ChevronDown size={16} className={`text-slate-500 transition-transform ${expandedMode === opt.id ? 'rotate-180' : ''}`}/>
+                                </div>
+                                {(expandedMode === opt.id || user.frequency === opt.id) && (
+                                    <div className="p-4 bg-black/20 text-sm text-slate-300 animate-expand">
+                                        <div className="font-bold text-white mb-1">{opt.title}</div>
+                                        {opt.desc}
+                                    </div>
+                                )}
+                            </div>
                         ))}
                      </div>
                      <div className="mt-auto w-full">
@@ -551,7 +616,7 @@
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <div className="text-right"><div className="font-bold text-white text-sm">{u.streak} <span className="text-[10px] text-orange-400">🔥</span></div></div>
-                                            <button onClick={(e) => { e.stopPropagation(); alert(`Мотивация для ${u.name}!`); }} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-cyan-400 hover:bg-cyan-500 hover:text-white transition-colors"><Zap size={14}/></button>
+                                            <button onClick={(e) => { e.stopPropagation(); sendMotivation(u.name); }} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-cyan-400 hover:bg-cyan-500 hover:text-white transition-colors"><Zap size={14}/></button>
                                         </div>
                                     </div>
                                     {expandedUserId === u.id && (<div className="mt-4 pt-4 border-t border-white/5 animate-expand overflow-hidden"><div className="grid grid-cols-2 gap-2 mb-3"><div className="bg-white/5 p-2 rounded text-center"><span className="text-[10px] uppercase text-slate-500 block mb-1">Алмазы</span><span className="font-bold text-white">{u.diamonds} 💎</span></div><div className="bg-white/5 p-2 rounded text-center"><span className="text-[10px] uppercase text-slate-500 block mb-1">Цель</span><span className="font-bold text-white">{u.goal} дн.</span></div></div><div className="flex flex-wrap gap-2">{u.disciplines?.map(d=><span key={d} className="text-[10px] px-2 py-1 bg-white/5 rounded border border-white/10 text-slate-300 font-bold">{d}</span>)}</div></div>)}
@@ -646,7 +711,7 @@
                     {activeModal === 'shop' && (
                         <div className="modal-fullscreen animate-slide-up">
                             <div className="content-section">
-                                <div className="flex justify-between items-center mb-6"><button onClick={()=>setActiveModal(null)} className="p-2 bg-white/10 rounded-full text-white"><ArrowLeft size={20}/></button><h2 className="text-xl font-bold text-rose-500">МАГАЗИН</h2><div className="w-8"></div></div>
+                                <div className="flex justify-between items-center mb-6"><button onClick={()=>setActiveModal(null)} className="p-2 bg-white/10 rounded-full text-white"><ArrowLeft size={20}/></button><h2 className="text-xl font-bold text-rose-500 uppercase">Магазин Искупления</h2><div className="w-8"></div></div>
                                 <div className="flex items-center justify-center flex-grow">
                                     <RedemptionShopContent onClose={()=>setActiveModal(null)}/>
                                 </div>
@@ -666,7 +731,11 @@
         const RedemptionShopContent = ({ onClose }) => {
             const [spinState, setSpinState] = useState('idle');
             const [task, setTask] = useState("");
-            const tasks = ["Селфи с котом", "Планка 1 мин", "30 Берпи на видео", "Смешное лицо"];
+            const tasks = [
+                "Селфи с котом", "Планка 1 мин на видео", "30 Берпи на камеру", "Записать войс бывшей", 
+                "Спеть гимн в сторис", "50 приседаний в магазине", "Отжаться на остановке", 
+                "Написать 'Я слабак' в статус на час", "Съесть лимон без эмоций", "Простоять в стульчике 2 мин"
+            ];
             const spin = () => {
                 setSpinState('spinning');
                 let counter = 0;
@@ -681,7 +750,7 @@
                     {spinState === 'idle' && <NeonButton variant="danger" onClick={spin}>КРУТИТЬ РУЛЕТКУ</NeonButton>}
                     {spinState === 'spinning' && <div className="text-xl font-bold text-white animate-pulse">{task}</div>}
                     {spinState === 'result' && (<div className="animate-fade-in"><div className="text-lg font-bold text-white mb-4 border p-4 rounded-xl border-dashed border-rose-500/50">{task}</div><NeonButton onClick={() => setSpinState('upload')} variant="danger"><Camera size={18}/> ЗАГРУЗИТЬ ФОТО</NeonButton></div>)}
-                    {spinState === 'upload' && (<div className="animate-fade-in"><div className="w-full h-32 bg-slate-800 rounded-xl flex items-center justify-center mb-4 border border-dashed border-slate-600"><span className="text-slate-500 text-xs">Фото загружено</span></div><NeonButton onClick={() => { alert("Отправлено на проверку!"); onClose(); }} variant="gold">ОТПРАВИТЬ</NeonButton></div>)}
+                    {spinState === 'upload' && (<div className="animate-fade-in"><div className="w-full h-32 bg-slate-800 rounded-xl flex items-center justify-center mb-4 border border-dashed border-slate-600"><span className="text-slate-500 text-xs">Фото загружено</span></div><NeonButton onClick={() => { alert("Отправлено на проверку! Алмаз будет начислен после одобрения."); onClose(); }} variant="gold">ОТПРАВИТЬ</NeonButton></div>)}
                 </GlassCard>
             );
         }
