@@ -203,6 +203,7 @@
             "[N], сделай это ради лайков в сторис (шутка, ради себя)!"
         ];
 
+        // --- GLOBAL DATA (Moved here to fix ReferenceError) ---
         const badgesData = [
             { id: 'streak', icon: <Flame size={14} />, color: 'text-orange-400', bg: 'bg-orange-500/20', label: 'На огне', desc: 'Стрик 3+ дней подряд' },
             { id: 'runner', icon: <Ruler size={14} />, color: 'text-cyan-400', bg: 'bg-cyan-500/20', label: 'Бегун', desc: 'Набрано 10+ км' },
@@ -213,6 +214,18 @@
             { id: 'weekend', icon: <Calendar size={14} />, color: 'text-rose-400', bg: 'bg-rose-500/20', label: 'Выходной', desc: 'Тренировка в Сб/Вс' },
             { id: 'social', icon: <Send size={14} />, color: 'text-blue-400', bg: 'bg-blue-500/20', label: 'Друг', desc: 'Пригласил друга' },
             { id: 'redemption', icon: <Skull size={14} />, color: 'text-slate-400', bg: 'bg-slate-500/20', label: 'Выживший', desc: 'Купил жизнь' },
+        ];
+
+        const ACHIEVEMENTS = [
+            { id: 1, title: "Первый Шаг", desc: "1 день в строю. Начало положено!", icon: <Star size={20}/>, condition: (u) => u.streak >= 1 },
+            { id: 2, title: "Неделя Выживания", desc: "7 дней подряд. Ты не слился!", icon: <Flame size={20}/>, condition: (u) => u.streak >= 7 },
+            { id: 3, title: "Привычка", desc: "21 день. Теперь это часть тебя.", icon: <Zap size={20}/>, condition: (u) => u.streak >= 21 },
+            { id: 4, title: "Экватор", desc: "50 дней. Половина пути пройдена!", icon: <Layers size={20}/>, condition: (u) => u.streak >= 50 },
+            { id: 5, title: "Легенда Марафона", desc: "100 дней. Ты прошел игру!", icon: <Crown size={20}/>, condition: (u) => u.streak >= 100 },
+            { id: 6, title: "Бегун", desc: "Набрано 50 км суммарно.", icon: <Ruler size={20}/>, condition: (u, stats) => stats.k >= 50 },
+            { id: 7, title: "Терминатор", desc: "1000 повторений суммарно.", icon: <Dumbbell size={20}/>, condition: (u, stats) => stats.r >= 1000 },
+            { id: 8, title: "Ранняя Пташка", desc: "Тренировка выполнена (любая).", icon: <Sun size={20}/>, condition: (u) => u.history.length > 0 }, 
+            { id: 9, title: "Воин Ночи", desc: "Тренировка выполнена (любая).", icon: <Moon size={20}/>, condition: (u) => u.history.length > 5 }
         ];
 
         // --- COMPONENTS ---
@@ -311,7 +324,16 @@
                 const tg = window.Telegram?.WebApp;
                 if (tg) { 
                     tg.ready(); 
-                    if (tg.requestFullscreen) tg.requestFullscreen();
+                    
+                    // FIX: Check if method exists and try/catch to avoid crash on version < 6.0
+                    try {
+                        if (typeof tg.requestFullscreen === 'function') {
+                            tg.requestFullscreen();
+                        }
+                    } catch (e) {
+                        console.log("Fullscreen not supported on this version");
+                    }
+
                     tg.expand(); 
                     tg.setHeaderColor('#020617'); 
                     tg.setBackgroundColor('#020617'); 
