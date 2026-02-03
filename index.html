@@ -92,10 +92,11 @@
             -webkit-overflow-scrolling: touch;
             padding: 1.5rem;
             padding-top: calc(80px + env(safe-area-inset-top)); 
-            padding-bottom: 120px;
+            padding-bottom: 40px; /* Отступ снизу */
             width: 100%;
             display: flex;
             flex-direction: column;
+            height: 100%; /* Важно для flex-grow */
         }
 
         /* Fullscreen Modal */
@@ -104,8 +105,6 @@
             background-color: #020617;
             display: flex; flex-direction: column;
         }
-        
-        /* Модальные окна тоже используют content-section для отступов */
     </style>
 </head>
 <body>
@@ -122,7 +121,7 @@
             Trophy, Diamond, Zap, Camera, CheckCircle, Activity, Settings, Plus, X, 
             Hexagon, Flame, Send, Bell, Skull, Dumbbell, Ruler, Star, Crown,
             BarChart3, Users, Calendar, ChevronDown, Shield, Edit3, Save, Trash2, ArrowLeft, Clock, UserPlus, Sun, Moon, Info,
-            Timer, Layers, Gauge
+            Timer, Layers, Gauge, RefreshCw
         } from 'https://esm.sh/lucide-react@0.263.1';
 
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/library/d/1zIhoIYV8JDFhRzaiAqIVwDanbakHeJprh8xY5IB9MtfocMqm9gd545VT/4'; 
@@ -200,6 +199,7 @@
             const [isAddingCustom, setIsAddingCustom] = useState(false);
             const [checkInCustomInput, setCheckInCustomInput] = useState("");
             const [isAddingInCheckIn, setIsAddingInCheckIn] = useState(false);
+            const [adminEditSportInput, setAdminEditSportInput] = useState("");
 
             // Check In
             const [checkInStage, setCheckInStage] = useState('select'); 
@@ -223,6 +223,9 @@
                 const tg = window.Telegram?.WebApp;
                 if (tg) { 
                     tg.ready(); 
+                    if (tg.requestFullscreen) {
+                        tg.requestFullscreen();
+                    }
                     tg.expand(); 
                     tg.setHeaderColor('#020617'); 
                     tg.setBackgroundColor('#020617'); 
@@ -252,9 +255,26 @@
                     setUser(parsedUser); 
                     setStep('dashboard'); 
                 } else { setStep('welcome'); }
+                
+                // Fetch initial date from Google Sheet (simulated)
+                fetchConfigDate();
+
             }, []);
 
             useEffect(() => { if(user.firstName) localStorage.setItem('fitness_aurora_user', JSON.stringify(user)); }, [user]);
+
+            // Sync Logic
+            const fetchConfigDate = async () => {
+                // В реальном приложении здесь будет fetch к скрипту с action=GET
+                // Сейчас мы просто берем дефолт, но имитируем асинхронность
+                /*
+                try {
+                    const res = await fetch(GOOGLE_SCRIPT_URL + '?action=GET_DATE');
+                    const data = await res.json();
+                    if(data.date) setMarathonStartDate(new Date(data.date));
+                } catch(e) {}
+                */
+            };
 
             // Helpers
             const getAdjustedGoals = () => {
@@ -266,7 +286,6 @@
                 ];
             };
             
-            // Logic to get rank title
             const getUserRankTitle = (g) => {
                 if (g >= 100) return 'Гигант';
                 if (g >= 60) return 'Атлет';
@@ -318,10 +337,31 @@
             const handleAdminUpdateDate = async () => {
                 if (!adminDateInput) return; setIsSyncing(true);
                 try { 
+                    // Отправляем POST запрос в Google Sheets
+                    await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors', // Важно для GAS
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'UPDATE_DATE', date: adminDateInput })
+                    });
+                    
+                    setMarathonStartDate(new Date(adminDateInput)); 
+                    alert("Дата обновлена и отправлена в таблицу!"); 
+                } catch (e) { 
+                    console.error(e);
+                    // Даже если ошибка сети (no-cors непрозрачен), обновляем локально
                     setMarathonStartDate(new Date(adminDateInput)); 
                     alert("Дата обновлена (локально)!"); 
-                } catch (e) { alert("Ошибка"); } 
+                } 
                 finally { setIsSyncing(false); }
+            };
+            
+            // Загрузка даты при открытии админки
+            const openAdmin = () => {
+                setActiveModal('admin');
+                setAdminDateInput(marathonStartDate.toISOString().split('T')[0]);
+                // Повторный фетч для синхронизации "Таблица -> Админка"
+                fetchConfigDate();
             };
 
             const handleDeleteAccount = () => { if(confirm("Удалить аккаунт?")) { localStorage.removeItem('fitness_aurora_user'); window.location.reload(); } };
@@ -372,7 +412,7 @@
             if (step === 'welcome') return (
                 <div className="content-section items-center justify-center">
                     <div className="relative w-48 h-48 flex items-center justify-center mb-8"><div className="absolute inset-0 bg-cyan-500 blur-[80px] opacity-40 rounded-full animate-pulse"></div><Hexagon size={140} className="text-cyan-400 stroke-[1.5] animate-float" /><Activity size={60} className="text-white absolute" /></div>
-                    <h1 className="text-5xl font-black text-white mb-2 text-center tracking-tighter">FITNESS<br/><span className="text-cyan-400">AURORA</span></h1>
+                    <h1 className="text-5xl font-black text-white mb-2 text-center tracking-tighter">FITNESS<br/><span className="text-cyan-400">КВАРТАЛ</span></h1>
                     <p className="text-slate-400 text-sm mb-12 tracking-widest uppercase">Твой путь к величию</p>
                     <div className="mt-auto w-full max-w-xs"><NeonButton onClick={() => setStep('registration')}>НАЧАТЬ</NeonButton></div>
                 </div>
@@ -385,7 +425,9 @@
                         <input placeholder="Имя" value={regForm.firstName} onChange={e => setRegForm({...regForm, firstName: e.target.value})} className="w-full p-4 bg-white/5 rounded-xl text-white border border-white/10 outline-none focus:border-cyan-500 transition-colors placeholder:text-slate-500 font-bold" />
                         <input placeholder="Фамилия (можно псевдоним)" value={regForm.lastName} onChange={e => setRegForm({...regForm, lastName: e.target.value})} className="w-full p-4 bg-white/5 rounded-xl text-white border border-white/10 outline-none focus:border-cyan-500 transition-colors placeholder:text-slate-500 font-bold" />
                     </div>
-                    <NeonButton onClick={() => { setUser(p => ({...p, ...regForm})); setStep('arsenal'); }} disabled={!regForm.firstName}>ДАЛЕЕ</NeonButton>
+                    <div className="mt-auto w-full">
+                        <NeonButton onClick={() => { setUser(p => ({...p, ...regForm})); setStep('arsenal'); }} disabled={!regForm.firstName}>ДАЛЕЕ</NeonButton>
+                    </div>
                 </div>
             );
 
@@ -399,7 +441,10 @@
                     ) : (
                         <div className="flex gap-2 mb-4 animate-fade-in"><input value={customInput} onChange={e=>setCustomInput(e.target.value)} className="flex-1 bg-slate-900 border border-cyan-500 rounded-xl px-4 text-white outline-none" autoFocus placeholder="Название..." /><button onClick={()=>addCustomSport(customInput)} className="p-3 bg-cyan-600 rounded-xl text-white"><CheckCircle/></button></div>
                     )}
-                    <div className="mt-auto"><NeonButton onClick={() => setStep('frequency')} disabled={user.disciplines.length === 0}>ДАЛЕЕ</NeonButton></div>
+                    <div className="mt-auto flex gap-3 w-full">
+                        <NeonButton variant="secondary" onClick={() => setStep('registration')}>НАЗАД</NeonButton>
+                        <NeonButton onClick={() => setStep('frequency')} disabled={user.disciplines.length === 0 || isAddingCustom}>ДАЛЕЕ</NeonButton>
+                    </div>
                 </div>
             );
 
@@ -409,14 +454,17 @@
                      <p className="text-slate-400 text-sm mb-6">Как часто планируешь тренироваться?</p>
                      <div className="space-y-3 flex-grow">
                         {['Каждый день', '3 раза в неделю', 'МИКС', 'На лайте'].map((opt) => (
-                            <GlassCard key={opt} onClick={() => { setUser(p => ({...p, frequency: opt})); setStep('goal'); }} className="p-5 flex justify-between items-center hover:bg-white/5 border-transparent hover:border-cyan-500/50 transition-all cursor-pointer">
-                                <span className="font-bold text-white">{opt}</span>
+                            <GlassCard key={opt} onClick={() => setUser(p => ({...p, frequency: opt}))} className={`p-5 flex justify-between items-center border transition-all cursor-pointer ${user.frequency === opt ? 'bg-cyan-600/20 border-cyan-500' : 'bg-white/5 border-transparent hover:bg-white/10'}`}>
+                                <span className={`font-bold ${user.frequency === opt ? 'text-cyan-400' : 'text-white'}`}>{opt}</span>
                                 {opt === 'Каждый день' && <Flame size={18} className="text-orange-400"/>}
                                 {opt === '3 раза в неделю' && <Activity size={18} className="text-cyan-400"/>}
                                 {opt === 'МИКС' && <Layers size={18} className="text-purple-400"/>}
                                 {opt === 'На лайте' && <Sun size={18} className="text-emerald-400"/>}
                             </GlassCard>
                         ))}
+                     </div>
+                     <div className="mt-auto w-full">
+                        <NeonButton onClick={() => setStep('goal')} disabled={!user.frequency}>ДАЛЕЕ</NeonButton>
                      </div>
                 </div>
             );
@@ -446,7 +494,7 @@
                         <div className="flex justify-between items-center mb-4">
                             <h1 className="text-sm font-bold text-white tracking-[0.2em] opacity-80">ПРОФИЛЬ</h1>
                             <div className="flex gap-2">
-                                {user.isAdmin && <button onClick={() => setActiveModal('admin')} className="w-10 h-10 flex items-center justify-center rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500/20 transition-colors"><Shield size={18} /></button>}
+                                {user.isAdmin && <button onClick={openAdmin} className="w-10 h-10 flex items-center justify-center rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500/20 transition-colors"><Shield size={18} /></button>}
                                 <div onClick={() => setActiveModal('shop')} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer hover:bg-white/10 transition-colors"><Diamond size={16} className="text-cyan-400 fill-cyan-400" /><span className="font-bold text-white text-sm">{user.diamonds}</span></div>
                                 <button onClick={() => setActiveModal('settings')} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-slate-400 transition-colors"><Settings size={18} /></button>
                             </div>
@@ -558,7 +606,7 @@
                                     {!editUser ? (
                                         <div className="space-y-2">
                                             <h3 className="text-slate-400 text-xs font-bold uppercase">Управление Пользователями</h3>
-                                            {!isAddingUser ? <NeonButton variant="secondary" onClick={()=>setIsAddingUser(true)} className="mb-4"><UserPlus size={18}/> Добавить</NeonButton> : (<GlassCard className="p-4 mb-4 animate-fade-in"><input type="text" value={newUserNick} onChange={e=>setNewUserNick(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white mb-2" placeholder="Имя пользователя"/><div className="flex gap-2"><NeonButton onClick={()=>setIsAddingUser(false)} variant="disabled">Отм.</NeonButton><NeonButton onClick={()=>{if(newUserNick){setLeaderboard(l=>[...l, {id:Date.now(), name:newUserNick, diamonds:3, streak:0, goal:30, status:'active'}]); setIsAddingUser(false); setNewUserNick('')}}}>OK</NeonButton></div></GlassCard>)}
+                                            {!isAddingUser ? <NeonButton variant="secondary" onClick={()=>setIsAddingUser(true)} className="mb-4"><UserPlus size={18}/> Добавить</NeonButton> : (<GlassCard className="p-4 mb-4 animate-fade-in"><input type="text" value={newUserNick} onChange={e=>setNewUserNick(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white mb-2" placeholder="Имя пользователя"/><div className="flex gap-2"><NeonButton onClick={()=>setIsAddingUser(false)} variant="disabled">Отм.</NeonButton><NeonButton onClick={()=>{if(newUserNick){setLeaderboard(l=>[...l, {id:Date.now(), name:newUserNick, diamonds:3, streak:0, goal:30, status:'active', disciplines: []}]); setIsAddingUser(false); setNewUserNick('')}}}>OK</NeonButton></div></GlassCard>)}
                                             {leaderboard.map(u=><div key={u.id} className="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/10"><span className="text-white font-bold">{u.name}</span><div className="flex gap-2"><button onClick={()=>setEditUser({...u})} className="p-2 bg-cyan-500/20 text-cyan-400 rounded-lg"><Edit3 size={16}/></button><button onClick={()=>{if(confirm('Удалить пользователя?'))setLeaderboard(l=>l.filter(x=>x.id!==u.id))}} className="p-2 bg-rose-500/20 text-rose-400 rounded-lg"><Trash2 size={16}/></button></div></div>)}
                                         </div>
                                     ) : (
@@ -569,6 +617,24 @@
                                                 <div><label className="text-[10px] text-slate-500 uppercase">Стрик</label><input type="number" value={editUser.streak} onChange={e=>setEditUser({...editUser, streak: +e.target.value})} className="w-full bg-slate-900 p-2 text-white rounded"/></div>
                                                 <div><label className="text-[10px] text-slate-500 uppercase">Цель</label><input type="number" value={editUser.goal} onChange={e=>setEditUser({...editUser, goal: +e.target.value})} className="w-full bg-slate-900 p-2 text-white rounded"/></div>
                                             </div>
+                                            
+                                            {/* Admin: Edit Disciplines */}
+                                            <div className="pt-2 border-t border-white/10">
+                                                <label className="text-[10px] text-slate-500 uppercase mb-2 block">Варианты (Арсенал)</label>
+                                                <div className="flex flex-wrap gap-2 mb-2">
+                                                    {editUser.disciplines && editUser.disciplines.map(d => (
+                                                        <span key={d} className="px-2 py-1 bg-white/5 rounded border border-white/10 text-xs flex items-center gap-1">
+                                                            {d} 
+                                                            <X size={12} className="cursor-pointer text-rose-400" onClick={() => setEditUser({...editUser, disciplines: editUser.disciplines.filter(x => x !== d)})}/>
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <input value={adminEditSportInput} onChange={e=>setAdminEditSportInput(e.target.value)} className="flex-1 bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white" placeholder="Добавить..."/>
+                                                    <button onClick={()=>{ if(adminEditSportInput){ setEditUser({...editUser, disciplines: [...(editUser.disciplines||[]), adminEditSportInput]}); setAdminEditSportInput(""); } }} className="p-2 bg-cyan-600 rounded text-white"><Plus size={14}/></button>
+                                                </div>
+                                            </div>
+
                                             <div className="flex gap-2 pt-2"><NeonButton variant="disabled" onClick={()=>setEditUser(null)}>Назад</NeonButton><NeonButton onClick={()=>{setLeaderboard(l=>l.map(x=>x.id===editUser.id?editUser:x)); setEditUser(null);}}>Сохранить</NeonButton></div>
                                         </GlassCard>
                                     )}
