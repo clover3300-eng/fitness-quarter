@@ -3,43 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fitness Квартал</title>
+    <title>Fitness Aurora</title>
     
-    <!-- Telegram Web App -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        // Light Aero Prism Palette
-                        bg: '#f8fafc', // slate-50
-                        surface: '#ffffff',
-                        primary: '#0891b2', // cyan-600
-                        secondary: '#4f46e5', // indigo-600
-                        accent: '#06b6d4', // cyan-500
-                        text: '#0f172a', // slate-900
-                        muted: '#64748b', // slate-500
+                        aurora: {
+                            bg: '#020617',     // Deep space blue
+                            card: 'rgba(30, 41, 59, 0.4)', // Glass
+                            border: 'rgba(148, 163, 184, 0.2)',
+                            primary: '#22d3ee', // Cyan
+                            secondary: '#a855f7', // Purple
+                            accent: '#34d399',  // Emerald
+                            text: '#f1f5f9',
+                            muted: '#94a3b8'
+                        }
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
                         display: ['Space Grotesk', 'sans-serif'],
                     },
                     spacing: {
-                        'safe-top': '80px',
+                        'safe-top': '20px',
                     },
                     animation: {
-                        'shine': 'shine 1.5s infinite',
-                        'float': 'float 3s ease-in-out infinite',
+                        'aurora-flow': 'aurora 15s ease infinite alternate',
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-glow': 'pulseGlow 3s infinite',
                         'fade-in': 'fadeIn 0.5s ease-out forwards',
                         'slide-up': 'slideUp 0.5s ease-out forwards',
                     },
                     keyframes: {
-                        shine: { '0%': { transform: 'translateX(-100%)' }, '100%': { transform: 'translateX(100%)' } },
-                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+                        aurora: {
+                            '0%': { backgroundPosition: '0% 50%' },
+                            '50%': { backgroundPosition: '100% 50%' },
+                            '100%': { backgroundPosition: '0% 50%' }
+                        },
+                        float: { 
+                            '0%, 100%': { transform: 'translateY(0)' }, 
+                            '50%': { transform: 'translateY(-15px)' } 
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { opacity: '1', boxShadow: '0 0 20px rgba(34, 211, 238, 0.2)' },
+                            '50%': { opacity: '0.8', boxShadow: '0 0 40px rgba(168, 85, 247, 0.4)' }
+                        },
                         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
                         slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } }
                     }
@@ -48,10 +60,8 @@
         }
     </script>
 
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 
-    <!-- React & Babel -->
     <script type="importmap">
         {
             "imports": {
@@ -62,25 +72,68 @@
         }
     </script>
     <script src="https://unpkg.com/@babel/standalone@7.26.9/babel.min.js"></script>
-    <script>
-        window.Babel = { presets: [['env', { modules: false }], 'react'] };
-    </script>
 
     <style>
         body { 
-            background-color: #f8fafc; 
-            color: #0f172a;
+            background-color: #020617; 
+            color: #f1f5f9;
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
+            font-family: 'Inter', sans-serif;
         }
-        .bg-stripe-danger {
-            background-image: repeating-linear-gradient(45deg, rgba(244, 63, 94, 0.05), rgba(244, 63, 94, 0.05) 10px, transparent 10px, transparent 20px);
+        
+        /* Aurora Background */
+        .aurora-bg {
+            background: linear-gradient(-45deg, #020617, #1e1b4b, #0f172a, #022c22);
+            background-size: 400% 400%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            animation: aurora 15s ease infinite alternate;
         }
+
+        .aurora-glow {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(34,211,238,0.15) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            top: -100px;
+            left: -50px;
+        }
+        
+        .aurora-glow-2 {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(168,85,247,0.15) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            bottom: -100px;
+            right: -50px;
+        }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 <body>
+    <div class="aurora-bg"></div>
+    <div class="aurora-glow"></div>
+    <div class="aurora-glow-2"></div>
     <div id="root"></div>
 
     <script type="text/babel" data-type="module" data-presets="env,react">
@@ -89,25 +142,20 @@
         import { 
             Trophy, Diamond, Zap, Camera, CheckCircle, Activity, User, Settings, Plus, X, 
             Hexagon, Flame, Send, Bell, AlertTriangle, Skull, Dumbbell, Timer, Ruler, 
-            BarChart3, Users, Calendar, Award, ChevronRight, Siren, FileWarning, UploadCloud, 
+            BarChart3, Users, Calendar, Award, ChevronRight, ChevronUp, ChevronDown, Siren, FileWarning, UploadCloud, 
             RefreshCw, Shield, Download, Edit3, Save, Trash2, LogOut, Sun, Moon
         } from 'lucide-react';
 
         // --- CONSTANTS ---
-        
-        // ВСТАВЬТЕ СЮДА ВАШУ ССЫЛКУ НА ВЕБ-ПРИЛОЖЕНИЕ (Google Apps Script Web App URL)
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydULT-3CWngM-jmKIuVH5f0LvcwDiSqMgEBCbR2FroObYhwKZqG_DeVc4pDa8-WL5A/exec'; 
-        
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydULT-3CWngM-jmKIuVH5f0LvcwDiSqMgEBCbR2FroObYhwKZqG_DeVc4pDa8-WL5A/exec'; // Вставьте ссылку Web App
         const ADMIN_USERNAME = 'solomin_d';
-        // Дата по умолчанию (если скрипт не подключен)
-        // Используем 18 марта 2025 как в вашем ТЗ для таблицы
         const DEFAULT_START_DATE = new Date('2025-03-18'); 
 
         // --- UI COMPONENTS ---
 
         const GlassCard = ({ children, className = "", onClick }) => (
-            <div onClick={onClick} className={`relative bg-white/70 backdrop-blur-xl border border-white/60 shadow-lg rounded-2xl overflow-hidden ${onClick ? 'cursor-pointer active:scale-95 transition-transform' : ''} ${className}`}>
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent opacity-60"></div>
+            <div onClick={onClick} className={`relative glass-panel rounded-2xl overflow-hidden ${onClick ? 'cursor-pointer active:scale-95 transition-transform' : ''} ${className}`}>
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
                 {children}
             </div>
         );
@@ -116,40 +164,40 @@
             const baseStyle = "w-full py-4 font-bold tracking-wider uppercase transition-all active:scale-95 flex items-center justify-center gap-2 relative overflow-hidden group rounded-xl";
             
             const variants = {
-                primary: "bg-cyan-600 text-white shadow-lg shadow-cyan-200 hover:bg-cyan-700",
-                danger: "bg-rose-500 text-white shadow-lg shadow-rose-200 hover:bg-rose-600",
-                success: "bg-emerald-500 text-white shadow-lg shadow-emerald-200 hover:bg-emerald-600",
-                gold: "bg-amber-500 text-white shadow-lg shadow-amber-200 hover:bg-amber-600",
-                secondary: "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50",
-                disabled: "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed shadow-none"
+                primary: "bg-cyan-600/90 text-white shadow-[0_0_20px_rgba(8,145,178,0.4)] hover:bg-cyan-500 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] border border-cyan-400/30",
+                danger: "bg-rose-600/90 text-white shadow-[0_0_20px_rgba(225,29,72,0.4)] hover:bg-rose-500 border border-rose-400/30",
+                success: "bg-emerald-600/90 text-white shadow-[0_0_20px_rgba(5,150,105,0.4)] hover:bg-emerald-500 border border-emerald-400/30",
+                gold: "bg-amber-500/90 text-white shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:bg-amber-400 border border-amber-300/30",
+                secondary: "bg-white/10 text-aurora-text border border-white/10 hover:bg-white/20",
+                disabled: "bg-slate-800/50 text-slate-500 border border-slate-700 cursor-not-allowed shadow-none"
             };
             
             return (
                 <button onClick={onClick} disabled={disabled} className={`${baseStyle} ${disabled ? variants.disabled : variants[variant]} ${className}`}>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-shine"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine"></div>
                     {children}
                 </button>
             );
         };
 
         const ToggleSwitch = ({ checked, onChange }) => (
-            <button onClick={() => onChange(!checked)} className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 relative ${checked ? 'bg-cyan-500' : 'bg-slate-200'}`}>
+            <button onClick={() => onChange(!checked)} className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 relative ${checked ? 'bg-cyan-500' : 'bg-slate-700'}`}>
                 <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${checked ? 'translate-x-6' : 'translate-x-0'}`} />
             </button>
         );
 
-        const Avatar = ({ name, className = "" }) => {
+        const Avatar = ({ name, className = "", size = "w-10 h-10" }) => {
             const initials = name ? name.slice(0, 2).toUpperCase() : "FQ";
             const gradients = [
-                "from-cyan-400 to-blue-500",
-                "from-emerald-400 to-teal-500",
-                "from-violet-400 to-purple-500",
-                "from-amber-400 to-orange-500",
+                "from-cyan-500 to-blue-600",
+                "from-purple-500 to-indigo-600",
+                "from-emerald-400 to-teal-600",
+                "from-fuchsia-500 to-pink-600",
             ];
             const colorIndex = name ? name.length % gradients.length : 0;
             
             return (
-                <div className={`rounded-full bg-gradient-to-br ${gradients[colorIndex]} flex items-center justify-center text-white font-bold shadow-md border-2 border-white ${className}`}>
+                <div className={`${size} rounded-full bg-gradient-to-br ${gradients[colorIndex]} flex items-center justify-center text-white font-bold shadow-lg border border-white/20 ${className}`}>
                     {initials}
                 </div>
             );
@@ -181,76 +229,51 @@
             return 'Новичок';
         };
 
-        const syncWithGoogleSheets = async (userData, actionType = 'UPDATE') => {
-            if (!GOOGLE_SCRIPT_URL) return;
-            const payload = {
-                action: actionType,
-                timestamp: new Date().toISOString(),
-                telegramId: userData.telegramId,
-                username: userData.username,
-                firstName: userData.firstName,
-                lastName: userData.lastName,
-                arsenal: userData.disciplines.join(', '),
-                goal: userData.goal,
-                diamonds: userData.diamonds,
-                streak: userData.streak,
-                completedToday: userData.todayActivity.join(', ')
-            };
-            try {
-                // Using no-cors mode for Google Apps Script Web App
-                await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-            } catch (e) { console.error("Sync Error:", e); }
-        };
-
-        // --- SCREENS (Defined outside App to fix input focus issues) ---
+        // --- SCREENS ---
 
         const WelcomeScreen = ({ onStart }) => (
-            <div className="flex flex-col h-full p-6 animate-fade-in relative z-10 pt-safe-top">
+            <div className="flex flex-col h-screen p-6 animate-fade-in relative z-10 pt-safe-top">
                 <div className="flex-grow flex flex-col items-center justify-center text-center space-y-8">
-                    <div className="relative w-36 h-36 flex items-center justify-center">
-                        <div className="absolute inset-0 bg-cyan-200 blur-3xl rounded-full animate-pulse"></div>
-                        <Hexagon size={120} className="text-cyan-600 stroke-[1.5] animate-float drop-shadow-xl" />
-                        <Activity size={48} className="text-cyan-800 absolute" />
+                    <div className="relative w-40 h-40 flex items-center justify-center">
+                        <div className="absolute inset-0 bg-cyan-500 blur-[60px] opacity-40 rounded-full animate-pulse"></div>
+                        <div className="absolute inset-0 bg-purple-500 blur-[60px] opacity-30 rounded-full translate-x-4 animate-pulse" style={{animationDelay: '1s'}}></div>
+                        <Hexagon size={130} className="text-cyan-400 stroke-[1.5] animate-float drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
+                        <Activity size={50} className="text-white absolute drop-shadow-lg" />
                     </div>
                     <div>
-                        <h1 className="text-5xl font-black text-slate-800 uppercase tracking-tighter leading-tight mb-2 font-display">Fitness<br/><span className="text-cyan-600">Квартал</span></h1>
-                        <p className="text-slate-500 font-medium tracking-wide uppercase text-xs bg-white inline-block px-4 py-1.5 rounded-full border border-slate-200 shadow-sm mt-2">Твоя территория спорта</p>
+                        <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-purple-300 uppercase tracking-tighter leading-tight mb-2 font-display">Fitness<br/>Aurora</h1>
+                        <p className="text-cyan-200/80 font-medium tracking-[0.2em] uppercase text-xs bg-white/5 inline-block px-4 py-1.5 rounded-full border border-white/10 backdrop-blur-md mt-4">Северный квартал</p>
                     </div>
                 </div>
                 <div className="mt-auto w-full pb-8">
-                    <NeonButton onClick={onStart} className="shadow-xl">Начать Челлендж</NeonButton>
-                    <p className="text-center text-slate-400 text-[10px] mt-4 uppercase tracking-widest font-bold">Version 5.0 • Light Mode</p>
+                    <NeonButton onClick={onStart}>Начать Путь</NeonButton>
+                    <p className="text-center text-slate-500 text-[10px] mt-4 uppercase tracking-widest font-bold">Version Aurora 1.0</p>
                 </div>
             </div>
         );
 
         const RegistrationScreen = ({ regForm, setRegForm, onNext }) => (
-            <div className="min-h-screen flex flex-col p-6 animate-slide-up bg-[#f8fafc] pt-safe-top">
-                <h2 className="text-3xl font-display font-bold text-slate-800 mb-6 tracking-wide">ПРЕДСТАВЬСЯ</h2>
+            <div className="min-h-screen flex flex-col p-6 animate-slide-up pt-safe-top">
+                <h2 className="text-3xl font-display font-bold text-white mb-6 tracking-wide">ИДЕНТИФИКАЦИЯ</h2>
                 <div className="space-y-6 flex-grow">
-                    <div>
-                        <label className="text-xs font-bold text-slate-400 uppercase ml-1 tracking-widest block mb-2">Имя</label>
+                    <GlassCard className="p-1">
                         <input 
                             type="text" 
                             value={regForm.firstName} 
                             onChange={e => setRegForm(prev => ({...prev, firstName: e.target.value}))} 
-                            className="w-full p-4 rounded-xl bg-white border border-slate-200 font-bold focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 outline-none text-slate-800 shadow-sm transition-all" 
-                            placeholder="Твое имя" 
+                            className="w-full p-4 bg-transparent text-white font-bold outline-none placeholder:text-slate-600" 
+                            placeholder="Имя агента" 
                         />
-                    </div>
-                    <div>
-                        <label className="text-xs font-bold text-slate-400 uppercase ml-1 tracking-widest block mb-2">Фамилия</label>
+                    </GlassCard>
+                    <GlassCard className="p-1">
                         <input 
                             type="text" 
                             value={regForm.lastName} 
                             onChange={e => setRegForm(prev => ({...prev, lastName: e.target.value}))} 
-                            className="w-full p-4 rounded-xl bg-white border border-slate-200 font-bold focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 outline-none text-slate-800 shadow-sm transition-all" 
-                            placeholder="Фамилия (не обязательно)" 
+                            className="w-full p-4 bg-transparent text-white font-bold outline-none placeholder:text-slate-600" 
+                            placeholder="Позывной (Фамилия)" 
                         />
-                    </div>
+                    </GlassCard>
                 </div>
                 <div className="pb-8"><NeonButton onClick={onNext} disabled={!regForm.firstName}>Далее</NeonButton></div>
             </div>
@@ -269,25 +292,25 @@
             };
 
             return (
-                <div className="p-6 flex flex-col h-full animate-slide-up relative z-10 pt-safe-top">
-                    <h2 className="text-3xl font-display font-bold text-slate-800 mb-2 tracking-wide">Твой Арсенал</h2>
-                    <p className="text-slate-500 text-sm mb-8 leading-relaxed">Выбери оружие для трансформации.<br/>Максимум 5 дисциплин.</p>
-                    <div className="flex flex-wrap gap-3 mb-4 max-h-[50vh] overflow-y-auto content-start pb-20 no-scrollbar">
+                <div className="p-6 flex flex-col h-screen animate-slide-up relative z-10 pt-safe-top">
+                    <h2 className="text-3xl font-display font-bold text-white mb-2 tracking-wide">ВЫБОР ОРУЖИЯ</h2>
+                    <p className="text-slate-400 text-sm mb-8 leading-relaxed">Собери свой сет.<br/>Максимум 5 дисциплин.</p>
+                    <div className="flex flex-wrap gap-3 mb-4 max-h-[60vh] overflow-y-auto content-start pb-20 no-scrollbar">
                         {popularSports.map(sport => (
-                            <button key={sport} onClick={() => onToggle(sport)} className={`px-5 py-3 rounded-xl text-sm font-bold tracking-wide transition-all duration-300 border shadow-sm ${disciplines.includes(sport) ? 'bg-cyan-600 text-white border-cyan-600 shadow-cyan-200' : 'bg-white text-slate-600 border-slate-200 hover:border-cyan-200 hover:text-cyan-600'}`}>{sport}</button>
+                            <button key={sport} onClick={() => onToggle(sport)} className={`px-5 py-3 rounded-xl text-sm font-bold tracking-wide transition-all duration-300 border backdrop-blur-md ${disciplines.includes(sport) ? 'bg-cyan-600/80 text-white border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'bg-white/5 text-slate-300 border-white/10 hover:border-cyan-500/50 hover:text-cyan-300'}`}>{sport}</button>
                         ))}
                         {!isAdding ? (
-                            <button onClick={() => setIsAdding(true)} className="px-5 py-3 rounded-xl text-sm border border-dashed border-slate-300 text-slate-400 hover:border-cyan-500 hover:text-cyan-600 bg-white flex items-center gap-2 transition-colors"><Plus size={16} /> Своя</button>
+                            <button onClick={() => setIsAdding(true)} className="px-5 py-3 rounded-xl text-sm border border-dashed border-slate-600 text-slate-500 hover:border-cyan-500 hover:text-cyan-400 bg-transparent flex items-center gap-2 transition-colors"><Plus size={16} /> Своя</button>
                         ) : (
                             <div className="flex items-center gap-2 animate-fade-in w-full sm:w-auto mt-2 sm:mt-0">
-                                <input type="text" value={customInput} onChange={(e) => setCustomInput(e.target.value)} placeholder="Название..." className="px-4 py-2.5 rounded-xl bg-white border border-cyan-500 outline-none text-slate-800 text-sm w-32 focus:ring-2 focus:ring-cyan-100" autoFocus onKeyDown={(e) => e.key === 'Enter' && handleAdd()} />
+                                <input type="text" value={customInput} onChange={(e) => setCustomInput(e.target.value)} placeholder="Название..." className="px-4 py-2.5 rounded-xl bg-slate-800/80 border border-cyan-500/50 outline-none text-white text-sm w-32 focus:ring-2 focus:ring-cyan-500/30" autoFocus onKeyDown={(e) => e.key === 'Enter' && handleAdd()} />
                                 <button onClick={handleAdd} className="p-3 bg-cyan-600 text-white rounded-xl shadow-lg hover:bg-cyan-700"><CheckCircle size={16}/></button>
                             </div>
                         )}
                     </div>
-                    <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#f8fafc] via-[#f8fafc] to-transparent">
-                        <div className="flex justify-between items-center mb-4 text-xs font-bold uppercase tracking-widest"><span className="text-slate-400">Выбрано</span><span className={disciplines.length > 0 ? "text-cyan-600" : "text-slate-400"}>{disciplines.length} / 5</span></div>
-                        <NeonButton onClick={onNext} disabled={disciplines.length === 0}>Далее</NeonButton>
+                    <div className="mt-auto pb-8">
+                        <div className="flex justify-between items-center mb-4 text-xs font-bold uppercase tracking-widest"><span className="text-slate-500">Слотов занято</span><span className={disciplines.length > 0 ? "text-cyan-400" : "text-slate-600"}>{disciplines.length} / 5</span></div>
+                        <NeonButton onClick={onNext} disabled={disciplines.length === 0}>Подтвердить</NeonButton>
                     </div>
                 </div>
             );
@@ -297,45 +320,34 @@
             const calculateGoalOptions = () => {
                 const now = new Date();
                 const start = startDate || DEFAULT_START_DATE;
-                
-                // Рассчитываем дни относительно старта
                 const diffTime = start - now;
                 const daysUntilStart = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
-                // Если марафон еще не начался (дни > 0), показываем полные цели
-                // Если марафон уже начался (дни <= 0), вычитаем прошедшие дни
                 const passed = daysUntilStart > 0 ? 0 : Math.abs(daysUntilStart);
                 
                 return [
                     { label: 'Новичок', days: 30 - passed, original: 30 },
                     { label: 'Атлет', days: 60 - passed, original: 60 },
-                    { label: 'Титан', days: 100 - passed, original: 100 }
+                    { label: 'Киборг', days: 100 - passed, original: 100 }
                 ].filter(g => g.days > 0);
             };
 
             const goals = calculateGoalOptions();
             
             return (
-                <div className="p-6 flex flex-col h-full animate-slide-up relative z-10 pt-safe-top">
-                    <h2 className="text-3xl font-display font-bold text-slate-800 mb-10 text-center tracking-wide">Выбери Высоту</h2>
+                <div className="p-6 flex flex-col h-screen animate-slide-up relative z-10 pt-safe-top">
+                    <h2 className="text-3xl font-display font-bold text-white mb-10 text-center tracking-wide">УРОВЕНЬ СЛОЖНОСТИ</h2>
                     <div className="flex flex-col gap-6 flex-grow justify-center pb-8">
                         {goals.map((g, idx) => (
-                            <GlassCard key={idx} onClick={() => onSelect(g.days)} className="p-6 flex items-center justify-between group border-l-4 border-l-transparent hover:border-l-cyan-500 transition-all bg-white hover:shadow-lg">
+                            <GlassCard key={idx} onClick={() => onSelect(g.days)} className="p-6 flex items-center justify-between group border-l-4 border-l-transparent hover:border-l-cyan-400 transition-all bg-white/5 hover:bg-white/10">
                                 <div className="flex flex-col">
-                                    <span className="text-4xl font-display font-black text-slate-800 group-hover:text-cyan-600 transition-colors">{g.days} <span className="text-lg font-sans font-normal text-slate-400">Дней</span></span>
-                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-2 group-hover:text-slate-600 transition-colors">{g.label}</span>
+                                    <span className="text-4xl font-display font-black text-white group-hover:text-cyan-300 transition-colors drop-shadow-md">{g.days} <span className="text-lg font-sans font-normal text-slate-400">Дней</span></span>
+                                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-2 group-hover:text-cyan-200 transition-colors">{g.label}</span>
                                 </div>
-                                <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-cyan-50 group-hover:text-cyan-600 transition-colors shadow-inner border border-slate-200 text-slate-400">
+                                <div className="w-14 h-14 rounded-full bg-slate-800/50 flex items-center justify-center group-hover:bg-cyan-500/20 group-hover:text-cyan-300 transition-colors border border-white/10 text-slate-500">
                                     {idx === 0 ? <Activity size={24} /> : idx === 1 ? <Zap size={24} /> : <Trophy size={24} />}
                                 </div>
                             </GlassCard>
                         ))}
-                        {goals.length === 0 && (
-                            <div className="text-center p-6 bg-rose-50 rounded-2xl border border-rose-200">
-                                <p className="text-rose-600 font-bold">Марафон уже завершен!</p>
-                                <p className="text-xs text-rose-400 mt-2">Жди следующего сезона.</p>
-                            </div>
-                        )}
                     </div>
                 </div>
             );
@@ -368,57 +380,35 @@
             const [dashboardView, setDashboardView] = useState('leaderboard');
             const [showAllBadges, setShowAllBadges] = useState(false);
             const [showConfetti, setShowConfetti] = useState(false);
+            const [isAddingCustom, setIsAddingCustom] = useState(false);
+            const [customInput, setCustomInput] = useState("");
             
             // Mock Leaderboard
             const [leaderboard, setLeaderboard] = useState([
-                { id: 1, name: 'Александр', diamonds: 3, streak: 12, goal: 100, status: 'active', disciplines: ['Бег', 'Воркаут'], history: [], badges: ['streak', 'runner'] },
-                { id: 2, name: 'Елена', diamonds: 5, streak: 45, goal: 60, status: 'active', disciplines: ['Зал', 'Плавание'], history: [], badges: ['gym', 'reps', 'early'] },
-                { id: 3, name: 'Макс', diamonds: 0, streak: 8, goal: 30, status: 'frozen', disciplines: ['Бокс'], history: [], badges: [] },
-                { id: 4, name: 'Игорь', diamonds: 2, streak: 89, goal: 100, status: 'active', disciplines: ['Вело', 'Отжимания'], history: [], badges: ['runner', 'reps', 'social', 'streak'] },
+                { id: 1, name: 'Alex', diamonds: 3, streak: 12, goal: 100, status: 'active', disciplines: ['Бег', 'Воркаут'], history: [], badges: ['streak', 'runner'] },
+                { id: 2, name: 'Elena', diamonds: 5, streak: 45, goal: 60, status: 'active', disciplines: ['Зал', 'Плавание'], history: [], badges: ['gym', 'reps', 'early'] },
+                { id: 3, name: 'Max', diamonds: 0, streak: 8, goal: 30, status: 'frozen', disciplines: ['Бокс'], history: [], badges: [] },
+                { id: 4, name: 'Igor', diamonds: 2, streak: 89, goal: 100, status: 'active', disciplines: ['Вело', 'Отжимания'], history: [], badges: ['runner', 'reps', 'social', 'streak'] },
             ]);
-
-            // --- FETCH CONFIG FROM GOOGLE SHEETS ---
-            useEffect(() => {
-                const fetchConfig = async () => {
-                    if (!GOOGLE_SCRIPT_URL) {
-                        setMarathonStartDate(DEFAULT_START_DATE);
-                        return;
-                    }
-                    try {
-                        const response = await fetch(GOOGLE_SCRIPT_URL);
-                        const json = await response.json();
-                        // Google Apps Script usually returns Config object
-                        if (json.result === 'success' && json.config && json.config.MARATHON_START_DATE) {
-                            console.log("Date fetched:", json.config.MARATHON_START_DATE);
-                            setMarathonStartDate(new Date(json.config.MARATHON_START_DATE));
-                        } else {
-                            setMarathonStartDate(DEFAULT_START_DATE);
-                        }
-                    } catch (e) {
-                        console.error("Failed to fetch config", e);
-                        setMarathonStartDate(DEFAULT_START_DATE);
-                    }
-                };
-                fetchConfig();
-            }, []);
 
             // --- INIT ---
             useEffect(() => {
+                // Telegram setup
                 const tg = window.Telegram?.WebApp;
                 if (tg) {
-                    tg.ready(); tg.expand();
-                    tg.setHeaderColor('#f8fafc'); 
-                    tg.setBackgroundColor('#f8fafc');
+                    tg.ready(); 
+                    tg.expand();
+                    tg.setHeaderColor('#020617'); 
+                    tg.setBackgroundColor('#020617');
                 }
 
-                const savedUser = localStorage.getItem('fitness_quarter_user');
+                // Check Local Storage
+                const savedUser = localStorage.getItem('fitness_aurora_user');
                 
                 if (savedUser) {
                     const parsed = JSON.parse(savedUser);
                     const tgUser = tg?.initDataUnsafe?.user;
-                    // Check admin rights
                     const isAdmin = (tgUser?.username === ADMIN_USERNAME) || parsed.isAdmin;
-                    
                     setUser({ ...parsed, isAdmin });
                     setStep('dashboard');
                 } else {
@@ -429,36 +419,57 @@
                     }
                     setStep('welcome');
                 }
+                
+                // Set default date
+                setMarathonStartDate(DEFAULT_START_DATE);
+
             }, []);
 
-            useEffect(() => { if (user.firstName) localStorage.setItem('fitness_quarter_user', JSON.stringify(user)); }, [user]);
+            useEffect(() => { if (user.firstName) localStorage.setItem('fitness_aurora_user', JSON.stringify(user)); }, [user]);
 
             // --- ACTION HANDLERS ---
             const handleRegNext = () => { if (regForm.firstName) { setUser(p => ({ ...p, firstName: regForm.firstName, lastName: regForm.lastName })); setStep('arsenal'); } };
             const handleArsenalToggle = (sport) => { setUser(prev => { const exists = prev.disciplines.includes(sport); if (exists) return { ...prev, disciplines: prev.disciplines.filter(d => d !== sport) }; if (prev.disciplines.length >= 5) return prev; return { ...prev, disciplines: [...prev.disciplines, sport] }; }); };
             const handleArsenalCustom = (sport) => { setPopularSports(prev => [...prev, sport]); handleArsenalToggle(sport); };
-            const handleGoalSelect = (goal) => { const newUser = { ...user, goal }; setUser(newUser); syncWithGoogleSheets(newUser, 'REGISTER'); setStep('dashboard'); };
+            const handleGoalSelect = (goal) => { const newUser = { ...user, goal }; setUser(newUser); setStep('dashboard'); };
             
-            const initCheckIn = (sport) => { setSelectedSportForCheckIn(sport); const type = getSportType(sport); if (type === 'other') { handleCheckInComplete(sport, null, null); } else { setCheckInStage('details'); setCheckInValue(""); } };
-            const handleCheckInComplete = (sport, value, unit) => {
+            const toggleDiscipline = (sport) => {
+                 setUser(prev => {
+                    if (prev.disciplines.includes(sport)) {
+                        return { ...prev, disciplines: prev.disciplines.filter(s => s !== sport) };
+                    } else {
+                        if (prev.disciplines.length < 5) return { ...prev, disciplines: [...prev.disciplines, sport] };
+                        return prev;
+                    }
+                });
+            };
+            
+            const handleAddCustom = () => {
+                if (customInput.trim()) {
+                    setPopularSports(prev => [...prev, customInput.trim()]);
+                    toggleDiscipline(customInput.trim());
+                    setCustomInput("");
+                    setIsAddingCustom(false);
+                }
+            };
+
+            const initCheckIn = (sport) => { setSelectedSportForCheckIn(sport); const type = getSportType(sport); if (type === 'other') { completeCheckIn(sport, null, null); } else { setCheckInStage('details'); setCheckInValue(""); } };
+            
+            const completeCheckIn = (sport, value, unit) => {
                 const type = getSportType(sport);
                 setUser(prev => {
                     const isFirstCheckIn = prev.todayActivity.length === 0;
                     const newItem = { date: new Date().toISOString(), sport, type, value, unit };
-                    const newUser = { ...prev, streak: isFirstCheckIn ? prev.streak + 1 : prev.streak, diamonds: isFirstCheckIn ? prev.diamonds : prev.diamonds, todayActivity: [...prev.todayActivity, sport], history: [newItem, ...prev.history] };
-                    syncWithGoogleSheets(newUser, 'CHECK_IN');
-                    return newUser;
+                    return { 
+                        ...prev, 
+                        streak: isFirstCheckIn ? prev.streak + 1 : prev.streak, 
+                        diamonds: isFirstCheckIn ? prev.diamonds : prev.diamonds, // В будущем можно давать алмазы
+                        todayActivity: [...prev.todayActivity, sport], 
+                        history: [newItem, ...prev.history] 
+                    };
                 });
                 setShowConfetti(true); setTimeout(() => setShowConfetti(false), 3000);
                 setCheckInModalOpen(false); setCheckInStage('select');
-            };
-
-            const handleLogout = () => { if(confirm("Сбросить прогресс?")) { localStorage.removeItem('fitness_quarter_user'); window.location.reload(); } };
-            const handleAdminUpdateUser = (updatedUser) => { setLeaderboard(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u)); };
-            const handleExportData = () => {
-                const headers = ["ID", "Name", "Diamonds", "Streak", "Goal", "Status", "Badges"];
-                const rows = leaderboard.map(u => [u.id, u.name, u.diamonds, u.streak, u.goal, u.status, u.badges?.join(',')].join(","));
-                const link = document.createElement("a"); link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n"))); link.setAttribute("download", "fitness_quarter_data.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link);
             };
 
             // Badge Config
@@ -479,48 +490,50 @@
                 { id: 'runner', icon: <Ruler size={16} />, label: 'Бегун', condition: getStatsSummary(user.history).totalKm >= 10 },
                 { id: 'gym', icon: <Dumbbell size={16} />, label: 'Терминатор', condition: getStatsSummary(user.history).totalGym >= 5 },
                 { id: 'reps', icon: <Activity size={16} />, label: 'Машина', condition: getStatsSummary(user.history).totalReps >= 500 },
-                { id: 'early', icon: <Sun size={16} />, label: 'Жаворонок', condition: false },
-                { id: 'night', icon: <Moon size={16} />, label: 'Сова', condition: false },
-                { id: 'weekend', icon: <Calendar size={16} />, label: 'Выходной', condition: false },
-                { id: 'social', icon: <Send size={16} />, label: 'Друг', condition: false },
-                { id: 'redemption', icon: <Skull size={16} />, label: 'Выживший', condition: false },
             ].map(b => ({...b, ...badgeConfig[b.id]}));
+            
             const visibleBadges = showAllBadges ? badges : badges.slice(0, 3);
             
+            // Logic for CheckIn status
+            const isCheckedIn = user.todayActivity.length > 0;
+
             // --- SUB-COMPONENTS ---
-            
-            const AdminPanel = () => {
-                const [editUser, setEditUser] = useState(null);
-                const handleSave = () => { handleAdminUpdateUser(editUser); setEditUser(null); };
-
-                if (editUser) return <div className="absolute inset-0 z-50 bg-[#f8fafc] p-6 animate-fade-in overflow-y-auto pt-safe-top"><div className="flex items-center gap-3 mb-8"><button onClick={() => setEditUser(null)} className="p-2 bg-white rounded-full border border-slate-200"><X size={20} className="text-slate-600"/></button><h2 className="text-2xl font-bold text-slate-800 font-display">РЕДАКТОР</h2></div><div className="space-y-6"><GlassCard className="p-6 space-y-4"><div><label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Имя</label><input type="text" value={editUser.name} onChange={(e) => setEditUser({...editUser, name: e.target.value})} className="w-full mt-2 p-3 rounded-lg bg-white border border-slate-200 text-slate-800 outline-none"/></div><div><label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Статус</label><select value={editUser.status} onChange={(e) => setEditUser({...editUser, status: e.target.value})} className="w-full mt-2 p-3 rounded-lg bg-white border border-slate-200 text-slate-800 outline-none"><option value="active">Active</option><option value="frozen">Frozen</option><option value="dead">Dead</option></select></div><div className="grid grid-cols-2 gap-4"><div><label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Алмазы</label><input type="number" value={editUser.diamonds} onChange={(e) => setEditUser({...editUser, diamonds: parseInt(e.target.value)})} className="w-full mt-2 p-3 rounded-lg bg-white border border-slate-200 text-slate-800 outline-none" /></div><div><label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Стрик</label><input type="number" value={editUser.streak} onChange={(e) => setEditUser({...editUser, streak: parseInt(e.target.value)})} className="w-full mt-2 p-3 rounded-lg bg-white border border-slate-200 text-slate-800 outline-none" /></div></div><div><label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Цель (дней)</label><select value={editUser.goal} onChange={(e) => setEditUser({...editUser, goal: parseInt(e.target.value)})} className="w-full mt-2 p-3 rounded-lg bg-white border border-slate-200 text-slate-800 outline-none"><option value="30">30</option><option value="60">60</option><option value="100">100</option></select></div></GlassCard><NeonButton variant="gold" onClick={handleSave}><Save size={18} /> Сохранить изменения</NeonButton></div></div>;
-                return <div className="absolute inset-0 z-50 bg-[#f8fafc] p-6 animate-fade-in overflow-y-auto pt-safe-top"><div className="flex justify-between items-center mb-8 border-b border-amber-200 pb-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center border-2 border-amber-300"><Shield size={20} className="text-amber-600" /></div><div><h2 className="text-xl font-display font-black text-amber-600 uppercase tracking-widest">Master Profile</h2><p className="text-[9px] font-bold text-amber-700 uppercase tracking-[0.2em]">System Admin</p></div></div><button onClick={() => setAdminPanelOpen(false)} className="p-2 bg-white rounded-full shadow-sm border border-slate-200"><X size={20} className="text-slate-400" /></button></div><div className="space-y-6"><div className="grid grid-cols-1 gap-3"><NeonButton variant="secondary" onClick={handleExportData}><Download size={18} /> Экспорт данных (CSV)</NeonButton></div><div><h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-4 pl-1">Участники</h3><div className="space-y-3">{leaderboard.map(u => (<GlassCard key={u.id} className="p-3 flex items-center justify-between"><div className="flex items-center gap-3"><div className={`w-1 h-8 rounded-full ${u.status === 'active' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-rose-500'}`}></div><div><div className="font-bold text-slate-700 font-display tracking-wide">{u.name}</div><div className="flex gap-3 text-[10px] text-slate-500 font-medium mt-0.5"><span className="flex items-center gap-1"><Diamond size={10} className="text-cyan-600"/> {u.diamonds}</span><span className="flex items-center gap-1"><Flame size={10} className="text-orange-500"/> {u.streak}</span><span className="uppercase">{u.status}</span></div></div></div><button onClick={() => setEditUser(u)} className="p-2 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-400 hover:text-amber-600 transition-colors"><Edit3 size={16} /></button></GlassCard>))}</div></div></div></div>;
-            };
-
             const RedemptionShop = () => {
                 const [processing, setProcessing] = useState(false);
                 const [task, setTask] = useState("Ищу наказание...");
                 const [isSpinning, setIsSpinning] = useState(false);
                 const [hasSpun, setHasSpun] = useState(false);
                 const [fileUploaded, setFileUploaded] = useState(false);
-                const [rerollCount, setRerollCount] = useState(0); 
-                const tasks = ["Сделай селфи с надписью 'Я ЛЕНИВАЯ ПАНДА' на лбу", "Сфоткайся в планке с котом (или пылесосом) на спине", "Сделай фото 'Лицо после 20 бёрпи'", "Сфоткайся с табличкой 'Обещаю больше не пропускать'", "Селфи в позе 'Умирающий лебедь' на коврике"];
-                const handleSpin = () => { if (hasSpun && rerollCount >= 1) return; if (hasSpun) setRerollCount(prev => prev + 1); setIsSpinning(true); setHasSpun(false); setFileUploaded(false); let interval = setInterval(() => { setTask(tasks[Math.floor(Math.random() * tasks.length)]); }, 80); setTimeout(() => { clearInterval(interval); setIsSpinning(false); setHasSpun(true); setTask(tasks[Math.floor(Math.random() * tasks.length)]); }, 2000); };
-                const handleBuyLife = () => { setProcessing(true); setTimeout(() => { setProcessing(false); setUser(prev => ({ ...prev, diamonds: prev.diamonds + 1, status: 'active' })); setStep('dashboard'); }, 4000); };
-                if (processing) return <div className="h-full flex flex-col items-center justify-center p-6 text-center space-y-8 relative z-10 bg-[#f8fafc]"><div className="relative"><div className="w-24 h-24 border-4 border-slate-200 border-t-rose-500 rounded-full animate-spin"></div><div className="absolute inset-0 flex items-center justify-center"><Flame className="text-rose-500 animate-pulse" size={32} /></div></div><div><h3 className="text-2xl font-display font-bold text-slate-800 mb-2 tracking-widest uppercase">AI ищет совесть...</h3><p className="text-slate-500 text-xs uppercase tracking-widest">"Генерирую унизительную подпись..."</p></div></div>;
+                
+                const tasks = ["Сделай селфи с надписью 'Я ЛЕНИВАЯ ПАНДА'", "Планка с котом на спине", "Лицо после 20 бёрпи"];
+                const handleSpin = () => { 
+                    setIsSpinning(true); setHasSpun(false); setFileUploaded(false); 
+                    let interval = setInterval(() => { setTask(tasks[Math.floor(Math.random() * tasks.length)]); }, 80); 
+                    setTimeout(() => { clearInterval(interval); setIsSpinning(false); setHasSpun(true); setTask(tasks[Math.floor(Math.random() * tasks.length)]); }, 2000); 
+                };
+                
+                const handleBuyLife = () => { 
+                    setProcessing(true); 
+                    setTimeout(() => { 
+                        setProcessing(false); setUser(prev => ({ ...prev, diamonds: prev.diamonds + 1, status: 'active' })); setStep('dashboard'); 
+                    }, 2000); 
+                };
+
+                if (processing) return <div className="h-full flex flex-col items-center justify-center p-6 text-center space-y-8 relative z-10"><div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div><h3 className="text-xl font-display font-bold text-white uppercase tracking-widest">Воскрешение...</h3></div>;
+                
                 return (
-                    <div className="h-full flex flex-col relative z-10 bg-[#f8fafc] overflow-y-auto">
-                        <div className="sticky top-0 z-20 bg-[#f8fafc]/90 backdrop-blur-md px-4 py-4 flex items-center gap-3 border-b border-rose-200/50 pt-safe-top"><button onClick={() => setStep('dashboard')} className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 active:scale-95 transition-transform">←</button><span className="font-display font-bold text-slate-800 uppercase tracking-wider">Магазин искупления</span></div>
+                    <div className="h-full flex flex-col relative z-10 overflow-y-auto">
+                        <div className="sticky top-0 z-20 bg-slate-900/90 backdrop-blur-md px-4 py-4 flex items-center gap-3 border-b border-white/10 pt-safe-top"><button onClick={() => setStep('dashboard')} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-transform">←</button><span className="font-display font-bold text-white uppercase tracking-wider">Магазин искупления</span></div>
                         <div className="p-6 pb-20">
-                            <div className="relative rounded-2xl overflow-hidden mb-8 border border-rose-500/30 shadow-lg shadow-rose-100 bg-rose-50"><div className="absolute inset-0 bg-stripe-danger opacity-10 pointer-events-none"></div><div className="p-8 text-center relative z-10"><div className="inline-flex items-center justify-center w-16 h-16 bg-rose-100 rounded-full mb-4 border-2 border-rose-200 shadow-sm animate-pulse-slow"><Skull className="text-rose-500" size={32} /></div><h2 className="text-2xl font-display font-black text-slate-800 uppercase leading-none mb-2 tracking-widest">ВЕРНУТЬ <span className="text-rose-500">АЛМАЗ</span></h2><p className="text-rose-600/70 text-xs font-bold uppercase tracking-wider">Цена: Твоя гордость</p></div></div>
-                            <GlassCard className="p-1 border-rose-200 mb-6 bg-white shadow-sm"><div className="border border-dashed border-rose-200 rounded-lg p-5"><div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2"><Siren size={14} className="text-rose-500 animate-pulse" /><span className="text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em]">ТВОЕ ЗАДАНИЕ</span></div>{isSpinning && <span className="text-[10px] text-slate-400 animate-pulse">ВЫБОР...</span>}</div><h3 className={`font-sans font-bold text-lg text-slate-800 leading-snug mb-6 min-h-[4rem] ${isSpinning ? 'opacity-50 blur-[1px]' : ''}`}>{(!hasSpun && !isSpinning) ? "Испытай удачу..." : `"${task}"`}</h3>{!hasSpun && !isSpinning ? (<NeonButton variant="danger" onClick={handleSpin} className="py-2 text-xs shadow-none">Крутить Рулетку 🎲</NeonButton>) : (<div className="flex gap-2 animate-fade-in"><span className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 uppercase tracking-wider flex-1 text-center">Награда: +1 💎</span>{hasSpun && !isSpinning && rerollCount < 1 && (<button onClick={handleSpin} className="px-3 py-2 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase"><RefreshCw size={12}/> <span>Обновить ({1 - rerollCount})</span></button>)}</div>)}</div></GlassCard>
-                            {hasSpun && (<div className="animate-slide-up"><button onClick={() => setFileUploaded(true)} disabled={isSpinning} className={`w-full border border-dashed rounded-xl p-8 mb-6 transition-all group relative overflow-hidden active:scale-[0.99] ${fileUploaded ? 'bg-emerald-50 border-emerald-300' : 'bg-white border-slate-300 hover:border-rose-400 hover:bg-rose-50'}`}><div className="flex flex-col items-center gap-3 relative z-10"><div className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${fileUploaded ? 'bg-emerald-100 text-emerald-500' : 'bg-slate-100 text-slate-400 group-hover:text-rose-500'}`}>{fileUploaded ? <CheckCircle size={24}/> : <Camera size={24} />}</div><div className="text-center"><span className={`block text-xs font-bold uppercase tracking-wider transition-colors ${fileUploaded ? 'text-emerald-600' : 'text-slate-500 group-hover:text-rose-600'}`}>{fileUploaded ? 'Фото загружено' : 'Загрузить фото'}</span></div></div></button><NeonButton variant={fileUploaded ? "danger" : "disabled"} onClick={handleBuyLife} disabled={!fileUploaded} className={fileUploaded ? "shadow-md shadow-rose-200" : ""}><div className="flex items-center gap-2"><span>{fileUploaded ? "ОТПРАВИТЬ НА ПРОЖАРКУ" : "СНАЧАЛА ЗАГРУЗИ ФОТО"}</span>{fileUploaded && <Send size={14} />}</div></NeonButton><p className="text-center text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-6 px-4 leading-relaxed opacity-70"><FileWarning size={10} className="inline mr-1 mb-0.5"/> Внимание: Фото будет опубликовано в общем чате.</p></div>)}
+                            <div className="relative rounded-2xl overflow-hidden mb-8 border border-rose-500/30 shadow-[0_0_30px_rgba(244,63,94,0.2)] bg-rose-900/20"><div className="p-8 text-center relative z-10"><div className="inline-flex items-center justify-center w-16 h-16 bg-rose-500/20 rounded-full mb-4 border border-rose-500/50 shadow-sm animate-pulse"><Skull className="text-rose-400" size={32} /></div><h2 className="text-2xl font-display font-black text-white uppercase leading-none mb-2 tracking-widest">ВЕРНУТЬ <span className="text-rose-500">АЛМАЗ</span></h2></div></div>
+                            <GlassCard className="p-1 border-rose-500/30 mb-6"><div className="border border-dashed border-rose-500/30 rounded-lg p-5"><div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2"><Siren size={14} className="text-rose-500 animate-pulse" /><span className="text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em]">ТВОЕ ЗАДАНИЕ</span></div></div><h3 className={`font-sans font-bold text-lg text-white leading-snug mb-6 min-h-[4rem] ${isSpinning ? 'opacity-50 blur-[1px]' : ''}`}>{(!hasSpun && !isSpinning) ? "Испытай удачу..." : `"${task}"`}</h3>{!hasSpun && !isSpinning ? (<NeonButton variant="danger" onClick={handleSpin} className="py-2 text-xs shadow-none">Крутить Рулетку 🎲</NeonButton>) : (<div className="flex gap-2 animate-fade-in"><span className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-[10px] font-bold text-slate-300 uppercase tracking-wider flex-1 text-center">Награда: +1 💎</span></div>)}</div></GlassCard>
+                            {hasSpun && (<div className="animate-slide-up"><button onClick={() => setFileUploaded(true)} disabled={isSpinning} className={`w-full border border-dashed rounded-xl p-8 mb-6 transition-all group relative overflow-hidden active:scale-[0.99] ${fileUploaded ? 'bg-emerald-900/20 border-emerald-500/50' : 'bg-transparent border-slate-600 hover:border-rose-400 hover:bg-rose-900/10'}`}><div className="flex flex-col items-center gap-3 relative z-10"><div className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${fileUploaded ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400 group-hover:text-rose-500'}`}>{fileUploaded ? <CheckCircle size={24}/> : <Camera size={24} />}</div><div className="text-center"><span className={`block text-xs font-bold uppercase tracking-wider transition-colors ${fileUploaded ? 'text-emerald-400' : 'text-slate-500 group-hover:text-rose-400'}`}>{fileUploaded ? 'Фото загружено' : 'Загрузить фото'}</span></div></div></button><NeonButton variant={fileUploaded ? "danger" : "disabled"} onClick={handleBuyLife} disabled={!fileUploaded}><div className="flex items-center gap-2"><span>{fileUploaded ? "ОТПРАВИТЬ" : "СНАЧАЛА ФОТО"}</span>{fileUploaded && <Send size={14} />}</div></NeonButton></div>)}
                         </div>
                     </div>
                 );
             };
 
-            // --- Render ---
+            // --- RENDER ---
             if (step === 'loading') return null;
             if (step === 'welcome') return <WelcomeScreen onStart={() => setStep('registration')} />;
             if (step === 'registration') return <RegistrationScreen regForm={regForm} setRegForm={setRegForm} onNext={handleRegNext} />;
@@ -532,42 +545,40 @@
             const userStats = getStatsSummary(user.history);
 
             return (
-                <div className="pb-24 relative min-h-screen z-10 bg-[#f8fafc]">
+                <div className="pb-24 relative min-h-screen z-10">
                     {/* Header */}
-                    <div className="sticky top-0 bg-[#f8fafc]/90 backdrop-blur-md z-20 px-6 py-4 border-b border-slate-200 pt-safe-top">
+                    <div className="sticky top-0 bg-[#020617]/80 backdrop-blur-xl z-20 px-6 py-4 border-b border-white/5 pt-safe-top">
                         <div className="flex justify-between items-start mb-4">
                             <div className="flex items-center gap-3 cursor-pointer group" onClick={() => user.isAdmin && setAdminPanelOpen(true)}>
-                                <div className="relative"><Avatar name={user.firstName} />{user.isAdmin && <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white rounded-full p-0.5 border-2 border-white"><Shield size={10} /></div>}</div>
-                                <div><div className="font-display font-bold text-slate-800 text-lg leading-tight group-hover:text-cyan-600 transition-colors">{user.firstName} {user.lastName}</div><div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Статус: <span className="text-emerald-500">{user.status === 'active' ? 'В строю' : 'Заморожен'}</span></div></div>
+                                <div className="relative"><Avatar name={user.firstName} />{user.isAdmin && <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white rounded-full p-0.5 border-2 border-[#020617]"><Shield size={10} /></div>}</div>
+                                <div><div className="font-display font-bold text-white text-lg leading-tight group-hover:text-cyan-400 transition-colors">{user.firstName}</div><div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Статус: <span className="text-emerald-400">{user.status === 'active' ? 'В строю' : 'Заморожен'}</span></div></div>
                             </div>
                             <div className="flex gap-2">
-                                <div onClick={() => setStep('redemption')} className="bg-white border border-slate-200 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer hover:bg-slate-50 transition-colors shadow-sm"><Diamond size={16} className="text-cyan-600 fill-cyan-600" /><span className="font-display font-bold text-slate-700 text-lg">{user.diamonds}</span></div>
-                                <button onClick={() => setEditingProfile(true)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-400 shadow-sm transition-colors"><Settings size={18} /></button>
+                                <div onClick={() => setStep('redemption')} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer hover:bg-white/10 transition-colors shadow-sm"><Diamond size={16} className="text-cyan-400 fill-cyan-400" /><span className="font-display font-bold text-white text-lg">{user.diamonds}</span></div>
+                                <button onClick={() => setEditingProfile(true)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-slate-400 transition-colors"><Settings size={18} /></button>
                             </div>
                         </div>
-                        <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-2 font-display uppercase tracking-widest"><span>{user.streak} Days Streak</span><span>Goal: {user.goal}</span></div>
-                        <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden relative"><div className="bg-gradient-to-r from-cyan-500 to-indigo-500 h-full shadow-[0_0_10px_rgba(6,182,212,0.3)]" style={{ width: `${progressPercent}%` }}></div></div>
+                        <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-2 font-display uppercase tracking-widest"><span>{user.streak} Days Streak</span><span>Goal: {user.goal}</span></div>
+                        <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden relative"><div className="bg-gradient-to-r from-cyan-500 to-purple-500 h-full shadow-[0_0_10px_rgba(34,211,238,0.5)]" style={{ width: `${progressPercent}%` }}></div></div>
                     </div>
-
-                    {adminPanelOpen && <AdminPanel />}
 
                     {/* Main Action */}
                     <div className="p-6">
                         {isCheckedIn ? (
-                            <GlassCard className="p-8 text-center bg-emerald-50 border-emerald-200">
-                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4 text-emerald-500"><CheckCircle size={32} /></div>
-                                <h3 className="text-xl font-display font-bold text-slate-800 mb-2 tracking-wide">ДЕНЬ ЗАСЧИТАН</h3>
-                                <div className="flex flex-wrap justify-center gap-2 mt-2 mb-6">{user.todayActivity.map(act => <span key={act} className="px-3 py-1 bg-white border border-emerald-200 rounded-lg text-[10px] font-bold text-emerald-600 uppercase tracking-wider shadow-sm">{act}</span>)}</div>
+                            <GlassCard className="p-8 text-center bg-emerald-900/10 border-emerald-500/20">
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 mb-4 text-emerald-400 border border-emerald-500/20 shadow-[0_0_20px_rgba(52,211,153,0.2)]"><CheckCircle size={32} /></div>
+                                <h3 className="text-xl font-display font-bold text-white mb-2 tracking-wide">ДЕНЬ ЗАСЧИТАН</h3>
+                                <div className="flex flex-wrap justify-center gap-2 mt-2 mb-6">{user.todayActivity.map(act => <span key={act} className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-[10px] font-bold text-emerald-400 uppercase tracking-wider shadow-sm">{act}</span>)}</div>
                                 <NeonButton variant="secondary" onClick={() => setCheckInModalOpen(true)} className="py-3 text-xs"><Plus size={14} /> Добавить еще</NeonButton>
                             </GlassCard>
                         ) : (
-                            <button onClick={() => setCheckInModalOpen(true)} disabled={user.diamonds <= 0} className="w-full aspect-[2/1] rounded-2xl bg-white border border-slate-200 shadow-lg relative group overflow-hidden active:scale-[0.98] transition-all hover:border-cyan-400">
-                                <div className="absolute inset-0 bg-gradient-to-br from-white to-slate-50 opacity-50"></div>
+                            <button onClick={() => setCheckInModalOpen(true)} disabled={user.diamonds <= 0} className="w-full aspect-[2/1] rounded-2xl glass-panel shadow-lg relative group overflow-hidden active:scale-[0.98] transition-all hover:border-cyan-400/50">
+                                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 opacity-50"></div>
                                 <div className="relative z-10 flex flex-col items-center justify-center h-full gap-4">
                                     {user.diamonds > 0 ? (
-                                        <><div className="w-16 h-16 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-500"><Zap size={32} className="fill-cyan-600" /></div><div className="text-center"><span className="block text-2xl font-display font-black text-slate-800 uppercase tracking-[0.2em] group-hover:text-cyan-600 transition-colors">ОТМЕТИТЬ</span><span className="text-slate-400 text-[10px] uppercase tracking-widest font-bold mt-1">Запиши свой прогресс</span></div></>
+                                        <><div className="w-16 h-16 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/30 group-hover:scale-110 transition-transform duration-500 shadow-[0_0_20px_rgba(34,211,238,0.2)]"><Zap size={32} className="fill-cyan-400" /></div><div className="text-center"><span className="block text-2xl font-display font-black text-white uppercase tracking-[0.2em] group-hover:text-cyan-300 transition-colors text-shadow">ОТМЕТИТЬ</span><span className="text-slate-400 text-[10px] uppercase tracking-widest font-bold mt-1">Запиши прогресс</span></div></>
                                     ) : (
-                                        <><div className="w-16 h-16 rounded-full bg-red-100 text-red-500 flex items-center justify-center"><X size={32} /></div><div className="text-center px-6"><span className="block text-xl font-display font-black text-red-500 uppercase tracking-widest mb-1">ЗАМОРОЖЕН</span><p className="text-[10px] text-gray-500 font-bold uppercase">Алмазы закончились.<br/>Иди в магазин искупления.</p></div></>
+                                        <><div className="w-16 h-16 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center border border-red-500/30"><X size={32} /></div><div className="text-center px-6"><span className="block text-xl font-display font-black text-red-500 uppercase tracking-widest mb-1">ЗАМОРОЖЕН</span><p className="text-[10px] text-slate-500 font-bold uppercase">Нужен выкуп.</p></div></>
                                     )}
                                 </div>
                             </button>
@@ -577,86 +588,81 @@
                     {/* Lists Toggle */}
                     <div className="px-6">
                         <div className="flex justify-between items-center mb-4 pl-1">
-                            <h3 className="text-slate-400 uppercase text-[10px] font-bold tracking-[0.2em]">{dashboardView === 'leaderboard' ? 'РЕЙТИНГ АГЕНТОВ' : 'ЛИЧНОЕ ДЕЛО'}</h3>
-                            <div className="bg-slate-200 p-1 rounded-lg flex gap-1 border border-slate-200">
-                                <button onClick={() => setDashboardView('leaderboard')} className={`p-1.5 rounded-md transition-all ${dashboardView === 'leaderboard' ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}><Users size={14} /></button>
-                                <button onClick={() => setDashboardView('progress')} className={`p-1.5 rounded-md transition-all ${dashboardView === 'progress' ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}><BarChart3 size={14} /></button>
+                            <h3 className="text-slate-500 uppercase text-[10px] font-bold tracking-[0.2em]">{dashboardView === 'leaderboard' ? 'РЕЙТИНГ АГЕНТОВ' : 'ЛИЧНОЕ ДЕЛО'}</h3>
+                            <div className="bg-slate-800/50 p-1 rounded-lg flex gap-1 border border-white/5">
+                                <button onClick={() => setDashboardView('leaderboard')} className={`p-1.5 rounded-md transition-all ${dashboardView === 'leaderboard' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}><Users size={14} /></button>
+                                <button onClick={() => setDashboardView('progress')} className={`p-1.5 rounded-md transition-all ${dashboardView === 'progress' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}><BarChart3 size={14} /></button>
                             </div>
                         </div>
 
                         {dashboardView === 'leaderboard' ? (
                             <div className="space-y-3">
                                 {leaderboard.map((u, idx) => (
-                                    <GlassCard key={u.id} onClick={() => setSelectedUser(u)} className={`p-4 flex items-center justify-between transition-colors ${u.status === 'frozen' ? 'opacity-60 bg-slate-50' : 'bg-white'}`}>
+                                    <GlassCard key={u.id} onClick={() => setSelectedUser(u)} className={`p-4 flex items-center justify-between transition-colors ${u.status === 'frozen' ? 'opacity-50 grayscale' : 'hover:bg-white/5'}`}>
                                         <div className="flex items-center gap-4">
                                             <div className="relative">
-                                                <Avatar name={u.name} className="w-10 h-10 text-xs" />
-                                                <div className="absolute -top-1 -right-1 bg-slate-800 rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold border border-white text-white">{idx + 1}</div>
+                                                <Avatar name={u.name} size="w-10 h-10" />
+                                                <div className="absolute -top-1 -right-1 bg-slate-900 rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold border border-slate-700 text-white">{idx + 1}</div>
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-2">
-                                                    <div className={`font-bold text-slate-800 tracking-wide ${u.status === 'frozen' ? 'line-through text-slate-400' : ''}`}>{u.name}</div>
+                                                    <div className={`font-bold text-slate-200 tracking-wide ${u.status === 'frozen' ? 'line-through text-slate-500' : ''}`}>{u.name}</div>
                                                     <div className="flex gap-1">{u.badges?.slice(0, 4).map(b => badgeConfig[b] && (<div key={b} className={`w-3 h-3 rounded-full flex items-center justify-center border ${badgeConfig[b].bg.replace('bg-', 'bg-').replace('/10', '/30')} ${badgeConfig[b].color}`}>{React.cloneElement(badgeConfig[b].icon, { size: 8 })}</div>))}</div>
                                                 </div>
-                                                <div className="flex gap-1 mt-1">{Array.from({ length: 3 }).map((_, i) => (<div key={i} className={`w-1.5 h-1.5 rotate-45 ${i < u.diamonds ? 'bg-cyan-500 shadow-sm' : 'bg-slate-200'}`}></div>))}</div>
+                                                <div className="flex gap-1 mt-1">{Array.from({ length: 3 }).map((_, i) => (<div key={i} className={`w-1.5 h-1.5 rotate-45 ${i < u.diamonds ? 'bg-cyan-500 shadow-[0_0_5px_rgba(34,211,238,0.8)]' : 'bg-slate-800'}`}></div>))}</div>
                                             </div>
                                         </div>
-                                        <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 hover:text-amber-400 hover:bg-amber-400/10 transition-colors"><Zap size={14} /></div>
                                     </GlassCard>
                                 ))}
                             </div>
                         ) : (
                             <div className="animate-fade-in space-y-6">
-                                <GlassCard className="p-6 bg-white">
+                                <GlassCard className="p-6">
                                     <div className="flex items-center justify-between mb-6">
-                                        <div className="flex items-center gap-3"><Avatar name={user.firstName} size="w-12 h-12" /><div><div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Ранг</div><div className="font-display font-black text-lg text-slate-800 tracking-wide">{getUserTitle(user.goal)}</div></div></div>
-                                        <div className="text-right"><div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Цель</div><div className="font-display font-black text-xl text-cyan-600">{user.goal} <span className="text-sm text-slate-400 font-sans font-normal">Дней</span></div></div>
+                                        <div className="flex items-center gap-3"><Avatar name={user.firstName} size="w-12 h-12" /><div><div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Ранг</div><div className="font-display font-black text-lg text-white tracking-wide">{getUserTitle(user.goal)}</div></div></div>
+                                        <div className="text-right"><div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Цель</div><div className="font-display font-black text-xl text-cyan-400">{user.goal} <span className="text-sm text-slate-500 font-sans font-normal">Дней</span></div></div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center"><Ruler size={16} className="mx-auto text-cyan-500 mb-1" /><div className="font-display font-bold text-lg text-slate-700">{userStats.totalKm}</div><div className="text-[9px] text-slate-400 uppercase font-bold">КМ Всего</div></div>
-                                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center"><Dumbbell size={16} className="mx-auto text-purple-500 mb-1" /><div className="font-display font-bold text-lg text-slate-700">{userStats.totalReps}</div><div className="text-[9px] text-slate-400 uppercase font-bold">Повторений</div></div>
+                                        <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 text-center"><Ruler size={16} className="mx-auto text-cyan-500 mb-1" /><div className="font-display font-bold text-lg text-slate-200">{userStats.totalKm}</div><div className="text-[9px] text-slate-500 uppercase font-bold">КМ Всего</div></div>
+                                        <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 text-center"><Dumbbell size={16} className="mx-auto text-purple-500 mb-1" /><div className="font-display font-bold text-lg text-slate-200">{userStats.totalReps}</div><div className="text-[9px] text-slate-500 uppercase font-bold">Повторений</div></div>
                                     </div>
                                 </GlassCard>
                                 <div>
-                                    <div className="flex justify-between items-center mb-3 pl-1 pr-1"><h3 className="text-slate-400 uppercase text-[10px] font-bold tracking-[0.2em]">Награды</h3><button onClick={() => setShowAllBadges(!showAllBadges)} className="text-[10px] font-bold text-cyan-600 hover:text-cyan-700 flex items-center gap-1 uppercase transition-colors">{showAllBadges ? 'Скрыть' : 'Раскрыть'}{showAllBadges ? <ChevronUp size={10}/> : <ChevronDown size={10}/>}</button></div>
-                                    <div className="grid gap-2 grid-cols-3">{visibleBadges.map(b => (<div key={b.id} className={`flex flex-col items-center p-3 rounded-xl border text-center transition-all ${b.condition ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-60 grayscale'}`}><div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 border bg-opacity-20 ${b.bg} ${b.color}`}>{b.icon}</div><div className="font-bold text-slate-600 text-[9px] uppercase leading-tight mb-1">{b.label}</div></div>))}</div>
-                                </div>
-                                <div>
-                                    <h3 className="text-slate-400 uppercase text-[10px] font-bold tracking-[0.2em] mb-3 pl-1">Хронология</h3>
-                                    <div className="space-y-2">{user.history.map((item, i) => (<div key={i} className="bg-white p-3 rounded-xl border border-slate-100 flex items-center justify-between shadow-sm"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400">{item.type === 'cardio' ? <Ruler size={14}/> : item.type === 'gym' ? <Dumbbell size={14}/> : <Activity size={14}/>}</div><div><div className="font-bold text-slate-700 text-xs tracking-wide">{item.sport}</div><div className="text-[9px] text-slate-400 uppercase tracking-wider">{new Date(item.date).toLocaleDateString('ru-RU', {day: 'numeric', month: 'short'})}</div></div></div><div className="text-right"><div className="font-display font-bold text-slate-800 text-sm">{item.value} <span className="text-[10px] font-normal text-slate-400">{item.unit || ''}</span></div></div></div>))}</div>
+                                    <div className="flex justify-between items-center mb-3 pl-1 pr-1"><h3 className="text-slate-500 uppercase text-[10px] font-bold tracking-[0.2em]">Награды</h3><button onClick={() => setShowAllBadges(!showAllBadges)} className="text-[10px] font-bold text-cyan-500 hover:text-cyan-400 flex items-center gap-1 uppercase transition-colors">{showAllBadges ? 'Скрыть' : 'Раскрыть'}{showAllBadges ? <ChevronUp size={10}/> : <ChevronDown size={10}/>}</button></div>
+                                    <div className="grid gap-2 grid-cols-3">{visibleBadges.map(b => (<div key={b.id} className={`flex flex-col items-center p-3 rounded-xl border text-center transition-all ${b.condition ? 'bg-white/5 border-white/10 shadow-sm' : 'bg-slate-900/50 border-white/5 opacity-40 grayscale'}`}><div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 border bg-opacity-20 ${b.bg} ${b.color}`}>{b.icon}</div><div className="font-bold text-slate-400 text-[9px] uppercase leading-tight mb-1">{b.label}</div></div>))}</div>
                                 </div>
                             </div>
                         )}
                     </div>
 
                     {checkInModalOpen && (
-                        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-end sm:items-center justify-center animate-fade-in p-4"><div className="w-full max-w-md bg-white rounded-t-3xl p-8 pb-10 sm:rounded-3xl shadow-2xl">
+                        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-end sm:items-center justify-center animate-fade-in p-4"><div className="w-full max-w-md bg-[#0f172a] border border-white/10 rounded-t-3xl p-8 pb-10 sm:rounded-3xl shadow-2xl">
                             {checkInStage === 'select' ? (
                                 <>
-                                    <div className="flex justify-between items-center mb-8"><h3 className="text-xl font-display font-bold text-slate-800 tracking-wider">ЧТО СДЕЛАНО?</h3><button onClick={() => setCheckInModalOpen(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200"><X size={20} className="text-slate-500" /></button></div>
+                                    <div className="flex justify-between items-center mb-8"><h3 className="text-xl font-display font-bold text-white tracking-wider">ЧТО СДЕЛАНО?</h3><button onClick={() => setCheckInModalOpen(false)} className="p-2 bg-slate-800 rounded-full hover:bg-slate-700 text-white"><X size={20} /></button></div>
                                     <div className="grid grid-cols-1 gap-3">
-                                        {user.disciplines.map(sport => (<button key={sport} onClick={() => initCheckIn(sport)} className="py-4 rounded-xl font-bold transition-all border bg-slate-50 text-slate-600 border-slate-100 hover:bg-cyan-50 hover:border-cyan-200 hover:text-cyan-700 flex justify-between px-6 shadow-sm"><span>{sport}</span>{user.todayActivity.includes(sport) && <span className="text-emerald-400">✓</span>}</button>))}
-                                        <div className="mt-6 text-center"><button onClick={() => { setCheckInModalOpen(false); setEditingProfile(true); }} className="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-cyan-600 transition-colors">Добавить дисциплину</button></div>
+                                        {user.disciplines.map(sport => (<button key={sport} onClick={() => initCheckIn(sport)} className="py-4 rounded-xl font-bold transition-all border bg-slate-800/50 text-slate-300 border-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/30 hover:text-cyan-400 flex justify-between px-6 shadow-sm"><span>{sport}</span>{user.todayActivity.includes(sport) && <span className="text-emerald-400">✓</span>}</button>))}
+                                        <div className="mt-6 text-center"><button onClick={() => { setCheckInModalOpen(false); setEditingProfile(true); }} className="text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-cyan-400 transition-colors">Добавить дисциплину</button></div>
                                     </div>
                                 </>
                             ) : (
                                 <div className="animate-slide-up">
-                                    <div className="flex justify-between items-center mb-8"><button onClick={() => setCheckInStage('select')} className="text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-slate-600 transition-colors">← Назад</button><h3 className="text-xl font-display font-bold text-slate-800 tracking-wider">{selectedSportForCheckIn}</h3><div className="w-8"></div></div>
-                                    {getSportType(selectedSportForCheckIn) === 'gym' && <div className="grid grid-cols-2 gap-3">{['Всё тело', 'Верх', 'Низ', 'Голова'].map(s => <button key={s} onClick={() => completeCheckIn(selectedSportForCheckIn, s, null)} className="py-6 rounded-xl bg-slate-50 border border-slate-100 hover:bg-cyan-50 hover:border-cyan-200 hover:text-cyan-700 text-slate-600 font-bold transition-all shadow-sm">{s === 'Голова' ? '🤪 Головой' : s}</button>)}</div>}
-                                    {getSportType(selectedSportForCheckIn) === 'reps' && <div className="grid grid-cols-2 gap-3">{[30, 60, 100, 200].map(r => <button key={r} onClick={() => completeCheckIn(selectedSportForCheckIn, r, 'повт')} className="py-6 rounded-xl bg-slate-50 border border-slate-100 hover:bg-cyan-50 hover:border-cyan-200 hover:text-cyan-700 font-display font-black text-2xl text-slate-600 transition-all shadow-sm">{r}</button>)}</div>}
-                                    {getSportType(selectedSportForCheckIn) === 'cardio' && <div className="space-y-8 flex flex-col items-center"><div className="flex items-end gap-2"><input type="number" autoFocus placeholder="0" className="text-center text-7xl font-display font-black text-slate-800 w-32 bg-transparent outline-none border-b-2 border-slate-200 focus:border-cyan-500 transition-colors pb-2" onChange={(e) => setCheckInValue(e.target.value)} /><span className="text-xl font-bold text-slate-400 pb-4">КМ</span></div><NeonButton onClick={() => completeCheckIn(selectedSportForCheckIn, checkInValue, 'км')} disabled={!checkInValue} variant={checkInValue ? 'primary' : 'disabled'}>Записать результат</NeonButton></div>}
+                                    <div className="flex justify-between items-center mb-8"><button onClick={() => setCheckInStage('select')} className="text-slate-500 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors">← Назад</button><h3 className="text-xl font-display font-bold text-white tracking-wider">{selectedSportForCheckIn}</h3><div className="w-8"></div></div>
+                                    {getSportType(selectedSportForCheckIn) === 'gym' && <div className="grid grid-cols-2 gap-3">{['Всё тело', 'Верх', 'Низ', 'Голова'].map(s => <button key={s} onClick={() => completeCheckIn(selectedSportForCheckIn, s, null)} className="py-6 rounded-xl bg-slate-800/50 border border-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/30 hover:text-cyan-400 text-slate-300 font-bold transition-all shadow-sm">{s === 'Голова' ? '🤪 Головой' : s}</button>)}</div>}
+                                    {getSportType(selectedSportForCheckIn) === 'reps' && <div className="grid grid-cols-2 gap-3">{[30, 60, 100, 200].map(r => <button key={r} onClick={() => completeCheckIn(selectedSportForCheckIn, r, 'повт')} className="py-6 rounded-xl bg-slate-800/50 border border-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/30 hover:text-cyan-400 font-display font-black text-2xl text-slate-300 transition-all shadow-sm">{r}</button>)}</div>}
+                                    {getSportType(selectedSportForCheckIn) === 'cardio' && <div className="space-y-8 flex flex-col items-center"><div className="flex items-end gap-2"><input type="number" autoFocus placeholder="0" className="text-center text-7xl font-display font-black text-white w-40 bg-transparent outline-none border-b-2 border-slate-700 focus:border-cyan-500 transition-colors pb-2" onChange={(e) => setCheckInValue(e.target.value)} /><span className="text-xl font-bold text-slate-500 pb-4">КМ</span></div><NeonButton onClick={() => completeCheckIn(selectedSportForCheckIn, checkInValue, 'км')} disabled={!checkInValue} variant={checkInValue ? 'primary' : 'disabled'}>Записать результат</NeonButton></div>}
                                 </div>
                             )}
                         </div></div>
                     )}
 
                     {editingProfile && (
-                        <div className="fixed inset-0 z-50 bg-[#f8fafc] p-6 animate-fade-in overflow-y-auto pt-safe-top">
-                            <div className="flex justify-between items-center mb-8"><h2 className="text-2xl font-display font-bold text-slate-800 tracking-wider">НАСТРОЙКИ</h2><button onClick={() => setEditingProfile(false)} className="p-2 bg-white rounded-full shadow-sm border border-slate-100"><X size={20} className="text-slate-500" /></button></div>
+                        <div className="fixed inset-0 z-50 bg-[#020617] p-6 animate-fade-in overflow-y-auto pt-safe-top">
+                            <div className="flex justify-between items-center mb-8"><h2 className="text-2xl font-display font-bold text-white tracking-wider">НАСТРОЙКИ</h2><button onClick={() => setEditingProfile(false)} className="p-2 bg-white/5 rounded-full shadow-sm border border-white/10 text-white"><X size={20} /></button></div>
                             <div className="space-y-8">
-                                <GlassCard className="p-4 flex justify-between items-center bg-white"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-600"><Bell size={20} /></div><div><div className="font-bold text-slate-800">Уведомления</div><div className="text-xs text-slate-400">Напоминания о тренировке</div></div></div><ToggleSwitch checked={user.notifications} onChange={(val) => setUser({...user, notifications: val})} /></GlassCard>
-                                <div><label className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 block px-1">Твои дисциплины</label><div className="flex flex-wrap gap-2">{popularSports.map(s => <button key={s} onClick={() => toggleDiscipline(s)} className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${user.disciplines.includes(s) ? 'bg-cyan-600 text-white border-cyan-600 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:border-cyan-200 hover:text-cyan-600'}`}>{s}</button>)}{!isAddingCustom ? <button onClick={() => setIsAddingCustom(true)} className="px-4 py-2 rounded-lg text-xs font-bold border border-dashed border-slate-300 text-slate-400 hover:border-cyan-500 hover:text-cyan-600 bg-white flex items-center gap-2 transition-colors"><Plus size={14} /> Своя</button> : <div className="flex items-center gap-2 mt-2 sm:mt-0"><input type="text" value={customInput} onChange={(e) => setCustomInput(e.target.value)} className="px-3 py-2 rounded-lg bg-white border border-cyan-500 outline-none text-slate-800 text-xs w-32 focus:ring-1 focus:ring-cyan-500" autoFocus onKeyDown={(e) => e.key === 'Enter' && handleAddCustom()} /><button onClick={handleAddCustom} className="p-2 bg-cyan-600 text-white rounded-lg shadow-sm hover:bg-cyan-700"><CheckCircle size={14}/></button></div>}</div></div>
-                                <div className="pb-10"><label className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 block px-1">Цель</label><div className="flex gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200">{[30, 60, 100].map(d => <button key={d} onClick={() => setUser({...user, goal: d})} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${user.goal === d ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-400 hover:bg-white/50'}`}>{d}</button>)}</div></div>
+                                <GlassCard className="p-4 flex justify-between items-center"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400"><Bell size={20} /></div><div><div className="font-bold text-slate-200">Уведомления</div><div className="text-xs text-slate-500">Напоминания о тренировке</div></div></div><ToggleSwitch checked={user.notifications} onChange={(val) => setUser({...user, notifications: val})} /></GlassCard>
+                                <div><label className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-4 block px-1">Твои дисциплины</label><div className="flex flex-wrap gap-2">{popularSports.map(s => <button key={s} onClick={() => toggleDiscipline(s)} className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${user.disciplines.includes(s) ? 'bg-cyan-600/50 text-white border-cyan-500/50 shadow-sm' : 'bg-white/5 border-white/10 text-slate-400 hover:border-cyan-500/30 hover:text-cyan-400'}`}>{s}</button>)}{!isAddingCustom ? <button onClick={() => setIsAddingCustom(true)} className="px-4 py-2 rounded-lg text-xs font-bold border border-dashed border-slate-700 text-slate-500 hover:border-cyan-500 hover:text-cyan-400 bg-transparent flex items-center gap-2 transition-colors"><Plus size={14} /> Своя</button> : <div className="flex items-center gap-2 mt-2 sm:mt-0"><input type="text" value={customInput} onChange={(e) => setCustomInput(e.target.value)} className="px-3 py-2 rounded-lg bg-slate-800 border border-cyan-500 outline-none text-white text-xs w-32 focus:ring-1 focus:ring-cyan-500" autoFocus onKeyDown={(e) => e.key === 'Enter' && handleAddCustom()} /><button onClick={handleAddCustom} className="p-2 bg-cyan-600 text-white rounded-lg shadow-sm hover:bg-cyan-700"><CheckCircle size={14}/></button></div>}</div></div>
+                                <div className="pb-10"><label className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-4 block px-1">Цель</label><div className="flex gap-2 bg-slate-900 p-1.5 rounded-xl border border-white/5">{[30, 60, 100].map(d => <button key={d} onClick={() => setUser({...user, goal: d})} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${user.goal === d ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-500 hover:bg-white/5'}`}>{d}</button>)}</div></div>
                             </div>
                             <div className="sticky bottom-6"><NeonButton onClick={() => setEditingProfile(false)}>Сохранить</NeonButton></div>
                         </div>
