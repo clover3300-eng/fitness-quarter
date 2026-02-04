@@ -574,7 +574,8 @@
                     telegramId: tgUserId,
                     name: user.username ? `@${user.username}` : user.firstName,
                     time: user.notificationTime,
-                    isOn: user.notifications
+                    isOn: user.notifications,
+                    arsenal: user.disciplines
                 };
 
                 try {
