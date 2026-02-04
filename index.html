@@ -494,18 +494,71 @@
             };
 
             // UPDATE: CheckInComplete now accepts optional sport and unit
-            const handleCheckInComplete = (val, sportOverride = null, unitOverride = null) => {
+       // ЗАМЕНИ СТАРУЮ handleCheckInComplete НА ЭТУ:
+            const handleCheckInComplete = async (val, sportOverride = null, unitOverride = null) => {
                 const sport = sportOverride || selectedSportForCheckIn;
                 const unit = unitOverride || (isGymWorkout(sport) ? 'тип' : getUnitForSport(sport));
+                
                 const now = new Date();
                 const todayStr = now.toDateString();
                 const dateDisplay = now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }); 
+                
                 const isNewDay = user.lastCheckInDate !== todayStr;
                 let newStreak = isNewDay ? user.streak + 1 : user.streak;
                 let newDiamonds = user.diamonds;
-                if (isNewDay && newStreak % 7 === 0 && newDiamonds < 3) { newDiamonds++; alert("💎 Алмаз восстановлен за стрик!"); }
-                setUser(prev => ({ ...prev, streak: newStreak, diamonds: newDiamonds, lastCheckInDate: todayStr, todayActivity: [...prev.todayActivity, sport], history: [{date: dateDisplay, fullDate: now.toISOString(), sport, value: val, unit}, ...prev.history] }));
-                setActiveModal(null); setCheckInStage('select'); setCheckInValue("");
+                
+                if (isNewDay && newStreak % 7 === 0 && newDiamonds < 3) { 
+                    newDiamonds++; 
+                    if (window.Telegram?.WebApp?.showPopup) {
+                        window.Telegram.WebApp.showPopup({ title: 'Стрик!', message: '💎 Алмаз восстановлен!' });
+                    } else {
+                        alert("💎 Алмаз восстановлен за стрик!"); 
+                    }
+                }
+
+                // 1. Обновляем локально (на экране)
+                setUser(prev => ({ 
+                    ...prev, 
+                    streak: newStreak, 
+                    diamonds: newDiamonds, 
+                    lastCheckInDate: todayStr, 
+                    todayActivity: [...prev.todayActivity, sport], 
+                    history: [{date: dateDisplay, fullDate: now.toISOString(), sport, value: val, unit}, ...prev.history] 
+                }));
+
+                // 2. ОТПРАВЛЯЕМ В ГУГЛ ТАБЛИЦУ (Этого не хватало!)
+                const tgUserId = user.telegramId || window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+                
+                if (tgUserId) {
+                    try {
+                        await fetch(GOOGLE_SCRIPT_URL, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                action: 'CHECK_IN',           // Новая команда для скрипта
+                                telegramId: tgUserId,
+                                username: user.username,
+                                firstName: user.firstName,
+                                lastName: user.lastName,
+                                
+                                // Что сделали
+                                sport: sport,
+                                value: val,
+                                
+                                // Обновленная статистика
+                                streak: newStreak,
+                                diamonds: newDiamonds
+                            })
+                        });
+                    } catch (e) {
+                        console.error("Ошибка отправки:", e);
+                    }
+                }
+
+                setActiveModal(null); 
+                setCheckInStage('select'); 
+                setCheckInValue("");
             };
 
             // UPDATE: Handle sport select (detect simple sports)
