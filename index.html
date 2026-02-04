@@ -385,6 +385,14 @@
                         parsedUser.photoUrl = tgu.photo_url;
                         parsedUser.isAdmin = tgu.username === ADMIN_USERNAME;
                     }
+
+                    // --- NEW LOGIC: RESET BUTTON IF NEW DAY ---
+                    const localTodayStr = new Date().toDateString(); // Получаем текущую дату по местному времени устройства
+                    if (parsedUser.lastCheckInDate !== localTodayStr) {
+                        parsedUser.todayActivity = []; // Если дата не совпадает (наступил новый день), сбрасываем активность
+                    }
+                    // ------------------------------------------
+
                     parsedUser = checkDiamondsOnLoad(parsedUser);
                     setUser(parsedUser); 
                     setStep('dashboard'); 
@@ -417,7 +425,7 @@
                 const diffDays = Math.ceil(Math.abs(today - last) / (1000 * 60 * 60 * 24));
                 if (diffDays === 0) return usr; 
                 let allowedGap = 1; 
-                if (usr.frequency === '3 раза в неделю') allowedGap = 2; 
+                if (usr.frequency === '3 раза в неделю' || usr.frequency === '5/2') allowedGap = 2; // Добавили 5/2 в исключения
                 else if (usr.frequency === 'МИКС' || usr.frequency === 'На лайте') allowedGap = 3; 
                 if (diffDays > allowedGap + 1) { 
                     const newDiamonds = Math.max(0, usr.diamonds - 1);
@@ -622,6 +630,7 @@
                      <div className="space-y-3 flex-grow">
                         {[
                             { id: 'Каждый день', icon: <Flame size={18} className="text-orange-400"/>, title: 'Путь Самурая', desc: 'Дисциплина стали. Идеально для утренней зарядки, отжиманий, приседаний. Ты строишь привычку каждый день.' },
+                            { id: '5/2', icon: <Star size={18} className="text-pink-400"/>, title: 'Режим Профи', desc: 'Серьезный подход. 5 дней работы, 2 дня отдыха. Идеально ложится на рабочую неделю. Максимальный прогресс с правом на выходные.' },
                             { id: '3 раза в неделю', icon: <Activity size={18} className="text-cyan-400"/>, title: 'Сила Титана', desc: 'Классика жанра. Лучший выбор для спортзала. День пашешь — день растешь. Баланс силы и восстановления.' },
                             { id: 'МИКС', icon: <Layers size={18} className="text-purple-400"/>, title: 'Стратег', desc: 'Гибкий подход. Чтобы не перегореть в зале, но и не заржаветь. Тренировки по самочувствию.' },
                             { id: 'На лайте', icon: <Sun size={18} className="text-emerald-400"/>, title: 'Инициация', desc: 'Для тех, кто только начинает. Главное — не бросить. Мягкий вход в мир величия.' }
