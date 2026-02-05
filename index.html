@@ -179,7 +179,6 @@
         const ADMIN_USERNAME = 'solomin_d';
         const DEFAULT_START_DATE = new Date('2026-04-01');
         
-        // Sports that don't need parameters
         const SIMPLE_SPORTS = ['бокс', 'йога', 'зарядка', 'борьба', 'джиу-джитсу', 'фитбоксинг', 'пилатес', 'растяжка', 'танцы', 'медитация', 'кикбоксинг', 'тайский бокс', 'грепплинг'];
 
         // --- MOTIVATION PHRASES ---
@@ -219,18 +218,6 @@
             { id: 'redemption', icon: <Skull size={14} />, color: 'text-slate-400', bg: 'bg-slate-500/20', label: 'Выживший', desc: 'Купил жизнь' },
         ];
 
-        const ACHIEVEMENTS = [
-            { id: 1, title: "Первый Шаг", desc: "1 день в строю. Начало положено!", icon: <Star size={20}/>, condition: (u) => u.streak >= 1 },
-            { id: 2, title: "Неделя Выживания", desc: "7 дней подряд. Ты не слился!", icon: <Flame size={20}/>, condition: (u) => u.streak >= 7 },
-            { id: 3, title: "Привычка", desc: "21 день. Теперь это часть тебя.", icon: <Zap size={20}/>, condition: (u) => u.streak >= 21 },
-            { id: 4, title: "Экватор", desc: "50 дней. Половина пути пройдена!", icon: <Layers size={20}/>, condition: (u) => u.streak >= 50 },
-            { id: 5, title: "Легенда Марафона", desc: "100 дней. Ты прошел игру!", icon: <Crown size={20}/>, condition: (u) => u.streak >= 100 },
-            { id: 6, title: "Бегун", desc: "Набрано 50 км суммарно.", icon: <Ruler size={20}/>, condition: (u, stats) => stats.k >= 50 },
-            { id: 7, title: "Терминатор", desc: "1000 повторений суммарно.", icon: <Dumbbell size={20}/>, condition: (u, stats) => stats.r >= 1000 },
-            { id: 8, title: "Ранняя Пташка", desc: "Тренировка выполнена (любая).", icon: <Sun size={20}/>, condition: (u) => u.history.length > 0 }, 
-            { id: 9, title: "Воин Ночи", desc: "Тренировка выполнена (любая).", icon: <Moon size={20}/>, condition: (u) => u.history.length > 5 }
-        ];
-
         // --- COMPONENTS ---
         const GlassCard = ({ children, className = "", onClick }) => (
             <div onClick={onClick} className={`relative glass rounded-2xl overflow-hidden ${onClick ? 'cursor-pointer active:scale-95 transition-transform' : ''} ${className}`}>
@@ -248,7 +235,7 @@
                 disabled: "bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed opacity-50" 
             };
             return (
-                <button id={id} onClick={onClick} disabled={disabled} className={`w-full py-4 font-bold tracking-wider uppercase rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 ${disabled ? v.disabled : v[variant]} ${className}`}>
+                <button id={id} onClick={disabled ? undefined : onClick} disabled={disabled} className={`w-full py-4 font-bold tracking-wider uppercase rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 ${disabled ? v.disabled : v[variant]} ${className}`}>
                     {children}
                 </button>
             );
@@ -292,7 +279,8 @@
             const [expandedMode, setExpandedMode] = useState(null);
             const [showAllLeaderboard, setShowAllLeaderboard] = useState(false);
             const [isBeastModeConfirmed, setIsBeastModeConfirmed] = useState(false); 
-            const [isSavingSettings, setIsSavingSettings] = useState(false); // NEW: Состояние сохранения настроек
+            const [isSavingSettings, setIsSavingSettings] = useState(false);
+            const [isSubmitting, setIsSubmitting] = useState(false); // NEW: блокировка кнопки при отправке
 
             // Inputs
             const [customInput, setCustomInput] = useState("");
@@ -324,20 +312,17 @@
                 { id: 104, name: 'Dima', photoUrl: null, diamonds: 3, streak: 1, goal: 30, status: 'active', disciplines: ['Бег'], history: [], badges: [] },
             ]);
 
-            // --- MOVED useMemo HERE ---
-            // Build Sorted Leaderboard including Current User
             const finalLeaderboard = useMemo(() => {
                 const currentUserEntry = { 
-                    id: 999, // user ID
+                    id: 999, 
                     name: `${user.firstName} (Вы)`,
                     photoUrl: user.photoUrl,
                     diamonds: user.diamonds,
                     streak: user.streak,
                     goal: user.goal,
                     isUser: true,
-                    badges: [] // simplistic badges for now
+                    badges: [] 
                 };
-                
                 const all = [...leaderboard, currentUserEntry];
                 return all.sort((a, b) => b.streak - a.streak);
             }, [leaderboard, user]);
@@ -346,25 +331,11 @@
                 const tg = window.Telegram?.WebApp;
                 if (tg) { 
                     tg.ready(); 
-                    
-                    // FIX: Safer fullscreen request check
-                    try {
-                        if (typeof tg.requestFullscreen === 'function') {
-                            tg.requestFullscreen();
-                        }
-                    } catch (e) {
-                        console.log("Fullscreen not supported");
-                    }
-
+                    try { if (typeof tg.requestFullscreen === 'function') tg.requestFullscreen(); } catch (e) {}
                     tg.expand(); 
                     tg.setHeaderColor('#020617'); 
                     tg.setBackgroundColor('#020617'); 
-                    
-                    try {
-                        if (typeof tg.enableClosingConfirmation === 'function') {
-                            tg.enableClosingConfirmation();
-                        }
-                    } catch(e) {}
+                    try { if (typeof tg.enableClosingConfirmation === 'function') tg.enableClosingConfirmation(); } catch(e) {}
                     
                     const tgUser = tg.initDataUnsafe?.user;
                     if (tgUser) {
@@ -372,10 +343,9 @@
                             username: tgUser.username,
                             photoUrl: tgUser.photo_url,
                             isAdmin: tgUser.username === ADMIN_USERNAME,
-                            telegramId: tgUser.id, // Ensure telegramId is set
+                            telegramId: tgUser.id,
                         };
                         setUser(prev => ({ ...prev, ...newUserData }));
-                        
                         if (tgUser.first_name && !regForm.firstName) {
                             setRegForm(prev => ({ ...prev, firstName: tgUser.first_name, lastName: tgUser.last_name || '' }));
                         }
@@ -392,13 +362,11 @@
                         parsedUser.telegramId = tgu.id;
                     }
 
-                    // --- NEW LOGIC: RESET BUTTON IF NEW DAY ---
                     const localTodayStr = new Date().toDateString(); 
                     if (parsedUser.lastCheckInDate !== localTodayStr) {
                         parsedUser.todayActivity = []; 
                     }
-                    // ------------------------------------------
-
+                    
                     parsedUser = checkDiamondsOnLoad(parsedUser);
                     setUser(parsedUser); 
                     setStep('dashboard'); 
@@ -407,22 +375,15 @@
                 fetchConfigDate();
             }, []);
 
-            // BACKGROUND CHANGER & MODAL SCROLL LOCK
             useEffect(() => {
                 const bg = document.getElementById('bg-layer');
                 if (bg) {
-                    if (step === 'dashboard') {
-                        bg.className = 'bg-aurora-dashboard';
-                    } else {
-                        bg.className = 'bg-aurora';
-                    }
+                    bg.className = step === 'dashboard' ? 'bg-aurora-dashboard' : 'bg-aurora';
                 }
             }, [step]);
 
-            // Save user state
             useEffect(() => { if(user.firstName) localStorage.setItem('fitness_aurora_user', JSON.stringify(user)); }, [user]);
 
-            // Logic: Diamonds & Streak
             const checkDiamondsOnLoad = (usr) => {
                 if (!usr.lastCheckInDate) return usr;
                 const last = new Date(usr.lastCheckInDate);
@@ -466,7 +427,6 @@
                 return gymWords.some(w => sport.includes(w));
             };
 
-            // DYNAMIC ACHIEVEMENTS
             const generateAchievements = (disciplines) => {
                 const isRun = disciplines.some(d => ['Бег', 'Ходьба', 'Лыжи'].includes(d));
                 const isGym = disciplines.some(d => ['Зал', 'Спортзал', 'Воркаут', 'Отжимания', 'Турник'].includes(d));
@@ -485,7 +445,6 @@
                 if (isGym) base.push({ id: 7, title: "Железный Человек", desc: "1000 повторений суммарно.", icon: <Dumbbell size={20}/>, condition: (u, stats) => stats.r >= 1000 });
                 if (isSwim) base.push({ id: 10, title: "Аквамен", desc: "Проплыви 10 км суммарно", icon: <Activity size={20}/>, condition: (u, stats) => stats.k >= 10 });
                 
-                // Fill if less than 9
                 if (base.length < 9) {
                      base.push({ id: 11, title: "Упорство", desc: "Сделай 10 отметок", icon: <CheckCircle size={20}/>, condition: (u) => u.history.length >= 10 });
                 }
@@ -493,9 +452,41 @@
                 return base.slice(0, 9);
             };
 
-            // UPDATE: CheckInComplete now accepts optional sport and unit
-       // ЗАМЕНИ СТАРУЮ handleCheckInComplete НА ЭТУ:
+            // ФУНКЦИЯ СОХРАНЕНИЯ НАСТРОЕК (ПЕРЕИСПОЛЬЗУЕМАЯ)
+            // Принимает опциональный список дисциплин, чтобы сохранить актуальные данные сразу после добавления
+            const saveSettingsToCloud = async (disciplinesOverride = null) => {
+                const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || user.telegramId;
+                if (!tgUserId) return; // Silent return if no ID (local test)
+
+                setIsSavingSettings(true);
+                const payload = {
+                    action: 'SAVE_SETTINGS',
+                    telegramId: tgUserId,
+                    name: user.username ? `@${user.username}` : user.firstName,
+                    time: user.notificationTime,
+                    isOn: user.notifications,
+                    arsenal: disciplinesOverride || user.disciplines // Use override if provided
+                };
+
+                try {
+                    await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                } catch (e) {
+                    console.error("Settings save error:", e);
+                } finally {
+                    setIsSavingSettings(false);
+                }
+            };
+
+            // ОБНОВЛЕННАЯ ФУНКЦИЯ ОТМЕТКИ (ЗАЩИТА ОТ ДВОЙНОГО НАЖАТИЯ + МГНОВЕННАЯ ОТПРАВКА)
             const handleCheckInComplete = async (val, sportOverride = null, unitOverride = null) => {
+                if (isSubmitting) return; // ЗАЩИТА ОТ ДВОЙНОГО КЛИКА
+                setIsSubmitting(true);
+
                 const sport = sportOverride || selectedSportForCheckIn;
                 const unit = unitOverride || (isGymWorkout(sport) ? 'тип' : getUnitForSport(sport));
                 
@@ -511,12 +502,10 @@
                     newDiamonds++; 
                     if (window.Telegram?.WebApp?.showPopup) {
                         window.Telegram.WebApp.showPopup({ title: 'Стрик!', message: '💎 Алмаз восстановлен!' });
-                    } else {
-                        alert("💎 Алмаз восстановлен за стрик!"); 
                     }
                 }
 
-                // 1. Обновляем локально (на экране)
+                // 1. Обновляем локально
                 setUser(prev => ({ 
                     ...prev, 
                     streak: newStreak, 
@@ -526,7 +515,12 @@
                     history: [{date: dateDisplay, fullDate: now.toISOString(), sport, value: val, unit}, ...prev.history] 
                 }));
 
-                // 2. ОТПРАВЛЯЕМ В ГУГЛ ТАБЛИЦУ (Этого не хватало!)
+                // Закрываем модалку сразу для UI
+                setActiveModal(null); 
+                setCheckInStage('select'); 
+                setCheckInValue("");
+
+                // 2. ОТПРАВЛЯЕМ В ГУГЛ ТАБЛИЦУ МГНОВЕННО
                 const tgUserId = user.telegramId || window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
                 
                 if (tgUserId) {
@@ -536,17 +530,13 @@
                             mode: 'no-cors',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                action: 'CHECK_IN',           // Новая команда для скрипта
+                                action: 'CHECK_IN',
                                 telegramId: tgUserId,
                                 username: user.username,
                                 firstName: user.firstName,
                                 lastName: user.lastName,
-                                
-                                // Что сделали
                                 sport: sport,
                                 value: val,
-                                
-                                // Обновленная статистика
                                 streak: newStreak,
                                 diamonds: newDiamonds
                             })
@@ -555,16 +545,12 @@
                         console.error("Ошибка отправки:", e);
                     }
                 }
-
-                setActiveModal(null); 
-                setCheckInStage('select'); 
-                setCheckInValue("");
+                
+                setIsSubmitting(false); // Снимаем блокировку
             };
 
-            // UPDATE: Handle sport select (detect simple sports)
             const handleSportSelection = (sportName) => {
                 const isSimple = SIMPLE_SPORTS.some(s => sportName.toLowerCase().includes(s));
-                
                 if (isSimple) {
                     handleCheckInComplete("Выполнено", sportName, "трен");
                 } else {
@@ -573,18 +559,30 @@
                 }
             };
 
+            // ОБНОВЛЕННАЯ ФУНКЦИЯ ДОБАВЛЕНИЯ СПОРТА (АВТО-СОХРАНЕНИЕ В НАСТРОЙКИ)
             const addCustomSport = (name, checkIn = false) => {
                 if(!name.trim()) return;
-                setPopularSports(p => [...p, name]); setUser(p => ({...p, disciplines: [...p.disciplines, name]}));
+                
+                const updatedDisciplines = [...user.disciplines, name];
+                setPopularSports(p => [...p, name]); 
+                setUser(p => ({...p, disciplines: updatedDisciplines}));
+
+                // МГНОВЕННО СОХРАНЯЕМ НОВУЮ ДИСЦИПЛИНУ В ОБЛАКО
+                saveSettingsToCloud(updatedDisciplines);
+
                 if(checkIn) { 
                      // Check if custom sport is simple
                      if (SIMPLE_SPORTS.some(s => name.toLowerCase().includes(s))) {
                          handleCheckInComplete("Выполнено", name, "трен");
                      } else {
-                         setSelectedSportForCheckIn(name); setCheckInStage('value'); 
+                         setSelectedSportForCheckIn(name); 
+                         setCheckInStage('value'); 
                      }
                 }
-                setIsAddingCustom(false); setIsAddingInCheckIn(false); setCustomInput(""); setCheckInCustomInput("");
+                setIsAddingCustom(false); 
+                setIsAddingInCheckIn(false); 
+                setCustomInput(""); 
+                setCheckInCustomInput("");
             };
             
             const handleAdminUpdateDate = async () => {
@@ -602,53 +600,10 @@
                 if (window.Telegram?.WebApp?.showPopup) { window.Telegram.WebApp.showPopup({ title: 'Отправлено 🚀', message: `Пуш для ${targetName}:\n"${msg}"`, buttons: [{id: 'ok', type: 'ok'}] }); } else { alert(`Пуш отправлен ${targetName}:\n"${msg}"`); }
             };
 
-            // SCROLL TO TOP
             const handleShowAll = (show) => {
                 setShowAllLeaderboard(show);
                 if (!show && contentRef.current) {
                     contentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-            };
-
-            // --- НОВАЯ ФУНКЦИЯ ДЛЯ СОХРАНЕНИЯ НАСТРОЕК ---
-            const saveSettingsToCloud = async () => {
-                const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || user.telegramId;
-
-                if (!tgUserId) {
-                    alert("Откройте приложение через Telegram для настройки уведомлений.");
-                    // Для теста в браузере можно раскомментировать и использовать фиктивный ID:
-                    // const dummyId = "TEST_USER_ID";
-                }
-
-                setIsSavingSettings(true);
-
-                const payload = {
-                    action: 'SAVE_SETTINGS',
-                    telegramId: tgUserId,
-                    name: user.username ? `@${user.username}` : user.firstName,
-                    time: user.notificationTime,
-                    isOn: user.notifications,
-                    arsenal: user.disciplines
-                };
-
-                try {
-                    await fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    
-                    if (window.Telegram?.WebApp?.showPopup) {
-                        window.Telegram.WebApp.showPopup({ title: 'Успех', message: 'Настройки уведомлений сохранены!' });
-                    } else {
-                        alert('Настройки уведомлений сохранены!');
-                    }
-                    setActiveModal(null);
-                } catch (e) {
-                    alert("Ошибка при сохранении: " + e.message);
-                } finally {
-                    setIsSavingSettings(false);
                 }
             };
 
@@ -657,7 +612,7 @@
                 const currentUnit = selectedSportForCheckIn ? getUnitForSport(selectedSportForCheckIn) : '';
                 
                 return (
-                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in" onClick={() => setActiveModal(null)}>
+                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in" onClick={() => !isSubmitting && setActiveModal(null)}>
                         <div className="w-full max-w-md bg-[#0f172a] rounded-t-3xl sm:rounded-3xl p-6 border-t sm:border border-white/10 relative" onClick={e => e.stopPropagation()}>
                             <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-6 sm:hidden"></div>
                             {checkInStage === 'select' && (
@@ -665,7 +620,7 @@
                                     <h3 className="text-xl font-bold text-white mb-4">ВЫБЕРИ АКТИВНОСТЬ</h3>
                                     <div className="flex flex-wrap gap-2 mb-4">
                                         {[...user.disciplines, ...popularSports].filter((v, i, a) => a.indexOf(v) === i).map(s => (
-                                            <button key={s} onClick={() => handleSportSelection(s)} className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-slate-300 hover:bg-cyan-500/20 hover:text-cyan-400 hover:border-cyan-500/50 transition-all">{s}</button>
+                                            <button key={s} onClick={() => handleSportSelection(s)} disabled={isSubmitting} className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-slate-300 hover:bg-cyan-500/20 hover:text-cyan-400 hover:border-cyan-500/50 transition-all">{s}</button>
                                         ))}
                                     </div>
                                     {!isAddingInCheckIn ? (
@@ -677,24 +632,24 @@
                             )}
                             {checkInStage === 'value' && (
                                 <div className="animate-fade-in text-center">
-                                    <button onClick={() => setCheckInStage('select')} className="absolute top-6 left-6 text-slate-500 hover:text-white"><ArrowLeft size={24} /></button>
+                                    <button onClick={() => setCheckInStage('select')} disabled={isSubmitting} className="absolute top-6 left-6 text-slate-500 hover:text-white"><ArrowLeft size={24} /></button>
                                     <h3 className="text-xl font-bold text-cyan-400 mb-1 uppercase">{selectedSportForCheckIn}</h3>
                                     
                                     {isGym ? (
                                         <div className="space-y-4 mb-4">
                                             <p className="text-slate-500 text-sm mb-4">Что сегодня качал?</p>
                                             <div className="grid grid-cols-2 gap-3">
-                                                <NeonButton variant="secondary" onClick={() => handleCheckInComplete("Все тело")}>Все тело</NeonButton>
-                                                <NeonButton variant="secondary" onClick={() => handleCheckInComplete("Верх")}>Верх</NeonButton>
-                                                <NeonButton variant="secondary" onClick={() => handleCheckInComplete("Низ")}>Низ</NeonButton>
-                                                <NeonButton variant="secondary" onClick={() => handleCheckInComplete("Качал головой")}>Качал головой</NeonButton>
+                                                <NeonButton variant="secondary" disabled={isSubmitting} onClick={() => handleCheckInComplete("Все тело")}>Все тело</NeonButton>
+                                                <NeonButton variant="secondary" disabled={isSubmitting} onClick={() => handleCheckInComplete("Верх")}>Верх</NeonButton>
+                                                <NeonButton variant="secondary" disabled={isSubmitting} onClick={() => handleCheckInComplete("Низ")}>Низ</NeonButton>
+                                                <NeonButton variant="secondary" disabled={isSubmitting} onClick={() => handleCheckInComplete("Качал головой")}>Качал головой</NeonButton>
                                             </div>
                                         </div>
                                     ) : (
                                         <>
                                             <p className="text-slate-500 text-sm mb-6">Сколько {currentUnit === 'км' ? 'прошел/пробежал' : 'сделал'}?</p>
                                             <div className="flex items-center justify-center gap-4 mb-8"><input type="number" value={checkInValue} onChange={e => setCheckInValue(e.target.value)} className="w-32 bg-transparent text-5xl font-black text-white text-center border-b-2 border-cyan-500 outline-none pb-2" autoFocus placeholder="0" /><span className="text-xl font-bold text-slate-500 mt-4">{currentUnit}.</span></div>
-                                            <NeonButton onClick={() => handleCheckInComplete(checkInValue)}>ЗАПИСАТЬ</NeonButton>
+                                            <NeonButton onClick={(e) => { e.stopPropagation(); handleCheckInComplete(checkInValue); }} disabled={isSubmitting}>{isSubmitting ? 'ЗАПИСЬ...' : 'ЗАПИСАТЬ'}</NeonButton>
                                         </>
                                     )}
                                 </div>
@@ -703,6 +658,13 @@
                     </div>
                 );
             };
+
+            // LOGIC FOR FUTURE DATE CHECK
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const startDate = new Date(marathonStartDate);
+            startDate.setHours(0,0,0,0);
+            const isFutureStart = startDate > today;
 
             // --- SCREENS ---
             if (step === 'welcome') return (
@@ -846,7 +808,7 @@
                     <div className="mb-6 mt-4"> 
                         <div className="flex justify-between items-center mb-6">
                             <h1 className="text-sm font-bold text-white tracking-[0.2em] opacity-80">ПРОФИЛЬ</h1>
-                            <div className="flex gap-2 mt-4"> {/* Lowered icons */}
+                            <div className="flex gap-2 mt-4"> 
                                 {user.isAdmin && <button onClick={openAdmin} className="w-10 h-10 flex items-center justify-center rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500/20 transition-colors"><Shield size={18} /></button>}
                                 <div onClick={() => setActiveModal('shop')} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer hover:bg-white/10 transition-colors"><Diamond size={16} className="text-cyan-400 fill-cyan-400" /><span className="font-bold text-white text-sm">{user.diamonds}</span></div>
                                 <button onClick={() => setActiveModal('settings')} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-slate-400 transition-colors"><Settings size={18} /></button>
@@ -858,8 +820,6 @@
                                 <Avatar name={user.firstName} photoUrl={user.photoUrl} size="w-12 h-12" />
                                 <div><div className="font-bold text-white text-lg leading-tight">{user.firstName}</div><div className="text-[11px] uppercase mt-0.5 font-medium"><span className="text-slate-500">Статус: </span><span className="text-emerald-400 text-neon">В строю</span></div></div>
                             </div>
-                            
-                            {/* UPDATED: Display Mode on the right */}
                             <div className="text-right">
                                 <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-0.5">Режим</div>
                                 <div className="text-xs font-bold text-slate-400">{user.frequency || "Не выбран"}</div>
@@ -872,28 +832,39 @@
                         </div>
                     </div>
                     
-                    {/* Check-in Block (Dynamic) */}
-                    {/* UPDATE: Added onClick for navigation when in progress view */}
+                    {/* Check-in Block (Dynamic with Future Date Check) */}
                     <div 
                         onClick={() => { if(dashboardView === 'progress') setDashboardView('leaderboard'); }}
                         className={`transition-all duration-500 ${dashboardView === 'progress' ? 'scale-95 opacity-80 mb-0 cursor-pointer' : 'mb-6'}`}
                     >
-                        {user.todayActivity.length > 0 ? (
-                            <GlassCard className="p-6 text-center bg-emerald-900/10 border-emerald-500/30 relative z-0">
-                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/10 mb-3 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]"><CheckCircle size={24} /></div>
-                                {dashboardView !== 'progress' && (
-                                    <div className="animate-fade-in">
-                                        <h3 className="text-lg font-bold text-white mb-4 tracking-wide">ДЕНЬ ЗАСЧИТАН</h3>
-                                        <div className="flex flex-wrap justify-center gap-2 mb-6">{user.todayActivity.map((act, i) => (<span key={i} className="px-3 py-1 bg-emerald-500/5 border border-emerald-500/20 rounded-lg text-[10px] font-bold text-emerald-300 uppercase tracking-wider">{act}</span>))}</div>
-                                        <button onClick={(e) => { e.stopPropagation(); setActiveModal('checkIn'); }} className="w-full py-4 bg-white/5 border border-white/10 rounded-xl text-white font-bold hover:bg-white/10 flex items-center justify-center gap-2 text-xs uppercase tracking-widest transition-colors backdrop-blur-md relative z-10"><Plus size={14}/> Добавить еще</button>
-                                    </div>
-                                )}
+                        {isFutureStart ? (
+                            // ЗАГЛУШКА ДЛЯ БУДУЩЕЙ ДАТЫ
+                            <GlassCard className="h-44 flex flex-col items-center justify-center text-center p-6 border-white/5 bg-slate-900/30">
+                                <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center mb-3 border border-white/10 text-slate-400">
+                                    <Lock size={24} />
+                                </div>
+                                <h3 className="text-lg font-bold text-white mb-1 uppercase tracking-widest">СКОРО СТАРТ</h3>
+                                <p className="text-slate-500 text-xs font-mono uppercase">Начало: {startDate.toLocaleDateString()}</p>
                             </GlassCard>
                         ) : (
-                            <button onClick={(e) => { if(dashboardView === 'progress') { e.stopPropagation(); setDashboardView('leaderboard'); } else { setActiveModal('checkIn'); } }} className="w-full h-44 rounded-2xl glass-panel flex flex-col items-center justify-center gap-4 active:scale-98 transition-all group hover:border-emerald-500/30">
-                                <div className="p-5 bg-emerald-500/10 rounded-full text-emerald-400 group-hover:scale-110 transition-transform animate-pulse-glow shadow-lg shadow-emerald-500/20"><Zap size={40} fill="currentColor" /></div>
-                                <span className="text-2xl font-black text-white uppercase tracking-[0.2em] group-hover:text-emerald-300 transition-colors">ОТМЕТИТЬСЯ</span>
-                            </button>
+                            // ОБЫЧНАЯ ЛОГИКА CHECK-IN
+                            user.todayActivity.length > 0 ? (
+                                <GlassCard className="p-6 text-center bg-emerald-900/10 border-emerald-500/30 relative z-0">
+                                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/10 mb-3 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]"><CheckCircle size={24} /></div>
+                                    {dashboardView !== 'progress' && (
+                                        <div className="animate-fade-in">
+                                            <h3 className="text-lg font-bold text-white mb-4 tracking-wide">ДЕНЬ ЗАСЧИТАН</h3>
+                                            <div className="flex flex-wrap justify-center gap-2 mb-6">{user.todayActivity.map((act, i) => (<span key={i} className="px-3 py-1 bg-emerald-500/5 border border-emerald-500/20 rounded-lg text-[10px] font-bold text-emerald-300 uppercase tracking-wider">{act}</span>))}</div>
+                                            <button onClick={(e) => { e.stopPropagation(); setActiveModal('checkIn'); }} className="w-full py-4 bg-white/5 border border-white/10 rounded-xl text-white font-bold hover:bg-white/10 flex items-center justify-center gap-2 text-xs uppercase tracking-widest transition-colors backdrop-blur-md relative z-10"><Plus size={14}/> Добавить еще</button>
+                                        </div>
+                                    )}
+                                </GlassCard>
+                            ) : (
+                                <button onClick={(e) => { if(dashboardView === 'progress') { e.stopPropagation(); setDashboardView('leaderboard'); } else { setActiveModal('checkIn'); } }} className="w-full h-44 rounded-2xl glass-panel flex flex-col items-center justify-center gap-4 active:scale-98 transition-all group hover:border-emerald-500/30">
+                                    <div className="p-5 bg-emerald-500/10 rounded-full text-emerald-400 group-hover:scale-110 transition-transform animate-pulse-glow shadow-lg shadow-emerald-500/20"><Zap size={40} fill="currentColor" /></div>
+                                    <span className="text-2xl font-black text-white uppercase tracking-[0.2em] group-hover:text-emerald-300 transition-colors">ОТМЕТИТЬСЯ</span>
+                                </button>
+                            )
                         )}
                     </div>
 
@@ -991,7 +962,7 @@
                                         <button onClick={handleDeleteAccount} className="w-full py-4 text-xs font-bold text-rose-500 border border-rose-500/30 bg-rose-500/10 rounded-xl uppercase flex items-center justify-center gap-2"><Trash2 size={16} /> Сбросить прогресс и выйти</button>
                                     </div>
 
-                                    <NeonButton id="save-settings-btn" onClick={saveSettingsToCloud} disabled={isSavingSettings} className="mt-8">
+                                    <NeonButton id="save-settings-btn" onClick={() => saveSettingsToCloud()} disabled={isSavingSettings} className="mt-8">
                                         {isSavingSettings ? "СОХРАНЕНИЕ..." : "СОХРАНИТЬ"}
                                     </NeonButton>
                                 </div>
